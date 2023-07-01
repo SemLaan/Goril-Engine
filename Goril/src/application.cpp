@@ -1,6 +1,11 @@
-#include <iostream>
+#include <goril.h>
+
+#include "game/gameapp.h"
+
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    Goril::App* app = new ExampleGame();
+    app->Run();
+    delete app;
 }
