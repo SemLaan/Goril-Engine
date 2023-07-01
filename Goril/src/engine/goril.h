@@ -2,4 +2,5 @@
 #include "core/gorilmem.h"
 
 #include "core/app.h"
+#include "core/layer.h"
 
