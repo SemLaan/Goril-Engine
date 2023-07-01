@@ -20,8 +20,10 @@ namespace Goril
 		void PopLayer();
 
 		void Run();
+		void Quit();
 
 	private:
+		bool m_shouldQuit = false;
 		LayerStack* m_layerStack;
 	};
 }

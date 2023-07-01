@@ -25,9 +25,14 @@ namespace Goril
 
 	void App::Run()
 	{
-		while (true)
+		while (!m_shouldQuit)
 		{
 			m_layerStack->UpdateLayers();
 		}
+	}
+
+	void App::Quit()
+	{
+		m_shouldQuit = true;
 	}
 }
