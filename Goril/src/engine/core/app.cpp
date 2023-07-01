@@ -5,6 +5,7 @@ namespace Goril
 
 	App::App()
 	{
+		m_layerStack = CreateScope<LayerStack>();
 	}
 
 	App::~App()
@@ -13,6 +14,9 @@ namespace Goril
 
 	void App::Run()
 	{
-		while (true);
+		while (true)
+		{
+			m_layerStack->UpdateLayers();
+		}
 	}
 }

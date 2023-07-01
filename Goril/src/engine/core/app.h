@@ -1,4 +1,6 @@
 #pragma once
+#include "layerstack.h"
+#include "gorilmem.h"
 
 namespace Goril
 {
@@ -9,5 +11,8 @@ namespace Goril
 		~App();
 
 		void Run();
+
+	private:
+		Scope<LayerStack> m_layerStack;
 	};
 }
