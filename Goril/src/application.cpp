@@ -1,6 +1,6 @@
 #include <goril.h>
 
-#include "game/gameapp.h"
+#include "game/examplegame.h"
 
 
 int main()
