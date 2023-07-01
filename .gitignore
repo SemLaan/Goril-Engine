@@ -1,5 +1,9 @@
 # Exclude visual studio
 /.vs
+**.sln
+**.vcxproj
+**.vcxproj.user
+**.vcxproj.filters
 
 # Exclude build
 /build
