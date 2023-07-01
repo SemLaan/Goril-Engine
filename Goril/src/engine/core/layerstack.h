@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include "layer.h"
+#include "gorilmem.h"
 
 namespace Goril
 {
@@ -10,12 +12,17 @@ namespace Goril
 		LayerStack();
 		~LayerStack();
 
-		void PushLayer();
+		void PushLayer(Ref<Layer> layer);
 		void PopLayer();
 
 		void UpdateLayers();
 
+		LayerStack& operator=(const LayerStack&) = delete;
+		LayerStack(const LayerStack&) = delete;
+		LayerStack& operator=(LayerStack&&) = delete;
+		LayerStack(LayerStack&&) = delete;
+
 	private:
-		std::vector<int> m_layers;
+		std::vector<Ref<Layer>> m_layers;
 	};
 }
