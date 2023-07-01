@@ -8,11 +8,20 @@ namespace Goril
 	{
 	public:
 		App();
-		~App();
+		virtual ~App();
+
+		App& operator=(const App&) = delete;
+		App(const App&) = delete;
+		App& operator=(App&&) = delete;
+		App(App&&) = delete;
+
+
+		void PushLayer(Ref<Layer> layer);
+		void PopLayer();
 
 		void Run();
 
 	private:
-		Scope<LayerStack> m_layerStack;
+		LayerStack* m_layerStack;
 	};
 }
