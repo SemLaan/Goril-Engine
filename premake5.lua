@@ -23,7 +23,8 @@ workspace "Goril"
 		includedirs
 		{
 			"%{prj.name}/vendor/headers;",
-			"%{prj.name}/src/engine;"
+			"%{prj.name}/src/engine;",
+			"%{prj.name}/src/platform;"
 		}
 
 
