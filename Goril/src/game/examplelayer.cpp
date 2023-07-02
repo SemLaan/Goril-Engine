@@ -14,8 +14,8 @@ void ExampleLayer::OnDetach()
 {
 }
 
-void ExampleLayer::UpdateLayer()
+void ExampleLayer::UpdateLayer(float deltaTime)
 {
-	std::cout << m_test << std::endl;
+	std::cout << deltaTime << std::endl;
 	m_test++;
 }

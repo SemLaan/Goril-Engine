@@ -15,7 +15,7 @@ namespace Goril
 		void PushLayer(Ref<Layer> layer);
 		void PopLayer();
 
-		void UpdateLayers();
+		void UpdateLayers(float deltaTime);
 
 		LayerStack& operator=(const LayerStack&) = delete;
 		LayerStack(const LayerStack&) = delete;

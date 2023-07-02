@@ -24,11 +24,11 @@ namespace Goril
 		m_layers.pop_back();
 	}
 
-	void LayerStack::UpdateLayers()
+	void LayerStack::UpdateLayers(float deltaTime)
 	{
 		for (Ref<Layer>& layer : m_layers)
 		{
-			layer->UpdateLayer();
+			layer->UpdateLayer(deltaTime);
 		}
 	}
 }

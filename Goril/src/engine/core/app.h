@@ -1,6 +1,7 @@
 #pragma once
 #include "layerstack.h"
 #include "gorilmem.h"
+#include "timer.h"
 
 namespace Goril
 {
@@ -25,5 +26,7 @@ namespace Goril
 	private:
 		bool m_shouldQuit = false;
 		LayerStack* m_layerStack;
+		Timer* m_timer;
+		float m_previousFrameTime;
 	};
 }

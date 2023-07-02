@@ -10,7 +10,7 @@ public:
 	// Inherited via Layer
 	virtual void OnAttach() override;
 	virtual void OnDetach() override;
-	virtual void UpdateLayer() override;
+	virtual void UpdateLayer(float deltaTime) override;
 
 private:
 	unsigned int m_test;
