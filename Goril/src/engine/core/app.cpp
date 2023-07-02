@@ -3,8 +3,9 @@
 namespace Goril
 {
 
-	App::App()
+	App::App(AppProperties& appProperties)
 	{
+		Window::Get()->Init(appProperties.m_width, appProperties.m_height);
 		m_layerStack = new LayerStack();
 		m_timer = new Timer();
 		m_previousFrameTime = m_timer->SecondsSinceStart();
@@ -14,6 +15,7 @@ namespace Goril
 	{
 		delete m_layerStack;
 		delete m_timer;
+		Window::Get()->Shutdown();
 	}
 
 	void App::PushLayer(Ref<Layer> layer)
@@ -35,6 +37,8 @@ namespace Goril
 			m_previousFrameTime = time;
 
 			m_layerStack->UpdateLayers(deltaTime);
+
+			Window::Get()->Present();
 		}
 	}
 

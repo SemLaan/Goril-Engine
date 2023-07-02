@@ -6,7 +6,8 @@
 class ExampleGame : public Goril::App
 {
 public:
-    ExampleGame()
+    ExampleGame(Goril::AppProperties& appProperties)
+        : App(appProperties)
     {
         PushLayer(Goril::CreateRef<ExampleLayer>());
     }
