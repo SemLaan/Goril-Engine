@@ -16,15 +16,27 @@ workspace "Goril"
 
 		files
 		{
+			"%{prj.name}/linking/include/**.h",
+			"%{prj.name}/linking/libs/**",
 			"%{prj.name}/src/**.h",
 			"%{prj.name}/src/**.cpp"
 		}
 
 		includedirs
 		{
-			"%{prj.name}/vendor/headers;",
-			"%{prj.name}/src/engine;",
-			"%{prj.name}/src/platform;"
+			"%{prj.name}/linking/include",
+			"%{prj.name}/src/engine",
+			"%{prj.name}/src/platform"
+		}
+
+		libdirs 
+		{ 
+			"%{prj.name}/linking/libs" 
+		}
+
+		links 
+		{ 
+			"glfw3.lib", 
 		}
 
 
