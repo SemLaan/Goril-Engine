@@ -3,6 +3,11 @@
 
 namespace Goril
 {
+	struct WindowSize
+	{
+		unsigned int width = 0;
+		unsigned int height = 0;
+	};
 
 	class Window
 	{
@@ -10,6 +15,7 @@ namespace Goril
 		virtual void Init(unsigned int width, unsigned int height) = 0;
 		virtual void Shutdown() = 0;
 		virtual void Present() = 0;
+		virtual WindowSize GetWindowSize() const = 0;
 
 		// Singleton code
 	public:
