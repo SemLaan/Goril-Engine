@@ -17,10 +17,7 @@ namespace Goril
 		/* Create a windowed mode window and its OpenGL context */
 		m_window = glfwCreateWindow(width, height, "window title", NULL, NULL);
 
-		/* Make the window's context current */
-		glfwMakeContextCurrent(m_window);
-
-		glfwSwapInterval(1);
+		m_graphicsContext = GraphicsContext::Create(m_window);
 	}
 
 	void GlewWindow::Shutdown()
@@ -30,8 +27,7 @@ namespace Goril
 
 	void GlewWindow::Present()
 	{
-		/* Swap front and back buffers */
-		glfwSwapBuffers(m_window);
+		m_graphicsContext->SwapBuffers();
 
 		/* Poll for and process events */
 		glfwPollEvents();

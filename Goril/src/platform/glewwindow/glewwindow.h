@@ -1,6 +1,7 @@
 #pragma once
 #include "core/window.h"
 #include "GLFW/glfw3.h"
+#include "rendering/graphicscontext.h"
 
 namespace Goril
 {
@@ -15,6 +16,7 @@ namespace Goril
 		virtual WindowSize GetWindowSize() const override;
 	private:
 		GLFWwindow* m_window;
+		GraphicsContext* m_graphicsContext;
 		WindowSize m_windowSize;
 	};
 }

@@ -1,6 +1,5 @@
 #pragma once
 
-
 namespace Goril
 {
 	struct WindowSize
