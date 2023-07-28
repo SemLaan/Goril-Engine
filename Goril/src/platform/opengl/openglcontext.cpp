@@ -1,4 +1,7 @@
 #include "openglcontext.h"
+#include <glad/glad.h>
+#include "GLFW/glfw3.h"
+
 
 namespace Goril
 {
@@ -8,6 +11,8 @@ namespace Goril
 	{
 		/* Make the window's context current */
 		glfwMakeContextCurrent(m_window);
+
+		gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
 		glfwSwapInterval(1);
 	}
