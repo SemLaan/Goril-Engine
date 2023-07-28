@@ -1,14 +1,9 @@
 #pragma once
 #include "core/gorilmem.h"
+#include "llrenums.h"
 
 namespace Goril::LLR
 {
-
-	struct Range
-	{
-		unsigned int start;
-		unsigned int end;
-	};
 
 	class IndexBuffer
 	{
@@ -19,7 +14,7 @@ namespace Goril::LLR
 		/// Sets new data in the buffer.
 		/// </summary>
 		/// <param name="pData">Pointer to data that will be put in the buffer.</param>
-		/// <param name="insertRange">Where the data will be placed in the buffer. (Be carefull to not exceed the buffer size)</param>
+		/// <param name="insertRange">Where the data will be placed in the buffer, interpreted in indices. (Be carefull to not exceed the buffer size)</param>
 		virtual void SetBufferData(const unsigned int* pData, Range insertRange) = 0;
 
 		/// <returns>How many indices this buffer has space for.</returns>

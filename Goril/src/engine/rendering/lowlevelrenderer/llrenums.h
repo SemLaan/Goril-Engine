@@ -41,6 +41,25 @@ namespace Goril::LLR
 		return 0;
 	}
 
+	static unsigned int ShaderDataTypeComponentCount(ShaderDataType type)
+	{
+		switch (type)
+		{
+		case ShaderDataType::Float:   return 1;
+		case ShaderDataType::Vec2F:  return 2;
+		case ShaderDataType::Vec3F:  return 3;
+		case ShaderDataType::Vec4F:  return 4;
+		case ShaderDataType::Mat3:    return 3; // 3* float3
+		case ShaderDataType::Mat4:    return 4; // 4* float4
+		case ShaderDataType::Int:     return 1;
+		case ShaderDataType::Vec2I:    return 2;
+		case ShaderDataType::Vec3I:    return 3;
+		case ShaderDataType::Vec4I:    return 4;
+		case ShaderDataType::Bool:    return 1;
+		}
+		return 0;
+	}
+
 	// Enum of all possible frame buffer texture formats
 	enum class FramebufferTextureFormat
 	{
@@ -97,4 +116,9 @@ namespace Goril::LLR
 		None = 0, OpenGL = 1
 	};
 
+	struct Range
+	{
+		size_t start;
+		size_t end;
+	};
 }
