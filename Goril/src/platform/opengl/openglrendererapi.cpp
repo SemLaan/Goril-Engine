@@ -1,7 +1,7 @@
 #include "openglrendererapi.h"
 
 
-namespace Goril::LLR::OpenGL
+namespace Goril::LLR
 {
 
 	void OpenGLRendererAPI::Init()

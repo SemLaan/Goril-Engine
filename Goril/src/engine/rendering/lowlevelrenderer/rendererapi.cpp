@@ -1,4 +1,5 @@
 #include "rendererapi.h"
+#include "opengl/openglrendererapi.h"
 
 namespace Goril::LLR
 {
@@ -9,7 +10,7 @@ namespace Goril::LLR
 		switch (GetAPI())
 		{
 		case API::OpenGL:
-			return nullptr;
+			return CreateScope<OpenGLRendererAPI>();
 		default:
 			return nullptr;
 		}

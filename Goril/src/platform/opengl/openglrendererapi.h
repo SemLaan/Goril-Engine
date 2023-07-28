@@ -1,7 +1,7 @@
 #pragma once
 #include "rendering/lowlevelrenderer/rendererapi.h"
 
-namespace Goril::LLR::OpenGL
+namespace Goril::LLR
 {
 	class OpenGLRendererAPI : public RendererAPI
 	{
