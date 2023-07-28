@@ -1,7 +1,7 @@
 #pragma once
 #include "core/window.h"
 #include "GLFW/glfw3.h"
-#include "rendering/graphicscontext.h"
+#include "rendering/graphicsdeviceinterface/graphicscontext.h"
 
 namespace Goril
 {

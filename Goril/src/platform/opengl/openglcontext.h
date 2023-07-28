@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/graphicscontext.h"
+#include "rendering/graphicsdeviceinterface/graphicscontext.h"
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
 
