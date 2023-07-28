@@ -1,4 +1,5 @@
 #pragma once
+#include "core/gorilmem.h"
 
 namespace Goril
 {
@@ -9,6 +10,6 @@ namespace Goril
 
 		virtual void SwapBuffers() = 0;
 
-		static GraphicsContext* Create(void* window);
+		static Scope<GraphicsContext> Create(void* window);
 	};
 }

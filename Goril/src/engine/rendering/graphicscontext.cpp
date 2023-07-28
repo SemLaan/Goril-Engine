@@ -3,8 +3,8 @@
 
 namespace Goril
 {
-	GraphicsContext* GraphicsContext::Create(void* window)
+	Scope<GraphicsContext> GraphicsContext::Create(void* window)
 	{
-		return new OpenGLContext(static_cast<GLFWwindow*>(window));
+		return CreateScope<OpenGLContext>(static_cast<GLFWwindow*>(window));
 	}
 }

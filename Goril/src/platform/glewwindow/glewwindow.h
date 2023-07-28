@@ -16,7 +16,7 @@ namespace Goril
 		virtual WindowSize GetWindowSize() const override;
 	private:
 		GLFWwindow* m_window;
-		GraphicsContext* m_graphicsContext;
+		Scope<GraphicsContext> m_graphicsContext;
 		WindowSize m_windowSize;
 	};
 }

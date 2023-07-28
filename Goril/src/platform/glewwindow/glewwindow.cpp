@@ -22,6 +22,7 @@ namespace Goril
 
 	void GlewWindow::Shutdown()
 	{
+		glfwDestroyWindow(m_window);
 		glfwTerminate();
 	}
 
