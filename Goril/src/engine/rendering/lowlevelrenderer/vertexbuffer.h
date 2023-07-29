@@ -12,8 +12,8 @@ namespace Goril::LLR
 		ShaderDataType type;    // Datatype
 		size_t offset;			// How many bytes from the start of the vertex to the start of this element
 
-		VertexBufferElement(ShaderDataType dataType)
-			: type(dataType), offset(ShaderDataTypeSize(type)) {}
+		VertexBufferElement(ShaderDataType dataType, size_t offset)
+			: type(dataType), offset(offset) {}
 	};
 
 	// Defines how the GPU should interpret the data in a vertex buffer
