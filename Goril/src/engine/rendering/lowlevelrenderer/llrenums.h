@@ -14,6 +14,13 @@ namespace Goril::LLR
 		STENCIL_BUFFER = BIT(3),
 	};
 
+	enum class ShaderType
+	{
+		None,
+		Vertex,
+		Fragment,
+	};
+
 	// Data types that shaders can understand
 	enum class ShaderDataType
 	{
