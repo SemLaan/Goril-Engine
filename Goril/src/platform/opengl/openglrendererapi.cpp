@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include "openglvertexarray.h"
 #include "openglindexbuffer.h"
+#include "openglshader.h"
 
 namespace Goril::LLR::OpenGL
 {
@@ -129,7 +130,7 @@ namespace Goril::LLR::OpenGL
 
 	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray> vertexArray, const Ref<Shader> shader, unsigned int indexCount)
 	{
-		//std::dynamic_pointer_cast<OpenGLShader>(shader)->Bind();
+		std::dynamic_pointer_cast<OpenGLShader>(shader)->Bind();
 		std::dynamic_pointer_cast<OpenGLVertexArray>(vertexArray)->Bind();
 		std::dynamic_pointer_cast<OpenGLIndexBuffer>(vertexArray->GetIndexBuffer())->Bind();
 		unsigned int count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
@@ -138,7 +139,7 @@ namespace Goril::LLR::OpenGL
 
 	void OpenGLRendererAPI::DrawIndexedInstanced(const Ref<VertexArray> vertexArray, const Ref<Shader> shader, unsigned int instanceCount, unsigned int indexCount)
 	{
-		//std::dynamic_pointer_cast<OpenGLShader>(shader)->Bind();
+		std::dynamic_pointer_cast<OpenGLShader>(shader)->Bind();
 		std::dynamic_pointer_cast<OpenGLVertexArray>(vertexArray)->Bind();
 		std::dynamic_pointer_cast<OpenGLIndexBuffer>(vertexArray->GetIndexBuffer())->Bind();
 		unsigned int count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();

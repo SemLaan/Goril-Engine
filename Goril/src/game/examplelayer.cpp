@@ -42,11 +42,15 @@ void ExampleLayer::UpdateLayer(float deltaTime)
 	va->SetIndexBuffer(ib);
 	va->AddVertexBuffer(vb);
 
+	std::string vertexShader = Shader::ParseShader("src/game/shaders/vertex.glsl");
+	std::string fragmentShader = Shader::ParseShader("src/game/shaders/fragment.glsl");
+
+	Ref<Shader> shader = Shader::Create(vertexShader, fragmentShader);
 
 	RenderCommand::SetClearColor(1, 1, 0, 0);
 	RenderCommand::Clear(COLOR_BUFFER);
 
-	RenderCommand::DrawIndexed(va, nullptr);
+	RenderCommand::DrawIndexed(va, shader);
 
 
 	delete[] indices;
