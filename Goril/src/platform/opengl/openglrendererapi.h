@@ -20,5 +20,8 @@ namespace Goril::LLR
 		void EnableBlend(bool enable) override;
 		void EnableDepthTest(bool enable) override;
 		void EnableStencilTest(bool enable) override;
+
+		void DrawIndexed(const Ref<VertexArray> vertexArray, const Ref<Shader> shader, unsigned int indexCount) override;
+		void DrawIndexedInstanced(const Ref<VertexArray> vertexArray, const Ref<Shader> shader, unsigned int instanceCount, unsigned int indexCount) override;
 	};
 }

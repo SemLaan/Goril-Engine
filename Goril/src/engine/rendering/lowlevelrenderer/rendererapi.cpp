@@ -7,7 +7,7 @@ namespace Goril::LLR
 
 	Scope<RendererAPI> RendererAPI::Create()
 	{
-		switch (GetAPI())
+		switch (GetAPIType())
 		{
 		case API::OpenGL:
 			return CreateScope<OpenGLRendererAPI>();

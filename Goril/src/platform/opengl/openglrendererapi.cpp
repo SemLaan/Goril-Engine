@@ -49,6 +49,14 @@ namespace Goril::LLR
 
 	}
 
+	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray> vertexArray, const Ref<Shader> shader, unsigned int indexCount)
+	{
+	}
+
+	void OpenGLRendererAPI::DrawIndexedInstanced(const Ref<VertexArray> vertexArray, const Ref<Shader> shader, unsigned int instanceCount, unsigned int indexCount)
+	{
+	}
+
 	int OpenGLRendererAPI::GetDrawCallsAndReset() const
 	{
 		return 0;

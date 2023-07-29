@@ -2,6 +2,7 @@
 #include "llrenums.h"
 #include "core/gorilmem.h"
 #include "vertexarray.h"
+#include "shader.h"
 
 namespace Goril::LLR
 {
@@ -27,23 +28,23 @@ namespace Goril::LLR
 		virtual int GetDrawCallsAndReset() const = 0;
 
 		/// <summary>
-		/// Draw call for one non-instanced object (automatically gets the vertex and index buffer from the vertex array)
+		/// Draw call for non-instanced object.
 		/// </summary>
 		/// <param name="vertexArray"></param>
 		/// <param name="shader"></param>
 		/// <param name="indexCount"></param>
-		//virtual void DrawIndexed(const std::shared_ptr<VertexArray> vertexArray, const std::shared_ptr<Shader> shader, unsigned int indexCount = 0) = 0;
+		virtual void DrawIndexed(const Ref<VertexArray> vertexArray, const Ref<Shader> shader, unsigned int indexCount = 0) = 0;
 
 		/// <summary>
-		/// Draw call for instanced objects (automatically gets the vertex and index buffer from the vertex array)
+		/// Draw call for instanced objects.
 		/// </summary>
 		/// <param name="vertexArray"></param>
 		/// <param name="shader"></param>
 		/// <param name="indexCount"></param>
-		//virtual void DrawIndexedInstanced(const std::shared_ptr<VertexArray> vertexArray, const std::shared_ptr<Shader> shader, unsigned int instanceCount, unsigned int indexCount = 0) = 0;
+		virtual void DrawIndexedInstanced(const Ref<VertexArray> vertexArray, const Ref<Shader> shader, unsigned int instanceCount, unsigned int indexCount = 0) = 0;
 
-		/// <returns>The API type that is currently being used not the api object itself</returns>
-		static API GetAPI() { return s_API; }
+		/// <returns>The underlying graphics API type that is currently being used not the api object itself.</returns>
+		static API GetAPIType() { return s_API; }
 		static Scope<RendererAPI> Create();
 	};
 }
