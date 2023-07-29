@@ -1,6 +1,9 @@
 #include "examplelayer.h"
 #include <iostream>
 #include <glm/glm.hpp>
+#include "goril.h"
+
+using namespace Goril;
 
 ExampleLayer::ExampleLayer()
 {
@@ -8,6 +11,8 @@ ExampleLayer::ExampleLayer()
 
 void ExampleLayer::OnAttach()
 {
+	unsigned int* beef = new unsigned int[3] {1, 4, 3};
+	Ref<LLR::IndexBuffer> test = LLR::IndexBuffer::Create(beef, 10);
 }
 
 void ExampleLayer::OnDetach()

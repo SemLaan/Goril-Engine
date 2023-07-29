@@ -1,11 +1,12 @@
 #pragma once
 #include "llrenums.h"
 #include "core/gorilmem.h"
-#include "vertexarray.h"
-#include "shader.h"
 
 namespace Goril::LLR
 {
+	class Shader;
+	class VertexArray;
+
 	class RendererAPI
 	{
 	private:
