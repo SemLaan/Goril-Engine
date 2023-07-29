@@ -6,7 +6,7 @@ namespace Goril
 	class Layer
 	{
 	public:
-		Layer();
+		Layer() = default;
 		virtual ~Layer() = default;
 
 		virtual void OnAttach() = 0;
