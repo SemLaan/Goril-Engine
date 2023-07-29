@@ -21,6 +21,11 @@ namespace Goril::LLR::OpenGL
 		G(glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW));
 	}
 
+	OpenGLVertexBuffer::~OpenGLVertexBuffer()
+	{
+		G(glDeleteBuffers(1, &m_rendererID));
+	}
+
 	void OpenGLVertexBuffer::SetBufferData(const void* pData, Range insertRange)
 	{
 		Bind();

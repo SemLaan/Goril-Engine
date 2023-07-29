@@ -11,6 +11,7 @@ namespace Goril::LLR::OpenGL
 	public:
 		OpenGLIndexBuffer(unsigned int count);
 		OpenGLIndexBuffer(const unsigned int* pData, unsigned int count);
+		~OpenGLIndexBuffer();
 
 		void Bind() const;
 

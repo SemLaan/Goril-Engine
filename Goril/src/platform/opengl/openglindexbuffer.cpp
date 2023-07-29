@@ -21,6 +21,11 @@ namespace Goril::LLR::OpenGL
 		G(glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(unsigned int), pData, GL_STATIC_DRAW));
 	}
 
+	OpenGLIndexBuffer::~OpenGLIndexBuffer()
+	{
+		G(glDeleteBuffers(1, &m_rendererID));
+	}
+
 	void OpenGLIndexBuffer::Bind() const
 	{
 		G(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_rendererID));

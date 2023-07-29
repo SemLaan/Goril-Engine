@@ -13,6 +13,7 @@ namespace Goril::LLR::OpenGL
 	public:
 		OpenGLVertexBuffer(size_t size);
 		OpenGLVertexBuffer(const void* pData, size_t size);
+		~OpenGLVertexBuffer();
 
 		void Bind() const;
 
