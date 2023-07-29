@@ -10,6 +10,10 @@ namespace Goril::LLR
 	{
 	public:
 		virtual ~VertexArray() = default;
+		VertexArray(const VertexArray&) = delete;
+		VertexArray& operator=(const VertexArray&) = delete;
+		VertexArray& operator=(VertexArray&&) = delete;
+		VertexArray(VertexArray&&) = delete;
 
 		virtual void AddVertexBuffer(const Ref<VertexBuffer> vertexBuffer) = 0;
 		virtual void SetIndexBuffer(const Ref<IndexBuffer> indexBuffer) = 0;

@@ -37,6 +37,10 @@ namespace Goril::LLR
 	{
 	public:
 		virtual ~VertexBuffer() = default;
+		VertexBuffer(const VertexBuffer&) = delete;
+		VertexBuffer& operator=(const VertexBuffer&) = delete;
+		VertexBuffer& operator=(VertexBuffer&&) = delete;
+		VertexBuffer(VertexBuffer&&) = delete;
 
 		/// <summary>
 		/// Sets new data in the buffer.

@@ -13,6 +13,10 @@ namespace Goril::LLR
 		static API s_API;
 	public:
 		virtual ~RendererAPI() = default;
+		RendererAPI(const RendererAPI&) = delete;
+		RendererAPI& operator=(const RendererAPI&) = delete;
+		RendererAPI& operator=(RendererAPI&&) = delete;
+		RendererAPI(RendererAPI&&) = delete;
 
 		virtual void Init() = 0;
 		virtual void Shutdown() = 0;

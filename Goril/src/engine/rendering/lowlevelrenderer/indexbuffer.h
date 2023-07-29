@@ -9,6 +9,10 @@ namespace Goril::LLR
 	{
 	public:
 		virtual ~IndexBuffer() = default;
+		IndexBuffer(const IndexBuffer&) = delete;
+		IndexBuffer& operator=(const IndexBuffer&) = delete;
+		IndexBuffer& operator=(IndexBuffer&&) = delete;
+		IndexBuffer(IndexBuffer&&) = delete;
 
 		/// <summary>
 		/// Sets new data in the buffer.
