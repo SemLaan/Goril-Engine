@@ -1,7 +1,7 @@
 #pragma once
 #include "rendering/lowlevelrenderer/indexbuffer.h"
 
-namespace Goril::LLR
+namespace Goril::LLR::OpenGL
 {
 	class OpenGLIndexBuffer : public IndexBuffer
 	{

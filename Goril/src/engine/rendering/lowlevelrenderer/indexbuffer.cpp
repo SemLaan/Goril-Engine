@@ -9,7 +9,7 @@ namespace Goril::LLR
         switch (RendererAPI::GetAPIType())
         {
         case API::OpenGL:
-            return CreateRef<OpenGLIndexBuffer>(count);
+            return CreateRef<OpenGL::OpenGLIndexBuffer>(count);
         default:
             return nullptr;
         }
@@ -20,7 +20,7 @@ namespace Goril::LLR
         switch (RendererAPI::GetAPIType())
         {
         case API::OpenGL:
-            return CreateRef<OpenGLIndexBuffer>(pData, count);
+            return CreateRef<OpenGL::OpenGLIndexBuffer>(pData, count);
         default:
             return nullptr;
         }

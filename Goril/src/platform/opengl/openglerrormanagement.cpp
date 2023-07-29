@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 
-namespace Goril::LLR
+namespace Goril::LLR::OpenGL
 {
 
 	void glfw_error_callback(int error, const char* description)

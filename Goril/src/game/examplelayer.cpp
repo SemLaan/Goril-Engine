@@ -11,8 +11,8 @@ ExampleLayer::ExampleLayer()
 
 void ExampleLayer::OnAttach()
 {
-	unsigned int* beef = new unsigned int[3] {1, 4, 3};
-	Ref<LLR::IndexBuffer> test = LLR::IndexBuffer::Create(beef, 10);
+	unsigned int* beef = new unsigned int[3] {0, 1, 2};
+	Ref<LLR::IndexBuffer> test = LLR::IndexBuffer::Create(beef, 3);
 }
 
 void ExampleLayer::OnDetach()

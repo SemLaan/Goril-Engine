@@ -12,7 +12,7 @@
 #endif // DEBUG
 
 
-namespace Goril::LLR
+namespace Goril::LLR::OpenGL
 {
 	void glfw_error_callback(int error, const char* description);
 	void glClearError();

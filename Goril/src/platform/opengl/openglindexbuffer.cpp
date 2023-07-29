@@ -2,7 +2,7 @@
 #include "openglerrormanagement.h"
 #include "glad/glad.h"
 
-namespace Goril::LLR
+namespace Goril::LLR::OpenGL
 {
 
 	OpenGLIndexBuffer::OpenGLIndexBuffer(unsigned int count)

@@ -10,7 +10,7 @@ namespace Goril::LLR
 		switch (GetAPIType())
 		{
 		case API::OpenGL:
-			return CreateScope<OpenGLRendererAPI>();
+			return CreateScope<OpenGL::OpenGLRendererAPI>();
 		default:
 			return nullptr;
 		}
