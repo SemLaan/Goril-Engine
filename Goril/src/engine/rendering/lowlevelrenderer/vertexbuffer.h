@@ -26,6 +26,7 @@ namespace Goril::LLR
 		unsigned int m_instanced;							// Should this vertex buffer be instanced (0 no, 1 yes)
 
 	public:
+		VertexBufferLayout() = default;
 		/// <summary>
 		/// Creates a vertex buffer layout.
 		/// </summary>
@@ -41,9 +42,6 @@ namespace Goril::LLR
 
 	class VertexBuffer
 	{
-	private:
-		VertexBufferLayout m_layout;
-
 	public:
 		virtual ~VertexBuffer() = default;
 
@@ -54,8 +52,8 @@ namespace Goril::LLR
 		/// <param name="insertRange">Where the data will be placed in the buffer, interpreted in bytes. (Be carefull to not exceed the buffer size)</param>
 		virtual void SetBufferData(const void* pData, Range insertRange) = 0;
 
-		inline const VertexBufferLayout& GetBufferLayout() const { return m_layout; }
-		void SetBufferLayout(const VertexBufferLayout& layout) { m_layout = layout; }
+		virtual inline const VertexBufferLayout& GetBufferLayout() const = 0;
+		virtual void SetBufferLayout(const VertexBufferLayout& layout) = 0;
 
 		/// <returns>Size of the buffer in bytes.</returns>
 		virtual inline size_t GetBufferSize() const = 0;

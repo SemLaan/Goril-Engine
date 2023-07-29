@@ -11,8 +11,20 @@ ExampleLayer::ExampleLayer()
 
 void ExampleLayer::OnAttach()
 {
-	unsigned int* beef = new unsigned int[3] {0, 1, 2};
-	Ref<LLR::IndexBuffer> test = LLR::IndexBuffer::Create(beef, 3);
+	struct Vertex
+	{
+		Vertex(float x, float y)
+		{
+			pos = glm::vec2(x, y);
+		}
+		glm::vec2 pos;
+	};
+
+	unsigned int* indices = new unsigned int[3] {0, 1, 2};
+	Ref<LLR::IndexBuffer> ib = LLR::IndexBuffer::Create(indices, 3);
+
+	Vertex* vertices = new Vertex[3]{ {0, 0}, {0, 1}, {1, 0} };
+	Ref<LLR::VertexBuffer> vb = LLR::VertexBuffer::Create(vertices, 3 * sizeof(Vertex));
 }
 
 void ExampleLayer::OnDetach()
