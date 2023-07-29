@@ -4,6 +4,7 @@
 #include "goril.h"
 
 using namespace Goril;
+using namespace Goril::LLR;
 
 ExampleLayer::ExampleLayer()
 {
@@ -31,21 +32,21 @@ void ExampleLayer::UpdateLayer(float deltaTime)
 	};
 
 	unsigned int* indices = new unsigned int[3] {0, 1, 2};
-	Ref<LLR::IndexBuffer> ib = LLR::IndexBuffer::Create(indices, 3);
+	Ref<IndexBuffer> ib = IndexBuffer::Create(indices, 3);
 
 	Vertex* vertices = new Vertex[3]{ {0, 0}, {0, 1}, {1, 0} };
-	Ref<LLR::VertexBuffer> vb = LLR::VertexBuffer::Create(vertices, 3 * sizeof(Vertex));
-	vb->SetBufferLayout({ LLR::ShaderDataType::Vec2F });
+	Ref<VertexBuffer> vb = VertexBuffer::Create(vertices, 3 * sizeof(Vertex));
+	vb->SetBufferLayout({ ShaderDataType::Vec2F });
 
-	Ref<LLR::VertexArray> va = LLR::VertexArray::Create();
+	Ref<VertexArray> va = VertexArray::Create();
 	va->SetIndexBuffer(ib);
 	va->AddVertexBuffer(vb);
 
 
-	LLR::RenderCommand::SetClearColor(1, 1, 0, 0);
-	LLR::RenderCommand::Clear(LLR::COLOR_BUFFER);
+	RenderCommand::SetClearColor(1, 1, 0, 0);
+	RenderCommand::Clear(COLOR_BUFFER);
 
-	LLR::RenderCommand::DrawIndexed(va, nullptr);
+	RenderCommand::DrawIndexed(va, nullptr);
 
 
 	delete[] indices;
