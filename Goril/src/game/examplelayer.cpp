@@ -25,6 +25,11 @@ void ExampleLayer::OnAttach()
 
 	Vertex* vertices = new Vertex[3]{ {0, 0}, {0, 1}, {1, 0} };
 	Ref<LLR::VertexBuffer> vb = LLR::VertexBuffer::Create(vertices, 3 * sizeof(Vertex));
+	vb->SetBufferLayout({LLR::ShaderDataType::Vec2F});
+
+	Ref<LLR::VertexArray> va = LLR::VertexArray::Create();
+	va->SetIndexBuffer(ib);
+	va->AddVertexBuffer(vb);
 }
 
 void ExampleLayer::OnDetach()
