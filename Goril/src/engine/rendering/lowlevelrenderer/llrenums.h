@@ -24,7 +24,7 @@ namespace Goril::LLR
 	// Data types that shaders can understand
 	enum class ShaderDataType
 	{
-		None = 0, Float, Vec2F, Vec3F, Vec4F, Mat3, Mat4, Int, Vec2I, Vec3I, Vec4I, Bool
+		None = 0, Float, Vec2F, Vec3F, Vec4F, Mat2, Mat3, Mat4, Int, Vec2I, Vec3I, Vec4I, Bool
 	};
 
 	// Byte sizes of all shader data types
@@ -36,6 +36,7 @@ namespace Goril::LLR
 		case ShaderDataType::Vec2F:   return 4 * 2;
 		case ShaderDataType::Vec3F:   return 4 * 3;
 		case ShaderDataType::Vec4F:   return 4 * 4;
+		case ShaderDataType::Mat2:     return 4 * 2 * 2;
 		case ShaderDataType::Mat3:     return 4 * 3 * 3;
 		case ShaderDataType::Mat4:     return 4 * 4 * 4;
 		case ShaderDataType::Int:      return 4;
@@ -56,6 +57,7 @@ namespace Goril::LLR
 		case ShaderDataType::Vec2F:  return 2;
 		case ShaderDataType::Vec3F:  return 3;
 		case ShaderDataType::Vec4F:  return 4;
+		case ShaderDataType::Mat2:    return 2; // 2* float2
 		case ShaderDataType::Mat3:    return 3; // 3* float3
 		case ShaderDataType::Mat4:    return 4; // 4* float4
 		case ShaderDataType::Int:     return 1;

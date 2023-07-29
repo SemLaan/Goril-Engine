@@ -25,5 +25,17 @@ namespace Goril::LLR
             return nullptr;
         }
     }
+
+    VertexBufferLayout::VertexBufferLayout(std::initializer_list<ShaderDataType> layout, unsigned int instanced)
+        : instanced(instanced), stride(0)
+    {
+        elements = std::vector<VertexBufferElement>();
+        for (ShaderDataType type : layout)
+        {
+            elements.emplace_back(type, stride);
+
+            stride += ShaderDataTypeSize(type);
+        }
+    }
 }
 

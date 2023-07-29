@@ -17,15 +17,13 @@ namespace Goril::LLR
 	};
 
 	// Defines how the GPU should interpret the data in a vertex buffer
-	class VertexBufferLayout
+	struct VertexBufferLayout
 	{
-	private:
 		// All the elements that make up 1 vertex, for example [Vec2F, Mat4]
-		std::vector<VertexBufferElement> m_elements;
-		size_t m_stride;								// Total size of one vertex in bytes
-		unsigned int m_instanced;							// Should this vertex buffer be instanced (0 no, 1 yes)
+		std::vector<VertexBufferElement> elements;
+		size_t stride;								// Total size of one vertex in bytes
+		unsigned int instanced;							// Should this vertex buffer be instanced (0 no, 1 yes)
 
-	public:
 		VertexBufferLayout() = default;
 		/// <summary>
 		/// Creates a vertex buffer layout.
@@ -33,11 +31,6 @@ namespace Goril::LLR
 		/// <param name="layout">Data types that make up a vertex.</param>
 		/// <param name="instanced">Whether this vertex buffer is instanced or not (0 no, 1 yes).</param>
 		VertexBufferLayout(std::initializer_list<ShaderDataType> layout, unsigned int instanced = 0);
-
-		/// <returns>The vector of elements that make up a vertex.</returns>
-		inline const std::vector<VertexBufferElement>& GetElements() const { return m_elements; }
-		/// <returns>Size of a vertex in bytes (aka stride).</returns>
-		inline size_t GetStride() const { return m_stride; }
 	};
 
 	class VertexBuffer
