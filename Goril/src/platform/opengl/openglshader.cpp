@@ -7,7 +7,9 @@ namespace Goril::LLR::OpenGL
 {
 	OpenGLShader::OpenGLShader(const std::string& vertexShaderCode, const std::string& fragmentShaderCode)
 	{
-		m_rendererID = CreateShaderProgram(CompileShader(GL_VERTEX_SHADER, vertexShaderCode.c_str()), CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode.c_str()));
+		unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShaderCode.c_str());
+		unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShaderCode.c_str());
+		m_rendererID = CreateShaderProgram(vs, fs);
 	}
 
 	OpenGLShader::~OpenGLShader()
@@ -36,7 +38,7 @@ namespace Goril::LLR::OpenGL
 		return id;
 	}
 
-	unsigned int CreateShaderProgram(unsigned int vertexShader, unsigned int fragmentShader)
+	unsigned int OpenGLShader::CreateShaderProgram(unsigned int vertexShader, unsigned int fragmentShader)
 	{
 		unsigned int program = glCreateProgram();
 
@@ -61,6 +63,11 @@ namespace Goril::LLR::OpenGL
 		return program;
 	}
 
+	void OpenGLShader::Bind() const
+	{
+		G(glUseProgram(m_rendererID));
+	}
+
 
 	// --------------------------------- Uniform setting ----------------------------------------
 	int OpenGLShader::GetUniformLocation(const std::string name)
@@ -81,41 +88,49 @@ namespace Goril::LLR::OpenGL
 
 	void OpenGLShader::SetInt(const std::string& name, int value)
 	{
-		G(glUseProgram(m_rendererID));		G(glUniform1i(GetUniformLocation(name), value));
+		Bind();
+		G(glUniform1i(GetUniformLocation(name), value));
 	}
 
 	void OpenGLShader::SetFloat(const std::string& name, float value)
 	{
-		G(glUseProgram(m_rendererID));		G(glUniform1f(GetUniformLocation(name), value));
+		Bind();
+		G(glUniform1f(GetUniformLocation(name), value));
 	}
 
 	void OpenGLShader::SetVec2F(const std::string& name, const glm::vec2& value)
 	{
-		G(glUseProgram(m_rendererID));		G(glUniform2f(GetUniformLocation(name), value.x, value.y));
+		Bind();
+		G(glUniform2f(GetUniformLocation(name), value.x, value.y));
 	}
 
 	void OpenGLShader::SetVec3F(const std::string& name, const glm::vec3& value)
 	{
-		G(glUseProgram(m_rendererID));		G(glUniform3f(GetUniformLocation(name), value.x, value.y, value.z));
+		Bind();
+		G(glUniform3f(GetUniformLocation(name), value.x, value.y, value.z));
 	}
 
 	void OpenGLShader::SetVec4F(const std::string& name, const glm::vec4& value)
 	{
-		G(glUseProgram(m_rendererID));		G(glUniform4f(GetUniformLocation(name), value.x, value.y, value.z, value.w));
+		Bind();
+		G(glUniform4f(GetUniformLocation(name), value.x, value.y, value.z, value.w));
 	}
 
 	void OpenGLShader::SetMat2(const std::string& name, const glm::mat2& mat)
 	{
-		G(glUseProgram(m_rendererID));		G(glUniformMatrix2fv(GetUniformLocation(name), 1, GL_FALSE, &mat[0][0]));
+		Bind();
+		G(glUniformMatrix2fv(GetUniformLocation(name), 1, GL_FALSE, &mat[0][0]));
 	}
 
 	void OpenGLShader::SetMat3(const std::string& name, const glm::mat3& mat)
 	{
-		G(glUseProgram(m_rendererID));		G(glUniformMatrix3fv(GetUniformLocation(name), 1, GL_FALSE, &mat[0][0]));
+		Bind();
+		G(glUniformMatrix3fv(GetUniformLocation(name), 1, GL_FALSE, &mat[0][0]));
 	}
 
 	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& mat)
 	{
-		G(glUseProgram(m_rendererID));		G(glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, &mat[0][0]));
+		Bind();
+		G(glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, &mat[0][0]));
 	}
 }

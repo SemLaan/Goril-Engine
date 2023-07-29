@@ -20,6 +20,7 @@ namespace Goril::LLR::OpenGL
 		OpenGLShader(const std::string& vertexShaderCode, const std::string& fragmentShaderCode);
 		~OpenGLShader();
 
+		void Bind() const;
 
 		void SetInt(const std::string& name, int value) override;
 		void SetFloat(const std::string& name, float value) override;
