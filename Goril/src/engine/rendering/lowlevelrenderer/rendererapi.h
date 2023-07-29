@@ -26,7 +26,6 @@ namespace Goril::LLR
 		virtual void EnableBlend(bool enable) = 0;
 		virtual void EnableDepthTest(bool enable) = 0;
 		virtual void EnableStencilTest(bool enable) = 0;
-		virtual int GetDrawCallsAndReset() const = 0;
 
 		/// <summary>
 		/// Draw call for non-instanced object.

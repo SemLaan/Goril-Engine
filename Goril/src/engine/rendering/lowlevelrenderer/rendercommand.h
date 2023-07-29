@@ -64,9 +64,14 @@ namespace Goril::LLR
 			s_rendererAPI->EnableStencilTest(enable);
 		}
 
-		inline static void GetDrawCallsAndReset()
+		inline static void DrawIndexed(const Ref<VertexArray> vertexArray, const Ref<Shader> shader, unsigned int indexCount = 0)
 		{
-			s_rendererAPI->GetDrawCallsAndReset();
+			s_rendererAPI->DrawIndexed(vertexArray, shader, indexCount);
+		}
+
+		inline static void DrawIndexedInstanced(const Ref<VertexArray> vertexArray, const Ref<Shader> shader, unsigned int instanceCount, unsigned int indexCount = 0)
+		{
+			s_rendererAPI->DrawIndexedInstanced(vertexArray, shader, instanceCount, indexCount);
 		}
 	};
 }

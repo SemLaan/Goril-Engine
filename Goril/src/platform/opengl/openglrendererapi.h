@@ -9,8 +9,6 @@ namespace Goril::LLR::OpenGL
 		void Init() override;
 		void Shutdown() override;
 
-		int GetDrawCallsAndReset() const override;
-
 		void SetClearColor(float r, float g, float b, float a) override;
 		void Clear(ClearOption clearOptions) override;
 		void SetBlendFunction(BlendOption source, BlendOption destination) override;
