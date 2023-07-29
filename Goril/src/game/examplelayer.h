@@ -13,5 +13,5 @@ public:
 	virtual void UpdateLayer(float deltaTime) override;
 
 private:
-	unsigned int m_test;
+
 };

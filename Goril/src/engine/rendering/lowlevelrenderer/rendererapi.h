@@ -1,6 +1,7 @@
 #pragma once
 #include "llrenums.h"
 #include "core/gorilmem.h"
+#include "vertexarray.h"
 
 namespace Goril::LLR
 {
