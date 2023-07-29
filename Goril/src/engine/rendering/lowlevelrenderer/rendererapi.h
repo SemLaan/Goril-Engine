@@ -11,6 +11,8 @@ namespace Goril::LLR
 	{
 	private:
 		static API s_API;
+	protected:
+		RendererAPI() = default;
 	public:
 		virtual ~RendererAPI() = default;
 		RendererAPI(const RendererAPI&) = delete;

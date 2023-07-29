@@ -35,6 +35,8 @@ namespace Goril::LLR
 
 	class VertexBuffer
 	{
+	protected:
+		VertexBuffer() = default;
 	public:
 		virtual ~VertexBuffer() = default;
 		VertexBuffer(const VertexBuffer&) = delete;

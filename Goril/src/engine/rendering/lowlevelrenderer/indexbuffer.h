@@ -7,6 +7,8 @@ namespace Goril::LLR
 
 	class IndexBuffer
 	{
+	protected:
+		IndexBuffer() = default;
 	public:
 		virtual ~IndexBuffer() = default;
 		IndexBuffer(const IndexBuffer&) = delete;

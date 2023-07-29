@@ -8,6 +8,8 @@ namespace Goril::LLR
 {
 	class Shader
 	{
+	protected:
+		Shader() = default;
 	public:
 		/// <summary>
 		/// Reads in the shader code from the given file.

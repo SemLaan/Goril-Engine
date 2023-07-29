@@ -8,6 +8,8 @@ namespace Goril::LLR
 {
 	class VertexArray
 	{
+	protected:
+		VertexArray() = default;
 	public:
 		virtual ~VertexArray() = default;
 		VertexArray(const VertexArray&) = delete;
