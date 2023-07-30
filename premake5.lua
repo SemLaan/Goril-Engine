@@ -17,6 +17,7 @@ workspace "Goril"
 		files
 		{
 			"%{prj.name}/linking/include/**.h",
+			"%{prj.name}/linking/include/**glad.c",
 			"%{prj.name}/linking/libs/**",
 			"%{prj.name}/src/**.h",
 			"%{prj.name}/src/**.cpp"
@@ -36,7 +37,8 @@ workspace "Goril"
 
 		links 
 		{ 
-			"glfw3.lib", 
+			"glfw3.lib",
+			"spdlog.lib",
 		}
 
 
