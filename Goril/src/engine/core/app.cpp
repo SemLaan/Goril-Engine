@@ -1,11 +1,13 @@
 #include "app.h"
 #include "rendering/lowlevelrenderer/renderapi.h"
+#include "logger.h"
 
 namespace Goril
 {
 
 	App::App(AppProperties& appProperties)
 	{
+		Logger::Get()->Init();
 		Window::Get()->Init(appProperties.m_width, appProperties.m_height);
 		LLR::RenderAPI::Get()->Init();
 		m_layerStack = new LayerStack();
@@ -19,6 +21,7 @@ namespace Goril
 		delete m_timer;
 		LLR::RenderAPI::Get()->Shutdown();
 		Window::Get()->Shutdown();
+		Logger::Get()->Shutdown();
 	}
 
 	void App::PushLayer(Ref<Layer> layer)
