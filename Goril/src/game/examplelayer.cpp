@@ -17,7 +17,10 @@ void ExampleLayer::OnAttach()
 	GRWARN("beefy");
 	GRINFO("beefy");
 	GRDEBUG("beefy");
-	GRTRACE("beefy");
+	GRTRACE("beefy {0} {1}", "meat", __FILE__);
+	GRASSERT(false);
+	GRASSERT_MSG(1==0, "beef");
+	GRASSERT_DEBUG(0);
 }
 
 void ExampleLayer::OnDetach()

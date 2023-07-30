@@ -5,6 +5,7 @@
 #include "core/layer.h"
 #include "core/timer.h"
 #include "core/logger.h"
+#include "core/asserts.h"
 
 #include "rendering/lowlevelrenderer/renderapi.h"
 #include "rendering/lowlevelrenderer/vertexarray.h"
