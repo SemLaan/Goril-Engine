@@ -1,6 +1,7 @@
 #include "openglvertexbuffer.h"
 #include "openglerrormanagement.h"
 #include <glad/glad.h>
+#include <core/core.h>
 
 namespace Goril::LLR::OpenGL
 {
@@ -28,6 +29,7 @@ namespace Goril::LLR::OpenGL
 
 	void OpenGLVertexBuffer::SetBufferData(const void* pData, Range insertRange)
 	{
+		GRASSERT_MSG(insertRange.end < m_size, "tried to set data out of buffer bounds");
 		Bind();
 		G(glBufferSubData(GL_ARRAY_BUFFER, insertRange.start, insertRange.end - insertRange.start, pData));
 	}

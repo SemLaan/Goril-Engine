@@ -1,6 +1,7 @@
 #include "openglindexbuffer.h"
 #include "openglerrormanagement.h"
 #include "glad/glad.h"
+#include <core/core.h>
 
 namespace Goril::LLR::OpenGL
 {
@@ -33,6 +34,7 @@ namespace Goril::LLR::OpenGL
 
 	void OpenGLIndexBuffer::SetBufferData(const unsigned int* pData, Range insertRange)
 	{
+		GRASSERT_MSG(insertRange.end < m_count, "tried to set data out of buffer bounds");
 		Bind();
 		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, insertRange.start * sizeof(unsigned int), (insertRange.end - insertRange.start) * sizeof(unsigned int), pData);
 	}
