@@ -12,7 +12,12 @@ ExampleLayer::ExampleLayer()
 
 void ExampleLayer::OnAttach()
 {
-	
+	GRFATAL("beefy");
+	GRERROR("beefy");
+	GRWARN("beefy");
+	GRINFO("beefy");
+	GRDEBUG("beefy");
+	GRTRACE("beefy");
 }
 
 void ExampleLayer::OnDetach()

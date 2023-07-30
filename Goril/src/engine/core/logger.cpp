@@ -3,12 +3,13 @@
 
 namespace Goril
 {
+	Ref<spdlog::logger> Logger::s_logger = nullptr;
 
 	void Logger::Init()
 	{
 		spdlog::set_pattern("%^[%T] %n: %v%$");
-		m_logger = spdlog::stdout_color_mt("Goril");
-		m_logger->set_level(spdlog::level::trace);
+		s_logger = spdlog::stdout_color_mt("GORIL");
+		s_logger->set_level(spdlog::level::trace);
 	}
 
 	void Logger::Shutdown()
