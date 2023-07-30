@@ -5,14 +5,21 @@ namespace Goril::LLR
 {
 	API RendererAPI::s_API = API::OpenGL;
 
-	Scope<RendererAPI> RendererAPI::Create()
+	RendererAPI*& RendererAPI::Get()
 	{
-		switch (GetAPIType())
+		static RendererAPI* instance = nullptr;
+		if (!instance)
 		{
-		case API::OpenGL:
-			return CreateScope<OpenGL::OpenGLRendererAPI>();
-		default:
-			return nullptr;
+			switch (GetAPIType())
+			{
+			case API::OpenGL:
+				instance = new OpenGL::OpenGLRendererAPI();
+				break;
+			default:
+				instance = nullptr;
+				break;
+			}
 		}
+		return instance;
 	}
 }

@@ -8,4 +8,3 @@
 #include "rendering/lowlevelrenderer/rendererapi.h"
 #include "rendering/lowlevelrenderer/vertexarray.h"
 #include "rendering/lowlevelrenderer/shader.h"
-#include "rendering/lowlevelrenderer/rendercommand.h"

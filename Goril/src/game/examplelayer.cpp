@@ -47,10 +47,10 @@ void ExampleLayer::UpdateLayer(float deltaTime)
 
 	Ref<Shader> shader = Shader::Create(vertexShader, fragmentShader);
 
-	RenderCommand::SetClearColor(1, 1, 0, 0);
-	RenderCommand::Clear(COLOR_BUFFER);
+	RendererAPI::Get()->SetClearColor(1, 1, 0, 0);
+	RendererAPI::Get()->Clear(COLOR_BUFFER);
 
-	RenderCommand::DrawIndexed(va, shader);
+	RendererAPI::Get()->DrawIndexed(va, shader);
 
 
 	delete[] indices;

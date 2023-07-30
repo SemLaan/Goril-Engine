@@ -15,10 +15,6 @@ namespace Goril::LLR
 		RendererAPI() = default;
 	public:
 		virtual ~RendererAPI() = default;
-		RendererAPI(const RendererAPI&) = delete;
-		RendererAPI& operator=(const RendererAPI&) = delete;
-		RendererAPI& operator=(RendererAPI&&) = delete;
-		RendererAPI(RendererAPI&&) = delete;
 
 		virtual void Init() = 0;
 		virtual void Shutdown() = 0;
@@ -51,6 +47,13 @@ namespace Goril::LLR
 
 		/// <returns>The underlying graphics API type that is currently being used not the api object itself.</returns>
 		static API GetAPIType() { return s_API; }
-		static Scope<RendererAPI> Create();
+	public:
+		// Singleton code
+		RendererAPI(const RendererAPI&) = delete;
+		RendererAPI& operator=(const RendererAPI&) = delete;
+		RendererAPI& operator=(RendererAPI&&) = delete;
+		RendererAPI(RendererAPI&&) = delete;
+
+		static RendererAPI*& Get();
 	};
 }

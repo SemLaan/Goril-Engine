@@ -1,5 +1,5 @@
 #include "app.h"
-#include "rendering/lowlevelrenderer/rendercommand.h"
+#include "rendering/lowlevelrenderer/rendererapi.h"
 
 namespace Goril
 {
@@ -7,7 +7,7 @@ namespace Goril
 	App::App(AppProperties& appProperties)
 	{
 		Window::Get()->Init(appProperties.m_width, appProperties.m_height);
-		LLR::RenderCommand::Init();
+		LLR::RendererAPI::Get()->Init();
 		m_layerStack = new LayerStack();
 		m_timer = new Timer();
 		m_previousFrameTime = m_timer->SecondsSinceStart();
@@ -17,7 +17,7 @@ namespace Goril
 	{
 		delete m_layerStack;
 		delete m_timer;
-		LLR::RenderCommand::Shutdown();
+		LLR::RendererAPI::Get()->Shutdown();
 		Window::Get()->Shutdown();
 	}
 
