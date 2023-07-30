@@ -20,10 +20,35 @@ namespace Goril::LLR
 		virtual void Shutdown() = 0;
 
 		virtual void SetClearColor(float r, float g, float b, float a) = 0;
+		/// <summary>
+		/// Clears certain buffers of the currently bound render target.
+		/// </summary>
+		/// <param name="clearOptions"></param>
 		virtual void Clear(ClearOption clearOptions) = 0;
+		/// <summary>
+		/// Sets the blend function for the output merger.
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="destination"></param>
 		virtual void SetBlendFunction(BlendOption source, BlendOption destination) = 0;
+		/// <summary>
+		/// Sets the stencil function, this determines if a fragment passes the stencil test or not.
+		/// </summary>
+		/// <param name="func"></param>
+		/// <param name="reference">A value that the stencil buffer can be compared with, how they get compared is based on the given func.</param>
+		/// <param name="mask">Bitmask that gets applied to the stencil buffer values before the stencil func gets ran on them.</param>
 		virtual void SetStencilFunc(StencilOption func, int reference, unsigned int mask) = 0;
+		/// <summary>
+		/// Sets the stencil mask, which is a bitmask that determines which bits the stencil op can see and change.
+		/// </summary>
+		/// <param name="mask"></param>
 		virtual void SetStencilMask(unsigned int mask) = 0;
+		/// <summary>
+		/// Sets the stencil operation, this determines how the stencil buffer gets updated during rendering.
+		/// </summary>
+		/// <param name="fail"></param>
+		/// <param name="zfail"></param>
+		/// <param name="zpass"></param>
 		virtual void SetStencilOp(StencilOption fail, StencilOption zfail, StencilOption zpass) = 0;
 		virtual void EnableBlend(bool enable) = 0;
 		virtual void EnableDepthTest(bool enable) = 0;
