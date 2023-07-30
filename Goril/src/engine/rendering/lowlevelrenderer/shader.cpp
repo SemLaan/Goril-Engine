@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iostream>
 #include "renderapi.h"
+#include <core/core.h>
 
 namespace Goril::LLR
 {
@@ -19,10 +20,8 @@ namespace Goril::LLR
 			ss << line << "\n";
 		}
 
-		if (ss.str().length() < 1)
-		{
-			std::cout << (std::string("wrong file path for file ") + filepath).c_str() << "\n";
-		}
+		GRASSERT_MSG(ss.str().length() >= 1, (std::string("wrong file path for file ") + filepath).c_str());
+
 		return ss.str();
 	}
 

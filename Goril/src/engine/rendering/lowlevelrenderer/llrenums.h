@@ -1,4 +1,5 @@
 #pragma once
+#include <core/core.h>
 
 #define BIT(x) 1U << (x-1)
 
@@ -46,6 +47,7 @@ namespace Goril::LLR
 		case ShaderDataType::Bool:     return 1;
 		}
 
+		GRASSERT_MSG(false, "shader data type not implemented or doesn't exist.");
 		return 0;
 	}
 
@@ -66,6 +68,8 @@ namespace Goril::LLR
 		case ShaderDataType::Vec4I:    return 4;
 		case ShaderDataType::Bool:    return 1;
 		}
+
+		GRASSERT_MSG(false, "shader data type not implemented or doesn't exist.");
 		return 0;
 	}
 

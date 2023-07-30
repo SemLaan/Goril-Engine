@@ -4,6 +4,7 @@
 #include "openglindexbuffer.h"
 #include "openglvertexbuffer.h"
 #include "rendering/lowlevelrenderer/llrenums.h"
+#include <core/core.h>
 
 namespace Goril::LLR::OpenGL
 {
@@ -59,6 +60,8 @@ namespace Goril::LLR::OpenGL
 		case ShaderDataType::Vec4I:     return GL_INT;
 		case ShaderDataType::Bool:     return GL_BOOL;
 		}
+
+		GRASSERT_MSG(false, "shader data type not implemented or doesn't exist.");
 
 		return 0;
 	}

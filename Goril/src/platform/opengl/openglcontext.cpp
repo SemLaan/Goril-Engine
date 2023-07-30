@@ -1,5 +1,5 @@
 #include "openglcontext.h"
-
+#include <core/core.h>
 
 namespace Goril
 {
@@ -10,7 +10,13 @@ namespace Goril
 		/* Make the window's context current */
 		glfwMakeContextCurrent(m_window);
 
-		gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		int succes = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		GRASSERT(succes);
+
+		GRINFO("OpenGL Info:");
+		GRINFO("  Vendor: {0}", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
+		GRINFO("  Renderer: {0}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
+		GRINFO("  Version: {0}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
 
 		glfwSwapInterval(1);
 	}

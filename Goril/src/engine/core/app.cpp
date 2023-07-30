@@ -13,6 +13,7 @@ namespace Goril
 		m_layerStack = new LayerStack();
 		m_timer = new Timer();
 		m_previousFrameTime = m_timer->SecondsSinceStart();
+		GRINFO("App startup complete");
 	}
 
 	App::~App()

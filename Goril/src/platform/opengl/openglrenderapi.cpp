@@ -4,6 +4,7 @@
 #include "openglvertexarray.h"
 #include "openglindexbuffer.h"
 #include "openglshader.h"
+#include <core/core.h>
 
 namespace Goril::LLR::OpenGL
 {
@@ -46,10 +47,12 @@ namespace Goril::LLR::OpenGL
 
 	void OpenGLRenderAPI::Init()
 	{
+		GRINFO("Opengl Renderapi initialized");
 	}
 
 	void OpenGLRenderAPI::Shutdown()
 	{
+		GRINFO("Opengl Renderapi shutdown");
 	}
 
 	void OpenGLRenderAPI::SetClearColor(float r, float g, float b, float a)
