@@ -1,12 +1,12 @@
 #include "vertexarray.h"
-#include "rendererapi.h"
+#include "renderapi.h"
 #include "opengl/openglvertexarray.h"
 
 namespace Goril::LLR
 {
 	Ref<VertexArray> VertexArray::Create()
 	{
-        switch (RendererAPI::GetAPIType())
+        switch (RenderAPI::GetAPIType())
         {
         case API::OpenGL:
             return CreateRef<OpenGL::OpenGLVertexArray>();

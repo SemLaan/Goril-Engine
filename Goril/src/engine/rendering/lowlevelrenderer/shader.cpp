@@ -3,7 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "rendererapi.h"
+#include "renderapi.h"
 
 namespace Goril::LLR
 {
@@ -28,7 +28,7 @@ namespace Goril::LLR
 
 	Ref<Shader> Shader::Create(const std::string& vertexShaderCode, const std::string& fragmentShaderCode)
 	{
-		switch (RendererAPI::GetAPIType())
+		switch (RenderAPI::GetAPIType())
 		{
 		case API::OpenGL:
 			return CreateRef<OpenGL::OpenGLShader>(vertexShaderCode, fragmentShaderCode);

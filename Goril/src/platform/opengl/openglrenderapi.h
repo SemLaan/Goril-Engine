@@ -1,9 +1,9 @@
 #pragma once
-#include "rendering/lowlevelrenderer/rendererapi.h"
+#include "rendering/lowlevelrenderer/renderapi.h"
 
 namespace Goril::LLR::OpenGL
 {
-	class OpenGLRendererAPI : public RendererAPI
+	class OpenGLRenderAPI : public RenderAPI
 	{
 	public:
 		void Init() override;

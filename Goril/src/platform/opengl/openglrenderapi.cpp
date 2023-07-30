@@ -1,4 +1,4 @@
-#include "openglrendererapi.h"
+#include "openglrenderapi.h"
 #include "openglerrormanagement.h"
 #include <glad/glad.h>
 #include "openglvertexarray.h"
@@ -44,20 +44,20 @@ namespace Goril::LLR::OpenGL
 		return 0;
 	}
 
-	void OpenGLRendererAPI::Init()
+	void OpenGLRenderAPI::Init()
 	{
 	}
 
-	void OpenGLRendererAPI::Shutdown()
+	void OpenGLRenderAPI::Shutdown()
 	{
 	}
 
-	void OpenGLRendererAPI::SetClearColor(float r, float g, float b, float a)
+	void OpenGLRenderAPI::SetClearColor(float r, float g, float b, float a)
 	{
 		G(glClearColor(r, g, b, a));
 	}
 
-	void OpenGLRendererAPI::Clear(ClearOption clearOptions)
+	void OpenGLRenderAPI::Clear(ClearOption clearOptions)
 	{
 		unsigned int options = 0;
 		if (clearOptions & ClearOption::COLOR_BUFFER)
@@ -72,27 +72,27 @@ namespace Goril::LLR::OpenGL
 		G(glClear(options));
 	}
 
-	void OpenGLRendererAPI::SetBlendFunction(BlendOption source, BlendOption destination)
+	void OpenGLRenderAPI::SetBlendFunction(BlendOption source, BlendOption destination)
 	{
 		G(glBlendFunc(BlendOptionToOpenGLBlendOption(source), BlendOptionToOpenGLBlendOption(destination)));
 	}
 
-	void OpenGLRendererAPI::SetStencilFunc(StencilOption func, int reference, unsigned int mask)
+	void OpenGLRenderAPI::SetStencilFunc(StencilOption func, int reference, unsigned int mask)
 	{
 		G(glStencilFunc(StencilOptionToOpenGLStencilOption(func), reference, mask));
 	}
 
-	void OpenGLRendererAPI::SetStencilMask(unsigned int mask)
+	void OpenGLRenderAPI::SetStencilMask(unsigned int mask)
 	{
 		G(glStencilMask(mask));
 	}
 
-	void OpenGLRendererAPI::SetStencilOp(StencilOption fail, StencilOption zfail, StencilOption zpass)
+	void OpenGLRenderAPI::SetStencilOp(StencilOption fail, StencilOption zfail, StencilOption zpass)
 	{
 		G(glStencilOp(StencilOptionToOpenGLStencilOption(fail), StencilOptionToOpenGLStencilOption(zfail), StencilOptionToOpenGLStencilOption(zpass)));
 	}
 
-	void OpenGLRendererAPI::EnableBlend(bool enable)
+	void OpenGLRenderAPI::EnableBlend(bool enable)
 	{
 		if (enable)
 		{
@@ -104,7 +104,7 @@ namespace Goril::LLR::OpenGL
 		}
 	}
 
-	void OpenGLRendererAPI::EnableDepthTest(bool enable)
+	void OpenGLRenderAPI::EnableDepthTest(bool enable)
 	{
 		if (enable)
 		{
@@ -116,7 +116,7 @@ namespace Goril::LLR::OpenGL
 		}
 	}
 
-	void OpenGLRendererAPI::EnableStencilTest(bool enable)
+	void OpenGLRenderAPI::EnableStencilTest(bool enable)
 	{
 		if (enable)
 		{
@@ -128,7 +128,7 @@ namespace Goril::LLR::OpenGL
 		}
 	}
 
-	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray> vertexArray, const Ref<Shader> shader, unsigned int indexCount)
+	void OpenGLRenderAPI::DrawIndexed(const Ref<VertexArray> vertexArray, const Ref<Shader> shader, unsigned int indexCount)
 	{
 		std::dynamic_pointer_cast<OpenGLShader>(shader)->Bind();
 		std::dynamic_pointer_cast<OpenGLVertexArray>(vertexArray)->Bind();
@@ -137,7 +137,7 @@ namespace Goril::LLR::OpenGL
 		G(glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr));
 	}
 
-	void OpenGLRendererAPI::DrawIndexedInstanced(const Ref<VertexArray> vertexArray, const Ref<Shader> shader, unsigned int instanceCount, unsigned int indexCount)
+	void OpenGLRenderAPI::DrawIndexedInstanced(const Ref<VertexArray> vertexArray, const Ref<Shader> shader, unsigned int instanceCount, unsigned int indexCount)
 	{
 		std::dynamic_pointer_cast<OpenGLShader>(shader)->Bind();
 		std::dynamic_pointer_cast<OpenGLVertexArray>(vertexArray)->Bind();

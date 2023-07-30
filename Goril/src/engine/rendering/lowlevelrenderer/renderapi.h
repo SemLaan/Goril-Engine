@@ -7,14 +7,14 @@ namespace Goril::LLR
 	class Shader;
 	class VertexArray;
 
-	class RendererAPI
+	class RenderAPI
 	{
 	private:
 		static API s_API;
 	protected:
-		RendererAPI() = default;
+		RenderAPI() = default;
 	public:
-		virtual ~RendererAPI() = default;
+		virtual ~RenderAPI() = default;
 
 		virtual void Init() = 0;
 		virtual void Shutdown() = 0;
@@ -74,11 +74,11 @@ namespace Goril::LLR
 		static API GetAPIType() { return s_API; }
 	public:
 		// Singleton code
-		RendererAPI(const RendererAPI&) = delete;
-		RendererAPI& operator=(const RendererAPI&) = delete;
-		RendererAPI& operator=(RendererAPI&&) = delete;
-		RendererAPI(RendererAPI&&) = delete;
+		RenderAPI(const RenderAPI&) = delete;
+		RenderAPI& operator=(const RenderAPI&) = delete;
+		RenderAPI& operator=(RenderAPI&&) = delete;
+		RenderAPI(RenderAPI&&) = delete;
 
-		static RendererAPI*& Get();
+		static RenderAPI*& Get();
 	};
 }
