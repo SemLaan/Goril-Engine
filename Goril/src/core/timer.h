@@ -1,16 +1,17 @@
 #pragma once
 #include <chrono>
+#include "defines.h"
 
-namespace Goril
+namespace gr
 {
 
 	class Timer
 	{
 	public:
-		Timer();
+		GRAPI Timer();
 
-		float SecondsSinceStart();
-		float MilisecondsSinceStart();
+		GRAPI f64 SecondsSinceStart();
+		GRAPI f64 MilisecondsSinceStart();
 	private:
 		std::chrono::steady_clock::time_point m_startTime;
 	};
