@@ -25,4 +25,4 @@ typedef double f64;
 
 // Boolean types
 typedef std::int32_t b32;
-typedef bool b8;
+typedef std::uint8_t b8;

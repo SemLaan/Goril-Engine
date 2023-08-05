@@ -12,6 +12,8 @@ namespace gr
 	class GRAPI GorilGame
 	{
 	public:
+		game_config config = {};
+
 		virtual b8 Init() = 0;
 
 		virtual b8 Update() = 0;
