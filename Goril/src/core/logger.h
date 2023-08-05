@@ -21,7 +21,6 @@ namespace gr
 	void shutdown_logger();
 	
 	GRAPI void log(log_level level, std::string message);
-
 }
 
 // Always define fatal and error
