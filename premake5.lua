@@ -65,8 +65,6 @@ workspace "Goril"
 
 		links 
 		{ 
-			"glfw3.lib",
-			"spdlog.lib",
 		}
 
 		defines 
@@ -105,8 +103,6 @@ workspace "Goril"
 		links 
 		{ 
 			"Goril",
-			"glfw3.lib",
-			"spdlog.lib",
 		}
 		
 		defines {}
