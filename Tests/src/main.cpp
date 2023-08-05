@@ -1,15 +1,30 @@
 #include <goril.h>
+#include "test_manager.h"
+#include <iostream>
+#include "core/timer_tests.h"
 
 int main()
 {
-	gr::Timer timer = gr::Timer();
+	if (!initialize_test_manager())
+	{
+		GRFATAL("Test manager somehow failed to init lol");
+		std::cin.get();
+		return 1;
+	}
 
-	GRTRACE("time: {}", timer.SecondsSinceStart());
+	// ----------------- register all tests ----------------
+	register_timer_tests();
+	// ------------------------------------------------------
 
-	GRERROR("test");
+	b8 result = run_tests();
 
-	GRTRACE("time: {}", timer.SecondsSinceStart());
+	shutdown_test_manager();
 
+	if (result == false)
+	{
+		GRFATAL("One or more tests failed!");
+		std::cin.get();
+	}
 
 	return 0;
 }

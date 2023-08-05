@@ -130,6 +130,7 @@ workspace "Goril"
 		{
 			"%{wks.location}/Goril/linking/include",
 			"%{wks.location}/Goril/src",
+			"%{prj.name}/src",
 		}
 		
 		libdirs 
