@@ -1,9 +1,9 @@
 #include <goril.h>
 
+#include "game.h"
 #include <entrypoint.h>
-#include <core/logger.h>
 
 gr::GorilGame* CreateGameInstance()
 {
-	return nullptr;
+	return new Game();
 }
