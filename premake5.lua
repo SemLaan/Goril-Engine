@@ -5,6 +5,7 @@ workspace "Goril"
 	platforms { "Windows" }
 	language "C++"
 	cppdialect "C++20"
+	startproject "Goril-Demo"
 
 	-- Setting platforms
 	filter { "platforms:Windows" }
@@ -32,7 +33,8 @@ workspace "Goril"
 	-- Copying the dll to the Demo and tests folder
 	postbuildcommands 
 	{
-		"{COPY} %{wks.location}/build/bin/%{cfg.buildcfg}/Goril/Goril.dll %{wks.location}/build/bin/%{cfg.buildcfg}/Goril-Demo"
+		"{COPY} %{wks.location}/build/bin/%{cfg.buildcfg}/Goril/Goril.dll %{wks.location}/build/bin/%{cfg.buildcfg}/Goril-Demo",
+		"{COPY} %{wks.location}/build/bin/%{cfg.buildcfg}/Goril/Goril.dll %{wks.location}/build/bin/%{cfg.buildcfg}/Tests"
 	}
 
 	-- Engine dll
@@ -109,3 +111,36 @@ workspace "Goril"
 		
 		
 	-- Unit testing
+	project "Tests"
+		kind "ConsoleApp"
+		location "%{wks.location}/Tests/"
+
+		targetdir ("%{wks.location}/build/bin/%{cfg.buildcfg}/%{prj.name}")
+		objdir ("%{wks.location}/build/bin-intermediate/%{cfg.architecture}-%{cfg.buildcfg}/%{prj.name}")
+
+		files
+		{
+			"%{prj.name}/linking/include/**.h",
+			"%{prj.name}/linking/libs/**",
+			"%{prj.name}/src/**.h",
+			"%{prj.name}/src/**.cpp",
+		}
+
+		includedirs
+		{
+			"%{wks.location}/Goril/linking/include",
+			"%{wks.location}/Goril/src",
+		}
+		
+		libdirs 
+		{ 
+			"%{wks.location}/Goril/linking/libs" 
+		}
+		
+		links 
+		{ 
+			"Goril",
+		}
+		
+		defines {}
+		
