@@ -1,15 +1,30 @@
 #include "application.h"
 
+#include "logger.h"
+#include "platform.h"
 
 namespace gr
 {
 	b8 initialize_engine(GorilGame* game_instance)
 	{
-		return 1;
+		// Initialize subsystems
+		initialize_logger();
+		initialize_platform();
+
+		return true;
 	}
 
 	b8 run_engine() 
 	{
-		return 1;
+		while (true)
+		{
+			// TODO: Do game engine stuff
+		}
+
+		// Shutdown subsystems
+		shutdown_platform();
+		shutdown_logger();
+
+		return true;
 	}
 }
