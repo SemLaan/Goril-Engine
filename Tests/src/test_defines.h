@@ -2,6 +2,10 @@
 #include <core/logger.h>
 #include <math.h>
 
+// Extra log define that always gets ran regardless of debug/release/dist because that doesn't matter for tests
+// Yet we don't want to have to log errors or fatals because thats not what were trying to log
+#define TESTINFO(message, ...)	::gr::log(::gr::LOG_LEVEL_INFO, std::format(message, __VA_ARGS__))
+
 
 
 #define expect_should_be(expected, actual)                                                              \
