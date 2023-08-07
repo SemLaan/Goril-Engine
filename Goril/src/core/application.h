@@ -5,8 +5,8 @@
 namespace gr
 {
 
-	GRAPI b8 initialize_engine(GorilGame* game_instance);
+	GRAPI b8 initialize_engine(game_config config);
 
-	GRAPI b8 run_engine();
+	GRAPI b8 run_engine(GorilGame* game_instance);
 }
 

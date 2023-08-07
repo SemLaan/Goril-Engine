@@ -5,6 +5,7 @@ namespace gr
 {
 	struct game_config
 	{
+		size_t game_instance_memory_requirement;
 		u32 width;
 		u32 height;
 	};
@@ -12,8 +13,6 @@ namespace gr
 	class GRAPI GorilGame
 	{
 	public:
-		game_config config = {};
-
 		virtual b8 Init() = 0;
 
 		virtual b8 Update() = 0;

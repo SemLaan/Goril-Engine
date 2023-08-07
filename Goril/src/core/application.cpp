@@ -5,7 +5,7 @@
 
 namespace gr
 {
-	b8 initialize_engine(GorilGame* game_instance)
+	b8 initialize_engine(game_config config)
 	{
 		// Initialize subsystems
 		if (!initialize_logger())
@@ -13,12 +13,16 @@ namespace gr
 			GRFATAL("Logger failed to initialize");
 			return false;
 		}
-		initialize_platform();
+		if (!initialize_platform())
+		{
+			GRFATAL("Platform failed to initialize");
+			return false;
+		}
 
 		return true;
 	}
 
-	b8 run_engine() 
+	b8 run_engine(GorilGame* game_instance)
 	{
 		while (true)
 		{

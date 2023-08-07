@@ -2,8 +2,6 @@
 
 b8 Game::Init()
 {
-    config.width = 800;
-    config.height = 600;
     return true;
 }
 
