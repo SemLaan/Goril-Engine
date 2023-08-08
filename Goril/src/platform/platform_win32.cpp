@@ -10,6 +10,10 @@
 
 namespace GR
 {
+	size_t GetPlatformRequiredMemory()
+	{
+		return 0;
+	}
 
 	b8 InitializePlatform()
 	{

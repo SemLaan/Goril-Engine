@@ -16,6 +16,8 @@ namespace GR
 		MAX_LOG_LEVELS
 	};
 
+	size_t GetLoggerRequiredMemory();
+
 	b8 InitializeLogger();
 
 	void ShutdownLogger();

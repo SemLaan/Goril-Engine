@@ -8,8 +8,10 @@ namespace GR
 {
 	b8 InitializeEngine(GameConfig config)
 	{
+		size_t subsystemsRequiredMemory = GetLoggerRequiredMemory() + GetPlatformRequiredMemory();
+
 		// Initialize subsystems
-		if (!InitializeMemory(config.game_instance_memory_requirement))
+		if (!InitializeMemory(config.game_instance_memory_requirement + subsystemsRequiredMemory))
 		{
 			GRFATAL("Memory failed to initialize");
 			return false;
