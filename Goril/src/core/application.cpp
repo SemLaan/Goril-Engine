@@ -2,13 +2,18 @@
 
 #include "logger.h"
 #include "platform.h"
-#include "memory.h"
+#include "gr_memory.h"
 
 namespace GR
 {
 	b8 InitializeEngine(GameConfig config)
 	{
 		// Initialize subsystems
+		if (!InitializeMemory(config.game_instance_memory_requirement))
+		{
+			GRFATAL("Memory failed to initialize");
+			return false;
+		}
 		if (!InitializeLogger())
 		{
 			GRFATAL("Logger failed to initialize");
@@ -33,6 +38,7 @@ namespace GR
 		// Shutdown subsystems
 		ShutdownPlatform();
 		ShutdownLogger();
+		ShutdownMemory();
 
 		return true;
 	}
