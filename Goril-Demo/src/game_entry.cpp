@@ -3,9 +3,9 @@
 #include "game.h"
 #include <entrypoint.h>
 
-gr::game_config GetGameConfig()
+GR::GameConfig GetGameConfig()
 {
-	gr::game_config config = {};
+	GR::GameConfig config = {};
 	
 	config.game_instance_memory_requirement = sizeof(Game);
 	config.width = 1280;
@@ -14,7 +14,7 @@ gr::game_config GetGameConfig()
 	return config;
 }
 
-b8 CreateGameInstance(gr::GorilGame* out_game)
+b8 CreateGameInstance(GR::GorilGame* out_game)
 {
 	out_game = new(out_game) Game();
 

@@ -3,7 +3,7 @@
 #include <string>
 #include <format>
 
-namespace gr
+namespace GR
 {
 	enum log_level
 	{
@@ -16,28 +16,28 @@ namespace gr
 		MAX_LOG_LEVELS
 	};
 
-	b8 initialize_logger();
+	b8 InitializeLogger();
 
-	void shutdown_logger();
+	void ShutdownLogger();
 	
-	GRAPI void log(log_level level, std::string message);
+	GRAPI void Log(log_level level, std::string message);
 }
 
 // Always define fatal and error
-#define GRFATAL(message, ...)	::gr::log(::gr::LOG_LEVEL_FATAL, std::format(message, __VA_ARGS__))
-#define GRERROR(message, ...)	::gr::log(::gr::LOG_LEVEL_ERROR, std::format(message, __VA_ARGS__))
+#define GRFATAL(message, ...)	::GR::Log(::GR::LOG_LEVEL_FATAL, std::format(message, __VA_ARGS__))
+#define GRERROR(message, ...)	::GR::Log(::GR::LOG_LEVEL_ERROR, std::format(message, __VA_ARGS__))
 
 #ifndef GR_DIST
-#define GRWARN(message, ...)	::gr::log(::gr::LOG_LEVEL_WARN, std::format(message, __VA_ARGS__))
-#define GRINFO(message, ...)	::gr::log(::gr::LOG_LEVEL_INFO, std::format(message, __VA_ARGS__))
+#define GRWARN(message, ...)	::GR::Log(::GR::LOG_LEVEL_WARN, std::format(message, __VA_ARGS__))
+#define GRINFO(message, ...)	::GR::Log(::GR::LOG_LEVEL_INFO, std::format(message, __VA_ARGS__))
 #else
 #define GRWARN(message, ...)
 #define GRINFO(message, ...)
 #endif
 
 #ifdef GR_DEBUG
-#define GRDEBUG(message, ...)	::gr::log(::gr::LOG_LEVEL_DEBUG, std::format(message, __VA_ARGS__))
-#define GRTRACE(message, ...)	::gr::log(::gr::LOG_LEVEL_TRACE, std::format(message, __VA_ARGS__))
+#define GRDEBUG(message, ...)	::GR::Log(::GR::LOG_LEVEL_DEBUG, std::format(message, __VA_ARGS__))
+#define GRTRACE(message, ...)	::GR::Log(::GR::LOG_LEVEL_TRACE, std::format(message, __VA_ARGS__))
 #else
 #define GRDEBUG(message, ...)
 #define GRTRACE(message, ...)

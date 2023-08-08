@@ -1,9 +1,9 @@
 #pragma once
 #include "defines.h"
 
-namespace gr
+namespace GR
 {
-	struct game_config
+	struct GameConfig
 	{
 		size_t game_instance_memory_requirement;
 		u32 width;

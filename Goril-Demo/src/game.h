@@ -1,7 +1,7 @@
 #pragma once
 #include <goril.h>
 
-class Game : public gr::GorilGame
+class Game : public GR::GorilGame
 {
 	// Inherited via GorilGame
 	b8 Init() override;

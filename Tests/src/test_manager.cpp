@@ -3,13 +3,13 @@
 #include "test_defines.h"
 
 static std::vector<PFN_test> tests;
-static gr::Timer timer;
+static GR::Timer timer;
 
 
 b8 initialize_test_manager()
 {
 	tests = std::vector<PFN_test>();
-	timer = gr::Timer();
+	timer = GR::Timer();
 
 	return true;
 }

@@ -2,11 +2,11 @@
 #include "defines.h"
 #include "logger.h"
 
-namespace gr
+namespace GR
 {
-	b8 initialize_platform();
+	b8 InitializePlatform();
 
-	void shutdown_platform();
+	void ShutdownPlatform();
 
-	void platform_log_message(log_level level, const char* message);
+	void PlatformLogMessage(log_level level, const char* message);
 }

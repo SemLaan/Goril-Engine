@@ -2,10 +2,10 @@
 
 #include "platform.h"
 
-namespace gr
+namespace GR
 {
 
-	static std::string log_levels[MAX_LOG_LEVELS] =
+	static std::string logLevels[MAX_LOG_LEVELS] =
 	{
 		"[FATAL]: ",
 		"[ERROR]: ",
@@ -15,7 +15,7 @@ namespace gr
 		"[TRACE]: ",
 	};
 
-	b8 initialize_logger()
+	b8 InitializeLogger()
 	{
 		// TODO: create file to write logs to
 
@@ -30,13 +30,13 @@ namespace gr
 		return true;
 	}
 
-	void shutdown_logger()
+	void ShutdownLogger()
 	{
 		// TODO: write logs to file
 	}
 
-	void log(log_level level, std::string message)
+	void Log(log_level level, std::string message)
 	{
-		platform_log_message(level, (log_levels[level] + message + "\n").c_str());
+		PlatformLogMessage(level, (logLevels[level] + message + "\n").c_str());
 	}
 }

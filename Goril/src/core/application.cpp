@@ -2,18 +2,19 @@
 
 #include "logger.h"
 #include "platform.h"
+#include "memory.h"
 
-namespace gr
+namespace GR
 {
-	b8 initialize_engine(game_config config)
+	b8 InitializeEngine(GameConfig config)
 	{
 		// Initialize subsystems
-		if (!initialize_logger())
+		if (!InitializeLogger())
 		{
 			GRFATAL("Logger failed to initialize");
 			return false;
 		}
-		if (!initialize_platform())
+		if (!InitializePlatform())
 		{
 			GRFATAL("Platform failed to initialize");
 			return false;
@@ -22,7 +23,7 @@ namespace gr
 		return true;
 	}
 
-	b8 run_engine(GorilGame* game_instance)
+	b8 RunEngine(GorilGame* gameInstance)
 	{
 		while (true)
 		{
@@ -30,8 +31,8 @@ namespace gr
 		}
 
 		// Shutdown subsystems
-		shutdown_platform();
-		shutdown_logger();
+		ShutdownPlatform();
+		ShutdownLogger();
 
 		return true;
 	}

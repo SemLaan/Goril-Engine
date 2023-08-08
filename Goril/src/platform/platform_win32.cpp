@@ -8,19 +8,19 @@
 #include "windows.h"
 
 
-namespace gr
+namespace GR
 {
 
-	b8 initialize_platform()
+	b8 InitializePlatform()
 	{
 		return true;
 	}
 
-	void shutdown_platform()
+	void ShutdownPlatform()
 	{
 	}
 
-	static u8 log_level_colors[MAX_LOG_LEVELS] =
+	static u8 logLevelColors[MAX_LOG_LEVELS] =
 	{
 		192,
 		4,
@@ -30,14 +30,14 @@ namespace gr
 		8
 	};
 	
-	void platform_log_message(log_level level, const char* message)
+	void PlatformLogMessage(log_level level, const char* message)
 	{
 		static HANDLE hConsole = {};
 		if (!hConsole)
 		{
 			hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 		}
-		SetConsoleTextAttribute(hConsole, log_level_colors[level]);
+		SetConsoleTextAttribute(hConsole, logLevelColors[level]);
 		OutputDebugStringA(message);
 		printf(message);
 	}

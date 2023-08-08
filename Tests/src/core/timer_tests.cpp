@@ -16,7 +16,7 @@ b8 timer_test()
 	u32 sleep_ms = 1000;
 	f64 sleep_seconds = MILLISECONDS_TO_SECONDS(sleep_ms);
 
-	gr::Timer timer = gr::Timer();
+	GR::Timer timer = GR::Timer();
 	std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
 
 	f64 ms_time = timer.MilisecondsSinceStart();

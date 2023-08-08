@@ -1,6 +1,6 @@
 #include "timer.h"
 
-namespace gr
+namespace GR
 {
 
 	Timer::Timer()

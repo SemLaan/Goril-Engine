@@ -2,11 +2,11 @@
 #include "defines.h"
 #include "goril_game.h"
 
-namespace gr
+namespace GR
 {
 
-	GRAPI b8 initialize_engine(game_config config);
+	GRAPI b8 InitializeEngine(GameConfig config);
 
-	GRAPI b8 run_engine(GorilGame* game_instance);
+	GRAPI b8 RunEngine(GorilGame* gameInstance);
 }
 

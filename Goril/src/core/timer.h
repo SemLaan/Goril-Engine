@@ -2,7 +2,7 @@
 #include <chrono>
 #include "defines.h"
 
-namespace gr
+namespace GR
 {
 
 	class Timer
