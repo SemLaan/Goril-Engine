@@ -7,8 +7,6 @@
 
 b8 alloc_and_dealloc_test()
 {
-	GR::InitializeMemory(100);
-
 	size_t initial_allocated = GR::GetMemoryUsage();
 	size_t test_allocation_size = 18;
 
@@ -21,8 +19,6 @@ b8 alloc_and_dealloc_test()
 	GR::Free(test_mem);
 
 	expect_should_be(GR::GetMemoryUsage(), initial_allocated);
-
-	GR::ShutdownMemory();
 
 	return true;
 }

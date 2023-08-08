@@ -35,11 +35,14 @@ namespace GR
 			// TODO: Do game engine stuff
 		}
 
+		return true;
+	}
+
+	void ShutdownEngine()
+	{
 		// Shutdown subsystems
 		ShutdownPlatform();
 		ShutdownLogger();
 		ShutdownMemory();
-
-		return true;
 	}
 }

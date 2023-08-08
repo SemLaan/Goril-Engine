@@ -15,10 +15,9 @@ namespace GR
 		MAX_MEMORY_TAGS
 	};
 
-	// TODO: make some kind of engine setup in the test project so that initialize and shutdown memory don't have to be exported
-	GRAPI b8 InitializeMemory(size_t arenaSize);
+	b8 InitializeMemory(size_t arenaSize);
 
-	GRAPI void ShutdownMemory();
+	void ShutdownMemory();
 
 	GRAPI Blk Alloc(size_t size, memory_tag tag);
 

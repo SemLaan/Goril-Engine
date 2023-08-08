@@ -34,6 +34,8 @@ int main()
 		GRFATAL("Engine failed while running, shutting down");
 		return 1;
 	}
+
+	GR::ShutdownEngine();
 	
 	return 0;
 }
