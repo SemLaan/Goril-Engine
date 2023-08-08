@@ -1,7 +1,9 @@
 #include <goril.h>
 #include "test_manager.h"
 #include <iostream>
+
 #include "core/timer_tests.h"
+#include "core/memory_tests.h"
 
 int main()
 {
@@ -14,6 +16,7 @@ int main()
 
 	// ----------------- register all tests ----------------
 	register_timer_tests();
+	register_memory_tests();
 	// ------------------------------------------------------
 
 	b8 result = run_tests();
