@@ -27,6 +27,8 @@ namespace GR
 			return false;
 		}
 
+		PrintMemoryStats();
+
 		return true;
 	}
 
