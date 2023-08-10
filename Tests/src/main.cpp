@@ -6,6 +6,7 @@
 
 #include "core/timer_tests.h"
 #include "core/memory_tests.h"
+#include "memory/allocator_tests.h"
 
 int main()
 {
@@ -17,8 +18,9 @@ int main()
 	}
 
 	// ----------------- register all tests ----------------
-	register_timer_tests();
 	register_memory_tests();
+	register_allocator_tests();
+	register_timer_tests();
 	// ------------------------------------------------------
 
 	// Init engine

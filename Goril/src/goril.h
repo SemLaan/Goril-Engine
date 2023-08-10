@@ -5,3 +5,4 @@
 #include "core/asserts.h"
 #include "core/timer.h"
 #include "core/gr_memory.h"
+#include "memory/allocator.h"
