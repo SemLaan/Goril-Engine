@@ -3,30 +3,44 @@
 
 namespace GR
 {
-	enum GRAPI memory_tag
+	// Forward declaring allocator
+	class Allocator;
+
+	enum GRAPI mem_tag
 	{
-		MEM_TAG_LINEAR_ALLOC,
+		LOCAL_ALLOCATOR,
+		MEMORY_SUBSYS,
+		LOGGING_SUBSYS,
+		PLATFORM_SUBSYS,
+		EVENT_SUBSYS,
+		RENDERER_SUBSYS,
+		GAME,
+		TEST,
 		MAX_MEMORY_TAGS
 	};
 
 	struct GRAPI Blk
 	{
 		void* ptr;
-		size_t length;
-		memory_tag tag;
+		size_t size;
+		mem_tag tag;
 	};
 
 	b8 InitializeMemory(size_t arenaSize);
 
 	void ShutdownMemory();
 
-	GRAPI Blk Alloc(size_t size, memory_tag tag);
+	GRAPI inline Allocator* GetGlobalAllocator();
 
-	GRAPI void Free(Blk block);
+	GRAPI inline void AllocInfo(size_t size, mem_tag tag);
 
-	GRAPI void Zero(Blk block);
+	GRAPI inline void FreeInfo(Blk& block);
 
-	GRAPI const size_t& GetMemoryUsage();
+	GRAPI inline void Zero(Blk block);
+
+	GRAPI inline const size_t& GetMemoryUsage();
+
+	GRAPI inline const u64& GetNetAllocations();
 
 	GRAPI void PrintMemoryStats();
 }
