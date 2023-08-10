@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <new>
 
 #ifdef GR_DLL
 #define GRAPI __declspec(dllexport)
@@ -27,6 +28,6 @@ typedef double f64;
 typedef std::int32_t b32;
 typedef std::uint8_t b8;
 
-#define KiB (1024)
-#define MiB (1024 * 1024)
-#define GiB (1024 * 1024 * 1024)
+#define KiB ((size_t)1024u)
+#define MiB ((size_t)1024u * (size_t)1024u)
+#define GiB ((size_t)1024u * (size_t)1024u * (size_t)1024u)
