@@ -34,10 +34,15 @@ namespace GR
 
 	b8 RunEngine(GorilGame* gameInstance)
 	{
+		gameInstance->Init();
+
 		while (true)
 		{
-			// TODO: Do game engine stuff
+			gameInstance->Update();
+			gameInstance->Render();
 		}
+
+		gameInstance->Shutdown();
 
 		return true;
 	}
