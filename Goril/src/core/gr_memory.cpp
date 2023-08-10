@@ -8,14 +8,14 @@ namespace GR
 {
 
 	static const char* memTagToText[mem_tag::MAX_MEMORY_TAGS] = {
-		"LOCAL_ALLOC",
-		"MEMORY_SUBSYS",
-		"LOGGING_SUBSYS",
-		"PLATFORM_SUBSYS",
-		"EVENT_SUBSYS",
-		"RENDERER_SUBSYS",
-		"GAME",
-		"TEST",
+		"LOCAL_ALLOC        ",
+		"MEMORY_SUBSYS      ",
+		"LOGGING_SUBSYS     ",
+		"PLATFORM_SUBSYS    ",
+		"EVENT_SUBSYS       ",
+		"RENDERER_SUBSYS    ",
+		"GAME               ",
+		"TEST               ",
 	};
 
 	struct MemoryState
@@ -131,7 +131,7 @@ namespace GR
 	void PrintMemoryStats()
 	{
 		GRINFO("Printing memory stats:");
-		GRINFO("Total allocated memory and total arena size (both in bytes): {}/{}", state->allocated, state->arenaSize);
+		GRINFO("Total allocated memory and total arena size (bytes): {}/{}", state->allocated, state->arenaSize);
 		GRINFO("Total allocations: {}", state->netAllocationCount);
 		GRINFO("Allocations by tag:");
 		for (u32 i = 0; i < mem_tag::MAX_MEMORY_TAGS; ++i)
