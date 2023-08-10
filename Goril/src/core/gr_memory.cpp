@@ -27,6 +27,7 @@ namespace GR
 		size_t allocated;
 		u64 netAllocationCount;
 		u32 perTagAllocCount[mem_tag::MAX_MEMORY_TAGS];
+		size_t memorySubsystemAllocSize;
 	};
 
 	static MemoryState* state;
@@ -68,6 +69,7 @@ namespace GR
 		state->arenaBlock = arena;
 		state->arenaSize = totalArenaSize;
 		state->allocated = sizeof(MemoryState) + sizeof(FreelistAllocator) + freelistNodeMemory;
+		state->memorySubsystemAllocSize = sizeof(MemoryState) + sizeof(FreelistAllocator) + freelistNodeMemory;
 		state->netAllocationCount = 1;
 		for (u32 i = 0; i < mem_tag::MAX_MEMORY_TAGS; i++)
 		{
@@ -81,6 +83,19 @@ namespace GR
 
 	void ShutdownMemory()
 	{
+		initialized = false;
+
+		// Removing all the allocation info from the state to print memory stats one last time for debugging 
+		// This way the programmer can check if everything else in the application was freed by seeing if it prints 0 net allocations
+		state->perTagAllocCount[MEMORY_SUBSYS] -= 1;
+		state->netAllocationCount--;
+		state->allocated -= state->memorySubsystemAllocSize;
+		PrintMemoryStats();
+
+		GetGlobalAllocator()->Free(state->stateBlock);
+		// We dont have to destroy the global allocator because that does nothing
+
+		// Return all the application memory back to the OS
 		free(state->arenaBlock);
 	}
 
