@@ -31,5 +31,5 @@ b8 timer_test()
 
 void register_timer_tests()
 {
-	register_test(timer_test);
+	register_test(timer_test, "Timer: timer test");
 }

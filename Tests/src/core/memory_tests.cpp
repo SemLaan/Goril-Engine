@@ -27,5 +27,5 @@ b8 alloc_and_dealloc_test()
 
 void register_memory_tests()
 {
-	register_test(alloc_and_dealloc_test);
+	register_test(alloc_and_dealloc_test, "Global allocator: alloc and dealloc");
 }

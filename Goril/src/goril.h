@@ -6,3 +6,4 @@
 #include "core/timer.h"
 #include "core/gr_memory.h"
 #include "memory/allocator.h"
+#include "containers/scope.h"
