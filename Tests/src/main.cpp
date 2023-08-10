@@ -2,6 +2,7 @@
 #include "test_manager.h"
 #include <iostream>
 #include <core/application.h>
+#include "test_defines.h"
 
 #include "core/timer_tests.h"
 #include "core/memory_tests.h"
@@ -24,7 +25,7 @@ int main()
 	GR::GameConfig config = {};
 	config.width = 0;
 	config.height = 0;
-	config.game_instance_memory_requirement = 1024;
+	config.game_instance_memory_requirement = RESERVED_GAME_MEMORY;
 	GR::InitializeEngine(config);
 
 	// Run tests
@@ -37,8 +38,13 @@ int main()
 	if (result == false)
 	{
 		GRFATAL("One or more tests failed!");
-		std::cin.get();
 	}
+	else
+	{
+		GRINFO("=============== All tests succesfull ==============");
+	}
+
+	std::cin.get();
 
 	return 0;
 }

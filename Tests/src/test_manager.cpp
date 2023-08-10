@@ -3,6 +3,7 @@
 #include "test_defines.h"
 
 static std::vector<PFN_test> tests;
+static std::vector<std::string> test_names;
 static GR::Timer timer;
 
 
@@ -18,20 +19,21 @@ void shutdown_test_manager()
 {
 }
 
-void register_test(PFN_test test)
+void register_test(PFN_test test, std::string test_name)
 {
 	tests.push_back(test);
+	test_names.push_back(test_name);
 }
 
 b8 run_tests()
 {
 	b8 any_failed = false;
 
-	TESTINFO("Starting tests...");
+	TESTINFO("=================== Starting tests... ====================");
 
 	for (u32 i = 0; i < tests.size(); ++i)
 	{
-		TESTINFO("Running test [{}/{}]", i+1, tests.size());
+		TESTINFO("Running test [{}/{}]: {}", i + 1, tests.size(), test_names[i]);
 		f64 test_start_time = timer.SecondsSinceStart();
 		b8 result = tests[i]();
 		f64 test_end_time = timer.SecondsSinceStart();
