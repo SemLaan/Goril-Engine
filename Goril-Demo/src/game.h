@@ -3,6 +3,7 @@
 
 class Game : public GR::GorilGame
 {
+public:
 	// Inherited via GorilGame
 	b8 Init() override;
 	b8 Update() override;

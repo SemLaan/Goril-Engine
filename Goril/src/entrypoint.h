@@ -5,7 +5,7 @@
 #include "core/asserts.h"
 
 extern GR::GameConfig GetGameConfig();
-extern b8 CreateGameInstance(GR::GorilGame* out_game);
+extern b8 CreateGameInstance(GR::Blk& out_game);
 
 int main()
 {
@@ -21,19 +21,21 @@ int main()
 	}
 	
 	// Getting the game instance object
-	GR::GorilGame* gameInstance = (GR::GorilGame*)malloc(4000); // TODO: use engine allocator
-	if (!CreateGameInstance(gameInstance))
+	GR::Blk gameInstanceBlock = GR::Blk();
+	if (!CreateGameInstance(gameInstanceBlock))
 	{
 		GRFATAL("Failed to create game instance, shutting down");
 	}
-	GRASSERT_DEBUG(gameInstance);
+	GRASSERT_DEBUG(gameInstanceBlock.ptr);
 
 	// Running the engine and game
-	if (!GR::RunEngine(gameInstance))
+	if (!GR::RunEngine((GR::GorilGame*)gameInstanceBlock.ptr))
 	{
 		GRFATAL("Engine failed while running, shutting down");
 		return 1;
 	}
+
+	GR::GetGlobalAllocator()->Free(gameInstanceBlock);
 
 	GR::ShutdownEngine();
 	

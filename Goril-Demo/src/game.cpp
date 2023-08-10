@@ -1,7 +1,12 @@
 #include "game.h"
+#include <goril.h>
+
+using namespace GR;
+
 
 b8 Game::Init()
 {
+    PrintMemoryStats();
     return true;
 }
 

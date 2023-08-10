@@ -14,9 +14,10 @@ GR::GameConfig GetGameConfig()
 	return config;
 }
 
-b8 CreateGameInstance(GR::GorilGame* out_game)
+b8 CreateGameInstance(GR::Blk& out_game)
 {
-	out_game = new(out_game) Game();
+	out_game = GR::GetGlobalAllocator()->Alloc(sizeof(Game), GR::mem_tag::GAME);
+	out_game.ptr = new(out_game.ptr) Game();
 
 	return true;
 }
