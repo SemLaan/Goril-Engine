@@ -67,16 +67,19 @@ namespace GR
 		state->globalAllocator = allocator;
 		state->arenaBlock = arena;
 		state->arenaSize = totalArenaSize;
-		state->allocated = sizeof(MemoryState) + sizeof(FreelistAllocator) + freelistNodeMemory + FreelistAllocator::GetAllocHeaderSize();
+		state->allocated = 0;
 		state->memorySubsystemAllocSize = sizeof(MemoryState) + sizeof(FreelistAllocator) + freelistNodeMemory + FreelistAllocator::GetAllocHeaderSize();
-		state->netAllocationCount = 2;
+		state->netAllocationCount = 0;
 		for (u32 i = 0; i < mem_tag::MAX_MEMORY_TAGS; i++)
 		{
 			state->perTagAllocCount[i] = 0;
 		}
-		state->perTagAllocCount[MEM_TAG_MEMORY_SUBSYS] = 2;
 
 		initialized = true;
+
+		AllocInfo(sizeof(MemoryState), MEM_TAG_MEMORY_SUBSYS);
+		AllocInfo(sizeof(FreelistAllocator) + freelistNodeMemory + FreelistAllocator::GetAllocHeaderSize(), MEM_TAG_MEMORY_SUBSYS);
+
 		return true;
 	}
 
@@ -86,9 +89,8 @@ namespace GR
 
 		// Removing all the allocation info from the state to print memory stats one last time for debugging 
 		// This way the programmer can check if everything else in the application was freed by seeing if it prints 0 net allocations
-		state->perTagAllocCount[MEM_TAG_MEMORY_SUBSYS] -= 2;
-		state->netAllocationCount -= 2;
-		state->allocated -= state->memorySubsystemAllocSize;
+		FreeInfo(state->memorySubsystemAllocSize, MEM_TAG_MEMORY_SUBSYS);
+		FreeInfo(0, MEM_TAG_MEMORY_SUBSYS);
 		PrintMemoryStats();
 
 		GetGlobalAllocator()->Free(state);
