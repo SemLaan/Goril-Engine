@@ -69,7 +69,7 @@ namespace GR
 	Scope<T> CreateScope(mem_tag tag, Types&&... args)
 	{
 		// Separate allocation from object initialization
-		T* temp = (T*)GetGlobalAllocator()->Alloc(sizeof(T), tag).ptr;
+		T* temp = (T*)GetGlobalAllocator()->Alloc(sizeof(T), tag);
 		return Scope<T>(new(temp) T(std::forward<Types>(args)...));
 	};
 }
