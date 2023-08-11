@@ -3,6 +3,14 @@
 
 namespace GR
 {
+	
+	struct AllocHeader
+	{
+		u32 size; // Size of the allocation including the size of the alloc header that is stored before the allocation
+#ifndef GR_DIST
+		mem_tag tag; // Only for debugging, gets optimized out of dist builds
+#endif
+	};
 
 	FreelistAllocator::FreelistAllocator(void* arena, size_t arenaSize, u32 nodeCount)
 		: m_nodeCount(nodeCount)
@@ -40,14 +48,23 @@ namespace GR
 		*nodeMemoryReq = *nodeCount * sizeof(Node);
 	}
 
-	bool FreelistAllocator::Owns(Blk block)
+	size_t FreelistAllocator::GetAllocHeaderSize()
 	{
-		return (block.ptr >= m_arenaStart) && (block.ptr < m_arenaEnd);
+		return sizeof(AllocHeader);
 	}
 
-	Blk FreelistAllocator::Alloc(size_t size, mem_tag tag)
+	bool FreelistAllocator::Owns(void* block)
 	{
-		AllocInfo(size, tag);
+		return (block >= m_arenaStart) && (block < m_arenaEnd);
+	}
+
+	void* FreelistAllocator::Alloc(size_t size, mem_tag tag)
+	{
+		u32 sizeWithHeader = (u32)size + sizeof(AllocHeader);
+
+#ifndef GR_DIST
+		AllocInfo(sizeWithHeader, tag);
+#endif
 
 		Node* node = m_head;
 		Node* previous = nullptr;
@@ -55,10 +72,16 @@ namespace GR
 		while (node)
 		{
 			// If this node is the exact required size just use it
-			if (node->size == size)
+			if (node->size == sizeWithHeader)
 			{
+				// Putting in the header
+				AllocHeader* header = (AllocHeader*)node->address;
+				header->size = sizeWithHeader;
+#ifndef GR_DIST
+				header->tag = tag; // Debug only
+#endif
 				// Preparing the block to return to the client
-				Blk block = { node->address, size, tag };
+				void* block = (u8*)node->address + sizeof(AllocHeader);
 				// Removing the node from the list and linking the list back together
 				if (previous)
 					previous->next = node->next;
@@ -68,13 +91,19 @@ namespace GR
 				return block;
 			}
 			// If this node is greater in size than requested, use it and split the node
-			else if (node->size > size)
+			else if (node->size > sizeWithHeader)
 			{
+				// Putting in the header
+				AllocHeader* header = (AllocHeader*)node->address;
+				header->size = sizeWithHeader;
+#ifndef GR_DIST
+				header->tag = tag; // Debug only
+#endif
 				// Preparing the block to return to the client
-				Blk block = { node->address, size, tag };
+				void* block = (u8*)node->address + sizeof(AllocHeader);
 				// Removing the now allocated memory from the node
-				node->size -= size;
-				node->address = (u8*)node->address + size;
+				node->size -= sizeWithHeader;
+				node->address = (u8*)node->address + sizeWithHeader;
 				return block;
 			}
 
@@ -83,20 +112,27 @@ namespace GR
 			node = node->next;
 		}
 
-		GRFATAL("Can't allocate object of size {}", size);
+		GRFATAL("Can't allocate object of size {}", sizeWithHeader);
 		GRASSERT_MSG(false, "Freelist allocator ran out of memory or too fragmented");
-		return Blk{};
+		return nullptr;
 	}
 
-	void FreelistAllocator::Free(Blk block)
+	void FreelistAllocator::Free(void* block)
 	{
-		FreeInfo(block);
+		// Going slightly before the block and grabbing the alloc header that is stored there for debug info
+		AllocHeader* header = (AllocHeader*)block - 1;
+		void* freeAddress = header;
+
+#ifndef GR_DIST
+		FreeInfo(header->size, header->tag);
+#endif
+
 
 		if (!m_head)
 		{
 			m_head = GetNodeFromPool();
-			m_head->address = block.ptr;
-			m_head->size = block.size;
+			m_head->address = freeAddress;
+			m_head->size = header->size;
 			m_head->next = nullptr;
 		}
 
@@ -106,12 +142,12 @@ namespace GR
 		while (node || previous)
 		{
 			// If freed block sits before the current free node, or we're at the end of the list
-			if ((node == nullptr) ? true : node->address > block.ptr)
+			if ((node == nullptr) ? true : node->address > freeAddress)
 			{
 				// True if previous exists and end of previous aligns with start of freed block
-				b8 aligns = previous ? ((u8*)previous->address + previous->size) == block.ptr : false;
+				b8 aligns = previous ? ((u8*)previous->address + previous->size) == freeAddress : false;
 				// True if the end of the freed block aligns with the start of the next node (also checks if node exist in case we are at the end of the list)
-				aligns |= node ? (((u8*)block.ptr + block.size) == node->address) << 1 : false;
+				aligns |= node ? (((u8*)freeAddress + header->size) == node->address) << 1 : false;
 
 				// aligns:
 				// 00 if nothing aligns
@@ -126,8 +162,8 @@ namespace GR
 				case 0b00: // Nothing aligns ====================
 					newNode = GetNodeFromPool();
 					newNode->next = node;
-					newNode->address = block.ptr;
-					newNode->size = block.size;
+					newNode->address = freeAddress;
+					newNode->size = header->size;
 					if (previous)
 					{
 						previous->next = newNode;
@@ -138,15 +174,15 @@ namespace GR
 					}
 					return;
 				case 0b01: // Previous aligns ===================
-					previous->size += block.size;
+					previous->size += header->size;
 					return;
 				case 0b10: // Next aligns =======================
-					node->address = block.ptr;
-					node->size += block.size;
+					node->address = freeAddress;
+					node->size += header->size;
 					return;
 				case 0b11: // Previous and next align ===========
 					previous->next = node->next;
-					previous->size += block.size + node->size;
+					previous->size += header->size + node->size;
 					ReturnNodeToPool(node);
 					return;
 				}

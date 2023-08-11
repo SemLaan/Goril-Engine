@@ -36,11 +36,12 @@ namespace GR
 
 		// Returns how much memory should be allocated in order to have enough space for the actual arena to be equal to arenaSize
 		static void GetRequiredNodesAndMemorySize(size_t arenaSize, size_t* nodeMemoryReq, u32* nodeCount);
+		static size_t GetAllocHeaderSize();
 
-		bool Owns(Blk block);
+		bool Owns(void* block);
 
-		Blk Alloc(size_t size, mem_tag tag);
-		void Free(Blk block);
+		void* Alloc(size_t size, mem_tag tag);
+		void Free(void* block);
 
 	private:
 		Node* GetNodeFromPool();
