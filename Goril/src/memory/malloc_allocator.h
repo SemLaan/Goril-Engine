@@ -1,17 +1,18 @@
 #pragma once
-#include "allocator.h"
+#include "defines.h"
+#include "core/gr_memory.h"
 
 namespace GR
 {
-	class MallocAllocator : public Allocator
+	class MallocAllocator
 	{
 	public:
 		MallocAllocator();
 		~MallocAllocator();
 
-		bool Owns(Blk block) override;
+		bool Owns(Blk block);
 
-		Blk Alloc(size_t size, mem_tag tag) override;
-		void Free(Blk block) override;
+		Blk Alloc(size_t size, mem_tag tag);
+		void Free(Blk block);
 	};
 }

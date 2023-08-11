@@ -1,11 +1,11 @@
 #pragma once
-#include "allocator.h"
-
+#include "defines.h"
+#include "core/gr_memory.h"
 
 namespace GR
 {
 
-	class GRAPI FreelistAllocator : public Allocator
+	class GRAPI FreelistAllocator
 	{
 		// =============== private Freelist Node class ==================================================
 		struct Node
@@ -37,10 +37,10 @@ namespace GR
 		// Returns how much memory should be allocated in order to have enough space for the actual arena to be equal to arenaSize
 		static void GetRequiredNodesAndMemorySize(size_t arenaSize, size_t* nodeMemoryReq, u32* nodeCount);
 
-		bool Owns(Blk block) override;
+		bool Owns(Blk block);
 
-		Blk Alloc(size_t size, mem_tag tag) override;
-		void Free(Blk block) override;
+		Blk Alloc(size_t size, mem_tag tag);
+		void Free(Blk block);
 
 	private:
 		Node* GetNodeFromPool();

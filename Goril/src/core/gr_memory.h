@@ -4,7 +4,7 @@
 namespace GR
 {
 	// Forward declaring allocator
-	class Allocator;
+	class FreelistAllocator;
 
 	enum GRAPI mem_tag
 	{
@@ -30,7 +30,7 @@ namespace GR
 
 	void ShutdownMemory();
 
-	GRAPI inline Allocator* GetGlobalAllocator();
+	GRAPI inline FreelistAllocator* GetGlobalAllocator();
 
 	GRAPI inline void AllocInfo(size_t size, mem_tag tag);
 

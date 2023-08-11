@@ -1,5 +1,5 @@
 #pragma once
-#include "memory/allocator.h"
+#include "core/gr_memory.h"
 
 
 namespace GR
@@ -13,17 +13,16 @@ namespace GR
 	{
 	private:
 		T* m_ptr;
-		Allocator* m_allocator;
 		mem_tag m_tag;
 	public:
 		// Default constructor
 		Scope()
-			: m_ptr(nullptr), m_allocator(nullptr), m_tag(0)
+			: m_ptr(nullptr), m_tag(0)
 		{}
 
 		// Constructor from pointer, this takes ownership over the pointer
-		explicit Scope(Allocator* allocator, mem_tag tag, T* ptr)
-			: m_ptr(ptr), m_allocator(allocator), m_tag(tag)
+		explicit Scope(mem_tag tag, T* ptr)
+			: m_ptr(ptr), m_tag(tag)
 		{}
 
 		~Scope()
@@ -32,16 +31,15 @@ namespace GR
 				return;
 			// Separate object destruction from deallocation
 			m_ptr->~T();
-			m_allocator->Free({ m_ptr, sizeof(T), m_tag });
+			GetGlobalAllocator()->Free({m_ptr, sizeof(T), m_tag});
 		}
 
 		void Reset()
 		{
 			GRASSERT_DEBUG(m_ptr);
 			m_ptr->~T();
-			m_allocator->Free({ m_ptr, sizeof(T), m_tag });
+			GetGlobalAllocator()->Free({m_ptr, sizeof(T), m_tag});
 			m_ptr = nullptr;
-			m_allocator = nullptr;
 		}
 
 		// Dereference operator
@@ -68,10 +66,10 @@ namespace GR
 	// We also don't know the type of scope nor the constructor arguments that takes so we have to use templates
 	// And finally the ... are for variadic arguments
 	template <typename T, typename... Types>
-	Scope<T> CreateScope(Allocator* allocator, mem_tag tag, Types&&... args)
+	Scope<T> CreateScope(mem_tag tag, Types&&... args)
 	{
 		// Separate allocation from object initialization
-		T* temp = (T*)allocator->Alloc(sizeof(T), tag).ptr;
-		return Scope<T>(allocator, tag, new(temp) T(std::forward<Types>(args)...));
+		T* temp = (T*)GetGlobalAllocator()->Alloc(sizeof(T), tag).ptr;
+		return Scope<T>(tag, new(temp) T(std::forward<Types>(args)...));
 	};
 }

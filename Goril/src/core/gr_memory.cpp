@@ -21,13 +21,13 @@ namespace GR
 	struct MemoryState
 	{
 		Blk stateBlock;
-		Allocator* globalAllocator;
+		FreelistAllocator* globalAllocator;
 		void* arenaBlock;
 		size_t arenaSize;
 		size_t allocated;
 		u64 netAllocationCount;
-		u32 perTagAllocCount[mem_tag::MAX_MEMORY_TAGS];
 		size_t memorySubsystemAllocSize;
+		u32 perTagAllocCount[mem_tag::MAX_MEMORY_TAGS];
 	};
 
 	static MemoryState* state;
@@ -63,19 +63,19 @@ namespace GR
 		// Creating the memory state
 		Blk stateBlock = allocator->Alloc(sizeof(MemoryState), mem_tag::MEMORY_SUBSYS);
 		state = (MemoryState*)stateBlock.ptr;
-		state = new(state) MemoryState{};
+		*state = {};
 		state->stateBlock = stateBlock;
 		state->globalAllocator = allocator;
 		state->arenaBlock = arena;
 		state->arenaSize = totalArenaSize;
 		state->allocated = sizeof(MemoryState) + sizeof(FreelistAllocator) + freelistNodeMemory;
 		state->memorySubsystemAllocSize = sizeof(MemoryState) + sizeof(FreelistAllocator) + freelistNodeMemory;
-		state->netAllocationCount = 1;
+		state->netAllocationCount = 2;
 		for (u32 i = 0; i < mem_tag::MAX_MEMORY_TAGS; i++)
 		{
 			state->perTagAllocCount[i] = 0;
 		}
-		state->perTagAllocCount[MEMORY_SUBSYS] = 1;
+		state->perTagAllocCount[MEMORY_SUBSYS] = 2;
 
 		initialized = true;
 		return true;
@@ -87,8 +87,8 @@ namespace GR
 
 		// Removing all the allocation info from the state to print memory stats one last time for debugging 
 		// This way the programmer can check if everything else in the application was freed by seeing if it prints 0 net allocations
-		state->perTagAllocCount[MEMORY_SUBSYS] -= 1;
-		state->netAllocationCount--;
+		state->perTagAllocCount[MEMORY_SUBSYS] -= 2;
+		state->netAllocationCount -= 2;
 		state->allocated -= state->memorySubsystemAllocSize;
 		PrintMemoryStats();
 
@@ -99,7 +99,7 @@ namespace GR
 		free(state->arenaBlock);
 	}
 
-	Allocator* GetGlobalAllocator()
+	FreelistAllocator* GetGlobalAllocator()
 	{
 		return state->globalAllocator;
 	}

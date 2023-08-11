@@ -1,9 +1,10 @@
 #pragma once
-#include "allocator.h"
+#include "defines.h"
+#include "core/gr_memory.h"
 
 namespace GR
 {
-	class GRAPI BumpAllocator : public Allocator
+	class GRAPI BumpAllocator
 	{
 	private:
 		u32 m_allocCount;
@@ -14,9 +15,9 @@ namespace GR
 		BumpAllocator(void* arena, size_t arenaSize);
 		~BumpAllocator();
 
-		bool Owns(Blk block) override;
+		bool Owns(Blk block);
 
-		Blk Alloc(size_t size, mem_tag tag) override;
-		void Free(Blk block) override;
+		Blk Alloc(size_t size, mem_tag tag);
+		void Free(Blk block);
 	};
 }

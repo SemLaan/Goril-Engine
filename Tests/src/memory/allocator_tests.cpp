@@ -13,7 +13,7 @@ b8 bump_allocator_test()
 	size_t arena_size = 12;
 
 	void* arena = malloc(arena_size);
-	Allocator* allocator = new BumpAllocator(arena, arena_size);
+	BumpAllocator* allocator = new BumpAllocator(arena, arena_size);
 
 	Blk temp = allocator->Alloc(8, mem_tag::TEST);
 	Blk temp2 = allocator->Alloc(4, mem_tag::TEST);
@@ -41,7 +41,7 @@ b8 freelist_allocator_test()
 	arena_size += required_node_memory;
 
 	void* arena = malloc(arena_size);
-	Allocator* allocator = new FreelistAllocator(arena, arena_size, required_nodes);
+	FreelistAllocator* allocator = new FreelistAllocator(arena, arena_size, required_nodes);
 
 	// Testing full allocation and deallocation
 	Blk temp = allocator->Alloc(12, mem_tag::TEST);
