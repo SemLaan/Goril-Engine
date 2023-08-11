@@ -136,7 +136,18 @@ namespace GR
 
 	void MemCopy(void* destination, void* source, size_t size)
 	{
-		memcpy(destination, source, size);
+		// Checking if destination and source overlap
+		if ((u8*)destination + size > source && destination < (u8*)source + size)
+		{
+			void* intermediateBlock = GetGlobalAllocator()->Alloc(size, MEM_TAG_MEMORY_SUBSYS);
+			memcpy(intermediateBlock, source, size);
+			memcpy(destination, intermediateBlock, size);
+			GetGlobalAllocator()->Free(intermediateBlock);
+		}
+		else // If the blocks don't overlap just copy them
+		{
+			memcpy(destination, source, size);
+		}
 	}
 
 	const size_t& GetMemoryUsage()
