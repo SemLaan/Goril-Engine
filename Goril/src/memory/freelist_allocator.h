@@ -1,9 +1,10 @@
 #pragma once
 #include "defines.h"
-#include "core/gr_memory.h"
 
 namespace GR
 {
+	// Forward declaring mem_tag enum
+	enum mem_tag;
 
 	class GRAPI FreelistAllocator
 	{

@@ -1,5 +1,6 @@
 #include "freelist_allocator.h"
 #include "core/asserts.h"
+#include "core/gr_memory.h"
 
 namespace GR
 {

@@ -1,21 +1,20 @@
 #pragma once
 #include "defines.h"
+#include "memory/freelist_allocator.h"
 
 namespace GR
 {
-	// Forward declaring allocator
-	class FreelistAllocator;
-
 	enum GRAPI mem_tag
 	{
-		LOCAL_ALLOCATOR,
-		MEMORY_SUBSYS,
-		LOGGING_SUBSYS,
-		PLATFORM_SUBSYS,
-		EVENT_SUBSYS,
-		RENDERER_SUBSYS,
-		GAME,
-		TEST,
+		MEM_TAG_LOCAL_ALLOCATOR,
+		MEM_TAG_MEMORY_SUBSYS,
+		MEM_TAG_LOGGING_SUBSYS,
+		MEM_TAG_PLATFORM_SUBSYS,
+		MEM_TAG_EVENT_SUBSYS,
+		MEM_TAG_RENDERER_SUBSYS,
+		MEM_TAG_GAME,
+		MEM_TAG_TEST,
+		MEM_TAG_DARRAY,
 		MAX_MEMORY_TAGS
 	};
 

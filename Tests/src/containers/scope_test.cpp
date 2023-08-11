@@ -22,7 +22,7 @@ b8 object_creation_test()
 {
 	i32 testValue = 5;
 
-	Scope<Example> temp = CreateScope<Example>(mem_tag::TEST, testValue);
+	Scope<Example> temp = CreateScope<Example>(MEM_TAG_TEST, testValue);
 
 	expect_should_be(temp->testInt, testValue);
 
@@ -36,7 +36,7 @@ b8 out_of_scope_test()
 	u64 startAllocations = GetNetAllocations();
 
 	{
-		Scope<Example> temp = CreateScope<Example>(mem_tag::TEST, testValue);
+		Scope<Example> temp = CreateScope<Example>(MEM_TAG_TEST, testValue);
 
 		expect_to_be_true(GetNetAllocations() > startAllocations);
 	}
@@ -53,7 +53,7 @@ b8 reset_test()
 	u64 startAllocations = GetNetAllocations();
 
 
-	Scope<Example> temp = CreateScope<Example>(mem_tag::TEST, testValue);
+	Scope<Example> temp = CreateScope<Example>(MEM_TAG_TEST, testValue);
 
 	expect_to_be_true(GetNetAllocations() > startAllocations);
 

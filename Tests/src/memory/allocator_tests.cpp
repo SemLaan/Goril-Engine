@@ -16,12 +16,12 @@ b8 bump_allocator_test()
 	BumpAllocator* allocator = new BumpAllocator();
 	allocator->Initialize(arena, arena_size);
 
-	void* temp = allocator->Alloc(8, mem_tag::TEST);
-	void* temp2 = allocator->Alloc(4, mem_tag::TEST);
+	void* temp = allocator->Alloc(8, MEM_TAG_TEST);
+	void* temp2 = allocator->Alloc(4, MEM_TAG_TEST);
 	allocator->Free(temp2);
 	allocator->Free(temp);
 
-	void* temp3 = allocator->Alloc(12, mem_tag::TEST);
+	void* temp3 = allocator->Alloc(12, MEM_TAG_TEST);
 	allocator->Free(temp3);
 
 	delete allocator;
@@ -46,22 +46,22 @@ b8 freelist_allocator_test()
 	allocator->Initialize(arena, arena_size, required_nodes);
 
 	// Testing full allocation and deallocation
-	void* temp = allocator->Alloc(1000 - allocator->GetAllocHeaderSize(), mem_tag::TEST);
+	void* temp = allocator->Alloc(1000 - allocator->GetAllocHeaderSize(), MEM_TAG_TEST);
 	allocator->Free(temp);
 
 	// Testing mixed allocs and deallocs
-	void* temp0 = allocator->Alloc(200, mem_tag::TEST);
-	void* temp1 = allocator->Alloc(300, mem_tag::TEST);
-	void* temp2 = allocator->Alloc(300, mem_tag::TEST);
-	void* temp3 = allocator->Alloc(100, mem_tag::TEST);
+	void* temp0 = allocator->Alloc(200, MEM_TAG_TEST);
+	void* temp1 = allocator->Alloc(300, MEM_TAG_TEST);
+	void* temp2 = allocator->Alloc(300, MEM_TAG_TEST);
+	void* temp3 = allocator->Alloc(100, MEM_TAG_TEST);
 	allocator->Free(temp1);
 	allocator->Free(temp2);
-	void* temp4 = allocator->Alloc(500, mem_tag::TEST); // This will only allocate if it has properly combined free elements that are next to each other
+	void* temp4 = allocator->Alloc(500, MEM_TAG_TEST); // This will only allocate if it has properly combined free elements that are next to each other
 	allocator->Free(temp0);
 	allocator->Free(temp3);
 	allocator->Free(temp4);
 
-	temp = allocator->Alloc(1000 - allocator->GetAllocHeaderSize(), mem_tag::TEST);
+	temp = allocator->Alloc(1000 - allocator->GetAllocHeaderSize(), MEM_TAG_TEST);
 	allocator->Free(temp);
 
 	delete allocator;

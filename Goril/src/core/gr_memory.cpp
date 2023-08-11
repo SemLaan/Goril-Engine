@@ -16,6 +16,7 @@ namespace GR
 		"RENDERER_SUBSYS    ",
 		"GAME               ",
 		"TEST               ",
+		"DARRAY             ",
 	};
 
 	struct MemoryState
@@ -61,7 +62,7 @@ namespace GR
 #pragma warning( pop )
 
 		// Creating the memory state
-		state = (MemoryState*)allocator->Alloc(sizeof(MemoryState), mem_tag::MEMORY_SUBSYS);
+		state = (MemoryState*)allocator->Alloc(sizeof(MemoryState), mem_tag::MEM_TAG_MEMORY_SUBSYS);
 		*state = {};
 		state->globalAllocator = allocator;
 		state->arenaBlock = arena;
@@ -73,7 +74,7 @@ namespace GR
 		{
 			state->perTagAllocCount[i] = 0;
 		}
-		state->perTagAllocCount[MEMORY_SUBSYS] = 2;
+		state->perTagAllocCount[MEM_TAG_MEMORY_SUBSYS] = 2;
 
 		initialized = true;
 		return true;
@@ -85,7 +86,7 @@ namespace GR
 
 		// Removing all the allocation info from the state to print memory stats one last time for debugging 
 		// This way the programmer can check if everything else in the application was freed by seeing if it prints 0 net allocations
-		state->perTagAllocCount[MEMORY_SUBSYS] -= 2;
+		state->perTagAllocCount[MEM_TAG_MEMORY_SUBSYS] -= 2;
 		state->netAllocationCount -= 2;
 		state->allocated -= state->memorySubsystemAllocSize;
 		PrintMemoryStats();

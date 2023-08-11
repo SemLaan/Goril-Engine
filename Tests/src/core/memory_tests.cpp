@@ -4,17 +4,18 @@
 #include "../test_manager.h"
 #include <goril.h>
 
+using namespace GR;
 
 b8 alloc_and_dealloc_test()
 {
-	u64 initial_allocation_count = GR::GetNetAllocations();
+	u64 initial_allocation_count = GetNetAllocations();
 	size_t test_allocation_size = 18;
-	size_t test_change_pos = test_allocation_size + GR::GetGlobalAllocator()->GetAllocHeaderSize();
+	size_t test_change_pos = test_allocation_size + GetGlobalAllocator()->GetAllocHeaderSize();
 
-	void* test_mem = GR::GetGlobalAllocator()->Alloc(test_allocation_size, GR::TEST);
+	void* test_mem = GetGlobalAllocator()->Alloc(test_allocation_size, MEM_TAG_TEST);
 	expect_to_be_true(test_mem != nullptr);
 
-	int* nextAlloc = (int*)GR::GetGlobalAllocator()->Alloc(4, GR::TEST);
+	int* nextAlloc = (int*)GetGlobalAllocator()->Alloc(4, MEM_TAG_TEST);
 	expect_to_be_true(nextAlloc != nullptr);
 
 	int* nextAllocCheat = (int*)((u8*)test_mem + test_change_pos);
@@ -27,13 +28,13 @@ b8 alloc_and_dealloc_test()
 	*nextAllocCheat = 3;
 	expect_should_be(*nextAlloc, 3);
 
-	GR::GetGlobalAllocator()->Free(test_mem);
+	GetGlobalAllocator()->Free(test_mem);
 
-	expect_should_be(GR::GetNetAllocations() - initial_allocation_count, 1);
+	expect_should_be(GetNetAllocations() - initial_allocation_count, 1);
 
-	GR::GetGlobalAllocator()->Free(nextAlloc);
+	GetGlobalAllocator()->Free(nextAlloc);
 
-	expect_should_be(GR::GetNetAllocations(), initial_allocation_count);
+	expect_should_be(GetNetAllocations(), initial_allocation_count);
 
 	return true;
 }
