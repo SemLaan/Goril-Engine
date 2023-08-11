@@ -20,7 +20,6 @@ namespace GR
 
 	struct MemoryState
 	{
-		Blk stateBlock;
 		FreelistAllocator* globalAllocator;
 		void* arenaBlock;
 		size_t arenaSize;
@@ -61,14 +60,12 @@ namespace GR
 #pragma warning( pop )
 
 		// Creating the memory state
-		Blk stateBlock = allocator->Alloc(sizeof(MemoryState), mem_tag::MEMORY_SUBSYS);
-		state = (MemoryState*)stateBlock.ptr;
+		state = (MemoryState*)allocator->Alloc(sizeof(MemoryState), mem_tag::MEMORY_SUBSYS);
 		*state = {};
-		state->stateBlock = stateBlock;
 		state->globalAllocator = allocator;
 		state->arenaBlock = arena;
 		state->arenaSize = totalArenaSize;
-		state->allocated = sizeof(MemoryState) + sizeof(FreelistAllocator) + freelistNodeMemory;
+		state->allocated = sizeof(MemoryState) + sizeof(FreelistAllocator) + freelistNodeMemory + FreelistAllocator::GetAllocHeaderSize();
 		state->memorySubsystemAllocSize = sizeof(MemoryState) + sizeof(FreelistAllocator) + freelistNodeMemory;
 		state->netAllocationCount = 2;
 		for (u32 i = 0; i < mem_tag::MAX_MEMORY_TAGS; i++)
@@ -92,7 +89,7 @@ namespace GR
 		state->allocated -= state->memorySubsystemAllocSize;
 		PrintMemoryStats();
 
-		GetGlobalAllocator()->Free(state->stateBlock);
+		GetGlobalAllocator()->Free(state);
 		// We dont have to destroy the global allocator because that does nothing
 
 		// Return all the application memory back to the OS
@@ -117,20 +114,20 @@ namespace GR
 #endif
 	}
 
-	void FreeInfo(Blk& block)
+	void FreeInfo(size_t size, mem_tag tag)
 	{
-		state->allocated -= block.size;
+		state->allocated -= size;
 #ifndef GR_DIST
 		if (state->allocated < 0)
 			GRFATAL("Somehow deallocated more memory than was allocated, very impressive and efficient use of memory");
 		state->netAllocationCount--;
-		state->perTagAllocCount[block.tag]--;
+		state->perTagAllocCount[tag]--;
 #endif
 	}
 
-	void Zero(Blk block)
+	void Zero(void* block, size_t size)
 	{
-		memset(block.ptr, 0, block.size);
+		memset(block, 0, size);
 	}
 
 	const size_t& GetMemoryUsage()

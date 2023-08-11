@@ -19,13 +19,6 @@ namespace GR
 		MAX_MEMORY_TAGS
 	};
 
-	struct GRAPI Blk
-	{
-		void* ptr;
-		size_t size;
-		mem_tag tag;
-	};
-
 	b8 InitializeMemory(size_t arenaSize);
 
 	void ShutdownMemory();
@@ -34,9 +27,9 @@ namespace GR
 
 	GRAPI inline void AllocInfo(size_t size, mem_tag tag);
 
-	GRAPI inline void FreeInfo(Blk& block);
+	GRAPI inline void FreeInfo(size_t size, mem_tag tag);
 
-	GRAPI inline void Zero(Blk block);
+	GRAPI inline void Zero(void* block, size_t size);
 
 	GRAPI inline const size_t& GetMemoryUsage();
 
