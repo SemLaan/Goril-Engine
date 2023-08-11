@@ -12,9 +12,9 @@ namespace GR
 #endif
 	};
 
-	FreelistAllocator::FreelistAllocator(void* arena, size_t arenaSize, u32 nodeCount)
-		: m_nodeCount(nodeCount)
+	void FreelistAllocator::Initialize(void* arena, size_t arenaSize, u32 nodeCount)
 	{
+		m_nodeCount = nodeCount;
 		m_nodePool = (Node*)arena;
 
 		for (u32 i = 0; i < m_nodeCount; ++i)
@@ -32,15 +32,11 @@ namespace GR
 		m_head->size = (u8*)m_arenaEnd - (u8*)m_arenaStart;
 	}
 
-	FreelistAllocator::~FreelistAllocator()
-	{
-	}
-
 	void FreelistAllocator::GetRequiredNodesAndMemorySize(size_t arenaSize, size_t* nodeMemoryReq, u32* nodeCount)
 	{
 		// Make one node for every x nodes that fit in the arena
-		u64 x = 8;
-		*nodeCount = (u32)(arenaSize / (x * sizeof(Node)));
+		u32 x = 10;
+		*nodeCount = (u32)((float)arenaSize / (float)((float)x * (float)sizeof(Node)));
 
 		if (*nodeCount < 20)
 			*nodeCount = 20;

@@ -31,8 +31,7 @@ namespace GR
 		Node* m_nodePool;
 		u32 m_nodeCount;
 	public:
-		FreelistAllocator(void* arena, size_t arenaSize, u32 nodeCount);
-		~FreelistAllocator();
+		void Initialize(void* arena, size_t arenaSize, u32 nodeCount);
 
 		// Returns how much memory should be allocated in order to have enough space for the actual arena to be equal to arenaSize
 		static void GetRequiredNodesAndMemorySize(size_t arenaSize, size_t* nodeMemoryReq, u32* nodeCount);

@@ -56,7 +56,8 @@ namespace GR
 		// The allocator can see the entire arena, except for the memory where itself sits
 #pragma warning( push ) // ==================================================== This pragma suppresses a warning about buffer overrun, the warning is obviously incorrect but
 #pragma warning( disable : 6386 ) // ========================================== the code analysis is confused because i'm using malloc to allocate one big block of memory for the entire program
-		allocator = new(allocator) FreelistAllocator((u8*)arena + sizeof(FreelistAllocator), totalArenaSize - sizeof(FreelistAllocator), freelistNodeCount);
+		allocator = new(allocator) FreelistAllocator();
+		allocator->Initialize((u8*)arena + sizeof(FreelistAllocator), totalArenaSize - sizeof(FreelistAllocator), freelistNodeCount);
 #pragma warning( pop )
 
 		// Creating the memory state
@@ -66,7 +67,7 @@ namespace GR
 		state->arenaBlock = arena;
 		state->arenaSize = totalArenaSize;
 		state->allocated = sizeof(MemoryState) + sizeof(FreelistAllocator) + freelistNodeMemory + FreelistAllocator::GetAllocHeaderSize();
-		state->memorySubsystemAllocSize = sizeof(MemoryState) + sizeof(FreelistAllocator) + freelistNodeMemory;
+		state->memorySubsystemAllocSize = sizeof(MemoryState) + sizeof(FreelistAllocator) + freelistNodeMemory + FreelistAllocator::GetAllocHeaderSize();
 		state->netAllocationCount = 2;
 		for (u32 i = 0; i < mem_tag::MAX_MEMORY_TAGS; i++)
 		{
