@@ -12,12 +12,11 @@ namespace GR
 		void* m_arena;
 		void* m_bumpPointer;
 	public:
-		BumpAllocator(void* arena, size_t arenaSize);
-		~BumpAllocator();
+		void Initialize(void* arena, size_t arenaSize);
 
-		bool Owns(Blk block);
+		bool Owns(void* block);
 
-		Blk Alloc(size_t size, mem_tag tag);
-		void Free(Blk block);
+		void* Alloc(size_t size, mem_tag tag);
+		void Free(void* block);
 	};
 }
