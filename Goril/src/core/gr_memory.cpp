@@ -134,6 +134,11 @@ namespace GR
 		memset(block, 0, size);
 	}
 
+	void MemCopy(void* destination, void* source, size_t size)
+	{
+		memcpy(destination, source, size);
+	}
+
 	const size_t& GetMemoryUsage()
 	{
 		return state->allocated;

@@ -30,6 +30,8 @@ namespace GR
 
 	GRAPI inline void Zero(void* block, size_t size);
 
+	GRAPI inline void MemCopy(void* destination, void* source, size_t size);
+
 	GRAPI inline const size_t& GetMemoryUsage();
 
 	GRAPI inline const u64& GetNetAllocations();
