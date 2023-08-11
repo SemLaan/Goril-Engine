@@ -15,6 +15,7 @@ namespace GR
 		void Initialize(void* arena, size_t arenaSize);
 
 		bool Owns(void* block);
+		static size_t GetAllocHeaderSize();
 
 		void* Alloc(size_t size, mem_tag tag);
 		void Free(void* block);

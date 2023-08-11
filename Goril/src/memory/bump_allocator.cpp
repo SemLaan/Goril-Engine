@@ -22,6 +22,11 @@ namespace GR
 		return (block >= m_arena) && (block < m_arenaEnd);
 	}
 
+	size_t BumpAllocator::GetAllocHeaderSize()
+	{
+		return sizeof(AllocHeader);
+	}
+
 	void* BumpAllocator::Alloc(size_t size, mem_tag tag)
 	{
 #ifndef GR_DIST
