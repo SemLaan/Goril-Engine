@@ -1,5 +1,6 @@
 #pragma once
 #include "core/gr_memory.h"
+#include <new>
 
 
 namespace GR
@@ -13,16 +14,15 @@ namespace GR
 	{
 	private:
 		T* m_ptr;
-		mem_tag m_tag;
 	public:
 		// Default constructor
 		Scope()
-			: m_ptr(nullptr), m_tag(0)
+			: m_ptr(nullptr)
 		{}
 
 		// Constructor from pointer, this takes ownership over the pointer
-		explicit Scope(mem_tag tag, T* ptr)
-			: m_ptr(ptr), m_tag(tag)
+		explicit Scope(T* ptr)
+			: m_ptr(ptr)
 		{}
 
 		~Scope()
@@ -31,14 +31,14 @@ namespace GR
 				return;
 			// Separate object destruction from deallocation
 			m_ptr->~T();
-			GetGlobalAllocator()->Free({m_ptr, sizeof(T), m_tag});
+			GetGlobalAllocator()->Free(m_ptr);
 		}
 
 		void Reset()
 		{
 			GRASSERT_DEBUG(m_ptr);
 			m_ptr->~T();
-			GetGlobalAllocator()->Free({m_ptr, sizeof(T), m_tag});
+			GetGlobalAllocator()->Free(m_ptr);
 			m_ptr = nullptr;
 		}
 
@@ -70,6 +70,6 @@ namespace GR
 	{
 		// Separate allocation from object initialization
 		T* temp = (T*)GetGlobalAllocator()->Alloc(sizeof(T), tag).ptr;
-		return Scope<T>(tag, new(temp) T(std::forward<Types>(args)...));
+		return Scope<T>(new(temp) T(std::forward<Types>(args)...));
 	};
 }

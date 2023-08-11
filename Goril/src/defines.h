@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <new>
 
 #ifdef GR_DLL
 #define GRAPI __declspec(dllexport)
