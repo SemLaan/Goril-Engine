@@ -54,6 +54,7 @@ namespace GR
 	{
 		// Going slightly before the block and grabbing the alloc header that is stored there for debug info
 		AllocHeader* header = (AllocHeader*)block - 1;
+		GRASSERT(size != (header->size - sizeof(AllocHeader)));
 
 		// If the requested size is smaller than the allocated size just return block
 		if ((header->size - sizeof(AllocHeader)) > size)

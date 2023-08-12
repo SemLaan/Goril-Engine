@@ -123,6 +123,12 @@ b8 freelist_allocator_realloc_test()
 	void* temp3 = allocator->Alloc(1000, MEM_TAG_TEST);
 	allocator->Free(temp3);
 
+	void* temp5 = allocator->Alloc(800, MEM_TAG_TEST);
+	temp5 = allocator->ReAlloc(temp5, 200);
+	void* temp6 = allocator->Alloc(500, MEM_TAG_TEST);
+	allocator->Free(temp5);
+	allocator->Free(temp6);
+
 	delete allocator;
 
 	free(arena);

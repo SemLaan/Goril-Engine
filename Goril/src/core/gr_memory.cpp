@@ -118,9 +118,9 @@ namespace GR
 #endif
 	}
 
-	void ReAllocInfo(size_t additionalSize)
+	void ReAllocInfo(i64 sizeChange)
 	{
-		state->allocated += additionalSize;
+		state->allocated += sizeChange;
 	}
 
 	void FreeInfo(size_t size, mem_tag tag)

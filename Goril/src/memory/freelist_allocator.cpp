@@ -118,11 +118,62 @@ namespace GR
 	{
 		// Going slightly before the block and grabbing the alloc header that is stored there for debug info
 		AllocHeader* header = (AllocHeader*)block - 1;
+		GRASSERT(size != (header->size - sizeof(AllocHeader)));
 
 		// ====== If the requested size is smaller than the allocated size just return block and free the leftovers of the block ==========================
 		if ((header->size - sizeof(AllocHeader)) > size)
-			return block; /// TODO: free leftovers of block
+		{
+			u32 freedSize = (header->size - sizeof(AllocHeader)) - size;
+			void* requiredAddress = (u8*)header + header->size;
 
+			// First checking if there are any free nodes to add to at all
+			if (!m_head)
+			{
+				m_head = GetNodeFromPool();
+				m_head->address = (u8*)block + size;
+				m_head->size = freedSize;
+				m_head->next = nullptr;
+				header->size -= freedSize;
+				ReAllocInfo(-(i64)freedSize);
+				return block;
+			}
+
+			// Looping through the nodes to see if there is a free node next to the allocation that we can give the freed bytes to
+			Node* node = m_head;
+			Node* previous = nullptr;
+
+			while (node)
+			{
+				// Aligned node found, give it the bytes
+				if (node->address == requiredAddress)
+				{
+					node->address = (u8*)node->address - freedSize;
+					node->size += freedSize;
+					break;
+				}
+				else if (node->address > requiredAddress) // No aligned node found making new free node
+				{
+					Node* newNode = GetNodeFromPool();
+					newNode->address = (u8*)block + size;
+					newNode->size = freedSize;
+					newNode->next = node;
+					if (previous)
+						previous->next = newNode;
+					else
+						m_head = newNode;
+					break;
+				}
+				// If the block being reallocated sits after the current node, go to the next node
+				previous = node;
+				node = node->next;
+			}
+
+			header->size -= freedSize;
+			ReAllocInfo(-(i64)freedSize);
+			return block;
+		}
+
+		// =================== If the requested size is bigger than our allocation ==============================
 		// Trying to find a free node next in line that we can add to our allocation
 		u32 requiredNodeSize = size - (header->size - sizeof(AllocHeader));
 		void* requiredAddress = (u8*)header + header->size;
@@ -151,7 +202,7 @@ namespace GR
 				}
 				header->size += requiredNodeSize;
 #ifndef GR_DIST
-				ReAllocInfo(requiredNodeSize);
+				ReAllocInfo((i64)requiredNodeSize);
 #endif
 				return block;
 			}
@@ -189,6 +240,7 @@ namespace GR
 			m_head->address = freeAddress;
 			m_head->size = header->size;
 			m_head->next = nullptr;
+			return;
 		}
 
 		Node* node = m_head;
@@ -220,13 +272,9 @@ namespace GR
 					newNode->address = freeAddress;
 					newNode->size = header->size;
 					if (previous)
-					{
 						previous->next = newNode;
-					}
 					else
-					{
 						m_head = newNode;
-					}
 					return;
 				case 0b01: // Previous aligns ===================
 					previous->size += header->size;
