@@ -8,16 +8,27 @@
 #include "windows.h"
 #include "core/logger.h"
 #include "core/asserts.h"
+#include "core/gr_memory.h"
 
 
 namespace GR
 {
+
+	struct PlatformState
+	{
+		HWND hwnd;
+	};
+
+	static PlatformState* state = nullptr;
 
 	// Forward declaring window callbacks
 	LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	b8 InitializePlatform()
 	{
+		state = (PlatformState*)GetSubsysBumpAllocator()->Alloc(sizeof(PlatformState), MEM_TAG_PLATFORM_SUBSYS);
+		Zero(state, sizeof(PlatformState));
+
 		const wchar_t* menuName = L"gorilwinmenu";
 		const wchar_t* className = L"gorilwinclass";
 
@@ -45,28 +56,29 @@ namespace GR
 			NULL, NULL, GetModuleHandle(NULL), NULL
 		);
 
-		if (hwnd == NULL)
+		if (state->hwnd == NULL)
 		{
 			GRFATAL("Creating window failed");
 			return false;
 		}
 
-		ShowWindow(hwnd, SW_SHOW);
+		ShowWindow(state->hwnd, SW_SHOW);
 
-		/*
+		
 		MSG msg = { };
-		while (GetMessage(&msg, NULL, 0, 0) > 0)
+		if(0)//while (GetMessage(&msg, NULL, 0, 0) > 0)
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-		*/
+		
 
 		return true;
 	}
 
 	void ShutdownPlatform()
 	{
+		GetSubsysBumpAllocator()->Free(state);
 	}
 
 	static u8 logLevelColors[MAX_LOG_LEVELS] =
