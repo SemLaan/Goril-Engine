@@ -26,6 +26,8 @@ namespace GR
 
 	GRAPI inline void AllocInfo(size_t size, mem_tag tag);
 
+	GRAPI inline void ReAllocInfo(size_t additionalSize);
+
 	GRAPI inline void FreeInfo(size_t size, mem_tag tag);
 
 	GRAPI inline void Zero(void* block, size_t size);

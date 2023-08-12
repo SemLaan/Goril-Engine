@@ -118,6 +118,11 @@ namespace GR
 #endif
 	}
 
+	void ReAllocInfo(size_t additionalSize)
+	{
+		state->allocated += additionalSize;
+	}
+
 	void FreeInfo(size_t size, mem_tag tag)
 	{
 		state->allocated -= size;
