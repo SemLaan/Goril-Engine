@@ -37,6 +37,6 @@ namespace GR
 
 	void Log(log_level level, std::string message)
 	{
-		PlatformLogMessage(level, (logLevels[level] + message + "\n").c_str());
+		PlatformLogString(level, (logLevels[level] + message + "\n").c_str());
 	}
 }

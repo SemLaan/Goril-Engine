@@ -8,5 +8,5 @@ namespace GR
 
 	void ShutdownPlatform();
 
-	void PlatformLogMessage(log_level level, const char* message);
+	void PlatformLogString(log_level level, const char* message);
 }
