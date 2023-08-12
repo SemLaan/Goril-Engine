@@ -63,7 +63,7 @@ namespace GR
 		// If the memory in front of this block is free
 		if ((u8*)block + (header->size - sizeof(AllocHeader)) == m_bumpPointer)
 		{
-			u32 newSize = size + sizeof(AllocHeader);
+			u32 newSize = (u32)size + sizeof(AllocHeader);
 #ifndef GR_DIST
 			ReAllocInfo(newSize - header->size);
 #endif

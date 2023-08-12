@@ -123,7 +123,7 @@ namespace GR
 		// ====== If the requested size is smaller than the allocated size just return block and free the leftovers of the block ==========================
 		if ((header->size - sizeof(AllocHeader)) > size)
 		{
-			u32 freedSize = (header->size - sizeof(AllocHeader)) - size;
+			u32 freedSize = ((u32)header->size - sizeof(AllocHeader)) - (u32)size;
 			void* requiredAddress = (u8*)header + header->size;
 
 			// First checking if there are any free nodes to add to at all
@@ -175,7 +175,7 @@ namespace GR
 
 		// =================== If the requested size is bigger than our allocation ==============================
 		// Trying to find a free node next in line that we can add to our allocation
-		u32 requiredNodeSize = size - (header->size - sizeof(AllocHeader));
+		u32 requiredNodeSize = (u32)size - (header->size - sizeof(AllocHeader));
 		void* requiredAddress = (u8*)header + header->size;
 
 		Node* node = m_head;
