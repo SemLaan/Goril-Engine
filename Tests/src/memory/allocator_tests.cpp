@@ -31,6 +31,28 @@ b8 bump_allocator_test()
 	return true;
 }
 
+b8 bump_allocator_realloc_test()
+{
+	size_t arena_size = 1000 + BumpAllocator::GetAllocHeaderSize();
+
+	void* arena = malloc(arena_size);
+	BumpAllocator* allocator = new BumpAllocator();
+	allocator->Initialize(arena, arena_size);
+
+	void* temp = allocator->Alloc(700, MEM_TAG_TEST);
+	temp = allocator->ReAlloc(temp, 800);
+	allocator->Free(temp);
+
+	void* temp4 = allocator->Alloc(1000, MEM_TAG_TEST);
+	allocator->Free(temp4);
+
+	delete allocator;
+
+	free(arena);
+
+	return true;
+}
+
 
 b8 freelist_allocator_test()
 {
@@ -75,5 +97,6 @@ b8 freelist_allocator_test()
 void register_allocator_tests()
 {
 	register_test(bump_allocator_test, "Allocators: Bump allocator");
+	register_test(bump_allocator_realloc_test, "Allocators: Bump allocator realloc");
 	register_test(freelist_allocator_test, "Allocators: Freelist allocator");
 }
