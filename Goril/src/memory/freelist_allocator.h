@@ -41,6 +41,7 @@ namespace GR
 		bool Owns(void* block);
 
 		void* Alloc(size_t size, mem_tag tag);
+		void* ReAlloc(void* block, size_t size);
 		void Free(void* block);
 
 	private:

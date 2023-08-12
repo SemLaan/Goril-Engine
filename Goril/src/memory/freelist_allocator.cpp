@@ -114,6 +114,64 @@ namespace GR
 		return nullptr;
 	}
 
+	void* FreelistAllocator::ReAlloc(void* block, size_t size)
+	{
+		// Going slightly before the block and grabbing the alloc header that is stored there for debug info
+		AllocHeader* header = (AllocHeader*)block - 1;
+
+		// ====== If the requested size is smaller than the allocated size just return block and free the leftovers of the block ==========================
+		if ((header->size - sizeof(AllocHeader)) > size)
+			return block; /// TODO: free leftovers of block
+
+		// Trying to find a free node next in line that we can add to our allocation
+		u32 requiredNodeSize = size - (header->size - sizeof(AllocHeader));
+		void* requiredAddress = (u8*)header + header->size;
+
+		Node* node = m_head;
+		Node* previous = nullptr;
+
+		while (node)
+		{
+			// ==== If we find a free node right at the end of our allocation ================================
+			if (node->address == requiredAddress && node->size >= requiredNodeSize)
+			{
+				// This if else statement updates the freelist
+				if (node->size == requiredNodeSize)
+				{
+					if (previous)
+						previous->next = node->next;
+					else // If the node is the head
+						m_head = node->next;
+					ReturnNodeToPool(node);
+				}
+				else // If the node is not the exact required size
+				{
+					node->address = (u8*)node->address + requiredNodeSize;
+					node->size -= requiredNodeSize;
+				}
+				header->size += requiredNodeSize;
+#ifndef GR_DIST
+				ReAllocInfo(requiredNodeSize);
+#endif
+				return block;
+			}
+			// If the block being reallocated sits after the current node, go to the next node
+			previous = node;
+			node = node->next;
+		}
+
+		// ================= We coudn't extend the allocation and have to alloc and free ===============
+#ifndef GR_DIST
+		void* newBlock = Alloc(size, header->tag); // If we're in gr dist tag doesn't exist in header, thats why this ifndef exists
+#else
+		void* newBlock = Alloc(size, MEM_TAG_LOCAL_ALLOCATOR);
+#endif // !GR_DIST
+
+		MemCopy(newBlock, block, header->size - sizeof(AllocHeader));
+		Free(block);
+		return newBlock;
+	}
+
 	void FreelistAllocator::Free(void* block)
 	{
 		// Going slightly before the block and grabbing the alloc header that is stored there for debug info
