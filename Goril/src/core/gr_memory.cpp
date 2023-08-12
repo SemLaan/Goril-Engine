@@ -9,6 +9,7 @@ namespace GR
 
 	static const char* memTagToText[mem_tag::MAX_MEMORY_TAGS] = {
 		"LOCAL_ALLOC        ",
+		"SUB_ARENA          ",
 		"MEMORY_SUBSYS      ",
 		"LOGGING_SUBSYS     ",
 		"PLATFORM_SUBSYS    ",
@@ -85,13 +86,13 @@ namespace GR
 
 	void ShutdownMemory()
 	{
-		initialized = false;
 
 		// Removing all the allocation info from the state to print memory stats one last time for debugging 
 		// This way the programmer can check if everything else in the application was freed by seeing if it prints 0 net allocations
 		FreeInfo(state->memorySubsystemAllocSize, MEM_TAG_MEMORY_SUBSYS);
 		FreeInfo(0, MEM_TAG_MEMORY_SUBSYS);
 		PrintMemoryStats();
+		initialized = false;
 
 		GetGlobalAllocator()->Free(state);
 		// We dont have to destroy the global allocator because that does nothing
@@ -109,8 +110,9 @@ namespace GR
 	{
 		if (!initialized)
 			return;
-		state->allocated += size;
 #ifndef GR_DIST
+		if (tag != MEM_TAG_SUB_ARENA)
+			state->allocated += size;
 		if (state->allocated > state->arenaSize)
 			GRERROR("Allocating more memory than the application initially asked for, you should probably increase the amount of requested memory in the game config");
 		state->netAllocationCount++;
@@ -120,13 +122,18 @@ namespace GR
 
 	void ReAllocInfo(i64 sizeChange)
 	{
+		if (!initialized)
+			return;
 		state->allocated += sizeChange;
 	}
 
 	void FreeInfo(size_t size, mem_tag tag)
 	{
-		state->allocated -= size;
 #ifndef GR_DIST
+		if (!initialized)
+			return;
+		if (tag != MEM_TAG_SUB_ARENA)
+			state->allocated -= size;
 		if (state->allocated < 0)
 			GRFATAL("Somehow deallocated more memory than was allocated, very impressive and efficient use of memory");
 		state->netAllocationCount--;
