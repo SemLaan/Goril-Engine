@@ -6,7 +6,7 @@
 
 namespace GR
 {
-
+#ifndef GR_DIST
 	static const char* memTagToText[mem_tag::MAX_MEMORY_TAGS] = {
 		"LOCAL_ALLOC        ",
 		"SUB_ARENA          ",
@@ -19,22 +19,26 @@ namespace GR
 		"TEST               ",
 		"DARRAY             ",
 	};
+#endif // !GR_DIST
 
 	struct MemoryState
 	{
 		FreelistAllocator* globalAllocator;
+		BumpAllocator* subsysBumpAllocator;
 		void* arenaBlock;
 		size_t arenaSize;
+#ifndef GR_DIST
+		size_t memorySubsystemAllocSize;
 		size_t allocated;
 		u64 netAllocationCount;
-		size_t memorySubsystemAllocSize;
 		u32 perTagAllocCount[mem_tag::MAX_MEMORY_TAGS];
+#endif // !GR_DIST
 	};
 
 	static MemoryState* state;
 	static b8 initialized = false;
 
-	b8 InitializeMemory(size_t requiredMemory)
+	b8 InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 	{
 		initialized = false;
 
@@ -68,6 +72,7 @@ namespace GR
 		state->globalAllocator = allocator;
 		state->arenaBlock = arena;
 		state->arenaSize = totalArenaSize;
+#ifndef GR_DIST
 		state->allocated = 0;
 		state->memorySubsystemAllocSize = sizeof(MemoryState) + sizeof(FreelistAllocator) + freelistNodeMemory + FreelistAllocator::GetAllocHeaderSize();
 		state->netAllocationCount = 0;
@@ -75,23 +80,34 @@ namespace GR
 		{
 			state->perTagAllocCount[i] = 0;
 		}
+#endif // !GR_DIST
 
 		initialized = true;
 
+#ifndef GR_DIST
 		AllocInfo(sizeof(MemoryState), MEM_TAG_MEMORY_SUBSYS);
 		AllocInfo(sizeof(FreelistAllocator) + freelistNodeMemory + FreelistAllocator::GetAllocHeaderSize(), MEM_TAG_MEMORY_SUBSYS);
+#endif // !GR_DIST
+
+		state->subsysBumpAllocator = (BumpAllocator*)allocator->Alloc(sizeof(BumpAllocator), MEM_TAG_LOCAL_ALLOCATOR);
+		state->subsysBumpAllocator->Initialize(allocator->Alloc(subsysMemoryRequirement, MEM_TAG_SUB_ARENA), subsysMemoryRequirement);
 
 		return true;
 	}
 
 	void ShutdownMemory()
 	{
+		GetGlobalAllocator()->Free(state->subsysBumpAllocator->GetArenaPointer());
+		GetGlobalAllocator()->Free(state->subsysBumpAllocator);
 
+#ifndef GR_DIST
 		// Removing all the allocation info from the state to print memory stats one last time for debugging 
 		// This way the programmer can check if everything else in the application was freed by seeing if it prints 0 net allocations
 		FreeInfo(state->memorySubsystemAllocSize, MEM_TAG_MEMORY_SUBSYS);
 		FreeInfo(0, MEM_TAG_MEMORY_SUBSYS);
 		PrintMemoryStats();
+#endif // !GR_DIST
+
 		initialized = false;
 
 		GetGlobalAllocator()->Free(state);
@@ -106,18 +122,22 @@ namespace GR
 		return state->globalAllocator;
 	}
 
+	BumpAllocator* GetSubsysBumpAllocator()
+	{
+		return state->subsysBumpAllocator;
+	}
+
+#ifndef GR_DIST // These functions only get compiled if it's not a distribution build
 	void AllocInfo(size_t size, mem_tag tag)
 	{
 		if (!initialized)
 			return;
-#ifndef GR_DIST
 		if (tag != MEM_TAG_SUB_ARENA)
 			state->allocated += size;
 		if (state->allocated > state->arenaSize)
 			GRERROR("Allocating more memory than the application initially asked for, you should probably increase the amount of requested memory in the game config");
 		state->netAllocationCount++;
 		state->perTagAllocCount[tag]++;
-#endif
 	}
 
 	void ReAllocInfo(i64 sizeChange)
@@ -129,7 +149,6 @@ namespace GR
 
 	void FreeInfo(size_t size, mem_tag tag)
 	{
-#ifndef GR_DIST
 		if (!initialized)
 			return;
 		if (tag != MEM_TAG_SUB_ARENA)
@@ -138,8 +157,8 @@ namespace GR
 			GRFATAL("Somehow deallocated more memory than was allocated, very impressive and efficient use of memory");
 		state->netAllocationCount--;
 		state->perTagAllocCount[tag]--;
-#endif
 	}
+#endif GR_DIST
 
 	void Zero(void* block, size_t size)
 	{
@@ -162,6 +181,7 @@ namespace GR
 		}
 	}
 
+#ifndef GR_DIST
 	const size_t& GetMemoryUsage()
 	{
 		return state->allocated;
@@ -171,9 +191,11 @@ namespace GR
 	{
 		return state->netAllocationCount;
 	}
+#endif // !GR_DIST
 
 	void PrintMemoryStats()
 	{
+#ifndef GR_DIST
 		GRINFO("Printing memory stats:");
 		GRINFO("Total allocated memory and total arena size (bytes): {}/{}", state->allocated, state->arenaSize);
 		GRINFO("Percent allocated: {:.2f}%%", 100 * (f32)state->allocated / (f32)state->arenaSize);
@@ -183,6 +205,7 @@ namespace GR
 		{
 			GRINFO("	{}: {}", memTagToText[i], state->perTagAllocCount[i]);
 		}
+#endif // !GR_DIST
 	}
 }
 

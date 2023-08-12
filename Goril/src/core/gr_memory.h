@@ -1,6 +1,7 @@
 #pragma once
 #include "defines.h"
 #include "memory/freelist_allocator.h"
+#include "memory/bump_allocator.h"
 
 namespace GR
 {
@@ -19,11 +20,12 @@ namespace GR
 		MAX_MEMORY_TAGS
 	};
 
-	b8 InitializeMemory(size_t arenaSize);
+	b8 InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement);
 
 	void ShutdownMemory();
 
 	GRAPI inline FreelistAllocator* GetGlobalAllocator();
+	inline BumpAllocator* GetSubsysBumpAllocator();
 
 	GRAPI inline void AllocInfo(size_t size, mem_tag tag);
 
