@@ -20,6 +20,7 @@ namespace GR
 		static size_t GetAllocHeaderSize();
 
 		void* Alloc(size_t size, mem_tag tag);
+		void* ReAlloc(void* block, size_t size);
 		void Free(void* block);
 	};
 }
