@@ -35,7 +35,7 @@ namespace GR
 #endif // !GR_DIST
 	};
 
-	static MemoryState* state;
+	static MemoryState* state = nullptr;
 	static b8 initialized = false;
 
 	b8 InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
@@ -68,7 +68,7 @@ namespace GR
 
 		// Creating the memory state
 		state = (MemoryState*)allocator->Alloc(sizeof(MemoryState), mem_tag::MEM_TAG_MEMORY_SUBSYS);
-		*state = {};
+		Zero(state, sizeof(MemoryState));
 		state->globalAllocator = allocator;
 		state->arenaBlock = arena;
 		state->arenaSize = totalArenaSize;

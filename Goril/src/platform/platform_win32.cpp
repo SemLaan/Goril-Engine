@@ -18,6 +18,9 @@ namespace GR
 
 	b8 InitializePlatform()
 	{
+		const wchar_t* menuName = L"gorilwinmenu";
+		const wchar_t* className = L"gorilwinclass";
+
 		WNDCLASSEX wc = {};
 
 		wc.cbSize = sizeof(WNDCLASSEX);
@@ -30,13 +33,13 @@ namespace GR
 		wc.hIconSm = NULL;
 		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 		wc.hbrBackground = NULL;
-		wc.lpszMenuName = L"beef";
-		wc.lpszClassName = L"meat";
+		wc.lpszMenuName = menuName;
+		wc.lpszClassName = className;
 
 		RegisterClassEx(&wc);
 
-		HWND hwnd = CreateWindowEx(
-			NULL, L"meat", L"Stront window",/// TODO: ask the application for a window name
+		state->hwnd = CreateWindowEx(
+			NULL, className, L"Stront window",/// TODO: ask the application for a window name
 			WS_OVERLAPPEDWINDOW, 
 			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 			NULL, NULL, GetModuleHandle(NULL), NULL
