@@ -93,10 +93,48 @@ b8 freelist_allocator_test()
 	return true;
 }
 
+b8 freelist_allocator_realloc_test()
+{
+	size_t arena_size = 1000 + FreelistAllocator::GetAllocHeaderSize();
+	size_t required_node_memory;
+	u32 required_nodes;
+
+	FreelistAllocator::GetRequiredNodesAndMemorySize(arena_size, &required_node_memory, &required_nodes);
+	arena_size += required_node_memory;
+
+	void* arena = malloc(arena_size);
+	FreelistAllocator* allocator = new FreelistAllocator();
+	allocator->Initialize(arena, arena_size, required_nodes);
+
+	void* temp = allocator->Alloc(700, MEM_TAG_TEST);
+	temp = allocator->ReAlloc(temp, 800);
+	allocator->Free(temp);
+
+	void* temp4 = allocator->Alloc(1000, MEM_TAG_TEST);
+	allocator->Free(temp4);
+
+
+	void* temp1 = allocator->Alloc(200, MEM_TAG_TEST);
+	void* temp2 = allocator->Alloc(200, MEM_TAG_TEST);
+	temp1 = allocator->ReAlloc(temp1, 300);
+	allocator->Free(temp1);
+	allocator->Free(temp2);
+
+	void* temp3 = allocator->Alloc(1000, MEM_TAG_TEST);
+	allocator->Free(temp3);
+
+	delete allocator;
+
+	free(arena);
+
+	return true;
+}
+
 
 void register_allocator_tests()
 {
 	register_test(bump_allocator_test, "Allocators: Bump allocator");
 	register_test(bump_allocator_realloc_test, "Allocators: Bump allocator realloc");
 	register_test(freelist_allocator_test, "Allocators: Freelist allocator");
+	register_test(freelist_allocator_realloc_test, "Allocators: Freelist allocator realloc");
 }
