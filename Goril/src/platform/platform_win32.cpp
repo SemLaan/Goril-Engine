@@ -64,21 +64,23 @@ namespace GR
 
 		ShowWindow(state->hwnd, SW_SHOW);
 
-		
-		MSG msg = { };
-		if(0)//while (GetMessage(&msg, NULL, 0, 0) > 0)
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-		
-
 		return true;
 	}
 
 	void ShutdownPlatform()
 	{
 		GetSubsysBumpAllocator()->Free(state);
+	}
+
+	void PlatformProcessMessage()
+	{
+		MSG msg = {};
+
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 	}
 
 	static u8 logLevelColors[MAX_LOG_LEVELS] =

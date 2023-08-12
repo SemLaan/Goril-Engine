@@ -37,10 +37,6 @@ int main()
 	// Run tests
 	b8 result = run_tests();
 
-	// Shutdown
-	GR::ShutdownEngine();
-	shutdown_test_manager();
-
 	if (result == false)
 	{
 		GRFATAL("One or more tests failed!");
@@ -49,6 +45,10 @@ int main()
 	{
 		GRINFO("=============== All tests succesfull ==============");
 	}
+
+	// Shutdown
+	GR::ShutdownEngine();
+	shutdown_test_manager();
 
 	std::cin.get();
 

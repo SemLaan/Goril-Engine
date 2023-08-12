@@ -39,6 +39,7 @@ namespace GR
 
 		while (true)
 		{
+			PlatformProcessMessage();
 			gameInstance->Update();
 			gameInstance->Render();
 		}
