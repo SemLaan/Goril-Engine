@@ -7,13 +7,14 @@
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
 #include "core/logger.h"
+#include "core/asserts.h"
 
 
 namespace GR
 {
-	// Forward declaring window callbacks
-	//LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+	// Forward declaring window callbacks
+	LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	b8 InitializePlatform()
 	{
@@ -21,7 +22,7 @@ namespace GR
 
 		wc.cbSize = sizeof(WNDCLASSEX);
 		wc.style = NULL;
-		wc.lpfnWndProc = DefWindowProc; /// TODO: custom window proc
+		wc.lpfnWndProc = WindowProc;
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = GetModuleHandle(NULL);
@@ -85,6 +86,11 @@ namespace GR
 		SetConsoleTextAttribute(hConsole, logLevelColors[level]);
 		OutputDebugStringA(message);
 		printf(message);
+	}
+
+	LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	{
+		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 }
 #endif
