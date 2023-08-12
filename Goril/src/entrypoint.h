@@ -3,6 +3,7 @@
 #include "core/application.h"
 #include "core/logger.h"
 #include "core/asserts.h"
+#include "core/gr_memory.h"
 
 extern GR::GameConfig GetGameConfig();
 extern b8 CreateGameInstance(GR::GorilGame*& out_game);

@@ -6,10 +6,14 @@
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
+#include "core/logger.h"
 
 
 namespace GR
 {
+	// Forward declaring window callbacks
+	//LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 	size_t GetPlatformRequiredMemory()
 	{
 		return 0;
@@ -17,6 +21,47 @@ namespace GR
 
 	b8 InitializePlatform()
 	{
+		WNDCLASSEX wc = {};
+
+		wc.cbSize = sizeof(WNDCLASSEX);
+		wc.style = NULL;
+		wc.lpfnWndProc = DefWindowProc; /// TODO: custom window proc
+		wc.cbClsExtra = 0;
+		wc.cbWndExtra = 0;
+		wc.hInstance = GetModuleHandle(NULL);
+		wc.hIcon = LoadIcon(NULL, IDC_ICON);
+		wc.hIconSm = NULL;
+		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = NULL;
+		wc.lpszMenuName = L"beef";
+		wc.lpszClassName = L"meat";
+
+		RegisterClassEx(&wc);
+
+		HWND hwnd = CreateWindowEx(
+			NULL, L"meat", L"Stront window",/// TODO: ask the application for a window name
+			WS_OVERLAPPEDWINDOW, 
+			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+			NULL, NULL, GetModuleHandle(NULL), NULL
+		);
+
+		if (hwnd == NULL)
+		{
+			GRFATAL("Creating window failed");
+			return false;
+		}
+
+		ShowWindow(hwnd, SW_SHOW);
+
+		/*
+		MSG msg = { };
+		while (GetMessage(&msg, NULL, 0, 0) > 0)
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		*/
+
 		return true;
 	}
 
