@@ -7,6 +7,7 @@
 #include "core/timer_tests.h"
 #include "core/memory_tests.h"
 #include "containers/scope_test.h"
+#include "containers/darray_test.h"
 #include "memory/allocator_tests.h"
 
 int main()
@@ -22,6 +23,7 @@ int main()
 	register_memory_tests();
 	register_scope_tests();
 	register_allocator_tests();
+	register_darray_tests();
 	register_timer_tests();
 	// ------------------------------------------------------
 
