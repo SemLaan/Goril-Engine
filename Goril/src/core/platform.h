@@ -4,8 +4,6 @@
 
 namespace GR
 {
-	size_t GetPlatformRequiredMemory();
-
 	b8 InitializePlatform();
 
 	void ShutdownPlatform();

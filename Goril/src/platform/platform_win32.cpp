@@ -14,10 +14,6 @@ namespace GR
 	// Forward declaring window callbacks
 	//LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	size_t GetPlatformRequiredMemory()
-	{
-		return 0;
-	}
 
 	b8 InitializePlatform()
 	{

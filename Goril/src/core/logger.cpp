@@ -15,11 +15,6 @@ namespace GR
 		"[TRACE]: ",
 	};
 
-	size_t GetLoggerRequiredMemory()
-	{
-		return 0;
-	}
-
 	b8 InitializeLogger()
 	{
 		// TODO: create file to write logs to
