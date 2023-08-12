@@ -18,6 +18,8 @@ namespace GR
 
 		bool Owns(void* block);
 		static size_t GetAllocHeaderSize();
+		void LogArenaUsage();
+		void* GetArenaPointer();
 
 		void* Alloc(size_t size, mem_tag tag);
 		void* ReAlloc(void* block, size_t size);

@@ -31,6 +31,19 @@ namespace GR
 		return sizeof(AllocHeader);
 	}
 
+	void BumpAllocator::LogArenaUsage()
+	{
+		size_t arenaSize = (u64)m_arenaEnd - (u64)m_arena;
+		size_t arenaUsage = (u64)m_bumpPointer - (u64)m_arena;
+		f32 percentUsed = (f32)arenaUsage / (f32)arenaSize;
+		GRDEBUG("Bump allocator usage (bytes): {}/{}, percent usage: {:.2f}%%", arenaUsage, arenaSize, 100 * percentUsed);
+	}
+
+	void* BumpAllocator::GetArenaPointer()
+	{
+		return m_arena;
+	}
+
 	void* BumpAllocator::Alloc(size_t size, mem_tag tag)
 	{
 		// Save metadata about the allocation just before the allocated block and bump the pointer to the place of the actual allocation
