@@ -44,8 +44,7 @@ b8 run_tests()
 		}
 		else
 		{
-			// the rounding and multiplication at the end of this line is to only show 3 places after the decimal
-			TESTINFO("Test succesfull, took: {}s", std::round((test_end_time - test_start_time) * 1000) / 1000);
+			TESTINFO("Test succesfull, took: {:.4f}s", test_end_time - test_start_time);
 		}
 	}
 

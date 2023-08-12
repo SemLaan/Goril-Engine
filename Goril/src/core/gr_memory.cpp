@@ -169,6 +169,7 @@ namespace GR
 	{
 		GRINFO("Printing memory stats:");
 		GRINFO("Total allocated memory and total arena size (bytes): {}/{}", state->allocated, state->arenaSize);
+		GRINFO("Percent allocated: {:.2f}%%", 100 * (f32)state->allocated / (f32)state->arenaSize);
 		GRINFO("Total allocations: {}", state->netAllocationCount);
 		GRINFO("Allocations by tag:");
 		for (u32 i = 0; i < mem_tag::MAX_MEMORY_TAGS; ++i)
