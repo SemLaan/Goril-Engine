@@ -7,7 +7,7 @@ using namespace GR;
 
 b8 Beef(EventType type, EventData data)
 {
-    GRDEBUG("Test, {}, {}, {}, {}", data.uint32[0], data.uint32[1], data.uint32[2], data.uint32[3]);
+    GRDEBUG("Test, {}, {}, {}, {}", data.u32[0], data.u32[1], data.u32[2], data.u32[3]);
     return false;
 }
 
@@ -20,7 +20,12 @@ b8 Game::Init()
 
 b8 Game::Update()
 {
-    InvokeEvent(EVCODE_QUIT, EventData({3,4,5,6}));
+    EventData data;
+    data.u32[0] = 3;
+    data.u32[1] = 4;
+    data.u32[2] = 5;
+    data.u32[3] = 6;
+    InvokeEvent(EVCODE_QUIT, data);
     return true;
 }
 

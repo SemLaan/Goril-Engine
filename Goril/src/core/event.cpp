@@ -32,12 +32,14 @@ namespace GR
 			state->eventCallbacks[type].Initialize(MEM_TAG_EVENT_SUBSYS, 5);
 		}
 
+		/// TODO: check for duplicate listeners if not in dist
+
 		state->eventCallbacks[type].Pushback(listener);
 	}
 
 	void UnregisterEventListener(EventType type, PFN_OnEvent listener)
 	{
-
+		///TODO: unregister event
 	}
 
 	void InvokeEvent(EventType type, EventData data)
