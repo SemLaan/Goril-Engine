@@ -3,6 +3,7 @@
 #include "logger.h"
 #include "platform.h"
 #include "gr_memory.h"
+#include "event.h"
 
 namespace GR
 {
@@ -20,6 +21,11 @@ namespace GR
 		if (!InitializeLogger())
 		{
 			GRFATAL("Logger failed to initialize");
+			return false;
+		}
+		if (!InitializeEvent())
+		{
+			GRFATAL("Event system failed to initialize");
 			return false;
 		}
 		if (!InitializePlatform(config.windowTitle, config.startMinimized))
@@ -53,6 +59,7 @@ namespace GR
 	{
 		// Shutdown subsystems
 		ShutdownPlatform();
+		ShutdownEvent();
 		ShutdownLogger();
 		ShutdownMemory();
 	}

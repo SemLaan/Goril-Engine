@@ -5,6 +5,7 @@
 #include "core/asserts.h"
 #include "core/timer.h"
 #include "core/gr_memory.h"
+#include "core/event.h"
 #include "memory/bump_allocator.h"
 #include "memory/freelist_allocator.h"
 #include "containers/scope.h"
