@@ -10,10 +10,10 @@ namespace GR
 	class Darray
 	{
 	private:
-		T* elements;
-		size_t size;
-		size_t capacity;
-		f32 scalingFactor;
+		T* elements = nullptr;
+		size_t size = 0;
+		size_t capacity = 0;
+		f32 scalingFactor = 0;
 	public:
 		void Initialize(mem_tag tag = MEM_TAG_DARRAY, u32 reserveCapacity = 1, f32 _scalingFactor = 1.6f)
 		{
@@ -30,6 +30,16 @@ namespace GR
 			GetGlobalAllocator()->Free(elements);
 		}
 
+		T* GetRawElements()
+		{
+			return elements;
+		}
+
+		size_t Size()
+		{
+			return size;
+		}
+
 		T const& operator[](int index) const
 		{
 			GRASSERT(index < size)
@@ -44,6 +54,17 @@ namespace GR
 		}
 
 		void Pushback(T&& element)
+		{
+			if (size >= capacity)
+			{
+				capacity = (size_t)ceil(capacity * scalingFactor);
+				elements = (T*)GetGlobalAllocator()->ReAlloc(elements, capacity * sizeof(T));
+			}
+			elements[size] = element;
+			size++;
+		}
+
+		void Pushback(T& element)
 		{
 			if (size >= capacity)
 			{
