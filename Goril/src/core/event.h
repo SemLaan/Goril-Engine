@@ -29,8 +29,9 @@ namespace GR
 	};
 
 	enum EventType
-	{
+	{ /// NOTE: always add new event types just before MAX_EVENTS
 		EVCODE_QUIT,
+		EVCODE_TEST,
 		MAX_EVENTS
 	};
 

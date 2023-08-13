@@ -22,7 +22,13 @@ namespace GR
 
 	void ShutdownEvent()
 	{
-		/// TODO: deinitialize all initialized darray's
+		for (Darray<PFN_OnEvent>& callbackDarray : state->eventCallbacks)
+		{
+			if (callbackDarray.GetRawElements())
+			{
+				callbackDarray.Deinitialize();
+			}
+		}
 		GetSubsysBumpAllocator()->Free(state);
 	}
 
@@ -65,7 +71,9 @@ namespace GR
 		{
 			for (u32 i = 0; i < state->eventCallbacks[type].Size(); ++i)
 			{
-				state->eventCallbacks[type][i](type, data);
+				// PFN_OnEvent callbacks return true if the event is handled so then we don't need to call anything else
+				if (state->eventCallbacks[type][i](type, data))
+					return;
 			}
 		}
 	}
