@@ -15,6 +15,13 @@ b8 Game::Init()
 {
     PrintMemoryStats();
     RegisterEventListener(EVCODE_QUIT, Beef);
+    EventData data;
+    data.u32[0] = 3;
+    data.u32[1] = 4;
+    data.u32[2] = 5;
+    data.u32[3] = 6;
+    InvokeEvent(EVCODE_QUIT, data);
+    UnregisterEventListener(EVCODE_QUIT, Beef);
     return true;
 }
 

@@ -22,6 +22,7 @@ namespace GR
 
 	void ShutdownEvent()
 	{
+		/// TODO: deinitialize all initialized darray's
 		GetSubsysBumpAllocator()->Free(state);
 	}
 
@@ -32,14 +33,30 @@ namespace GR
 			state->eventCallbacks[type].Initialize(MEM_TAG_EVENT_SUBSYS, 5);
 		}
 
-		/// TODO: check for duplicate listeners if not in dist
+#ifndef GR_DIST
+		for (u32 i = 0; i < state->eventCallbacks[type].Size(); ++i)
+		{
+			GRASSERT_MSG(state->eventCallbacks[type][i] != listener, "Tried to insert duplicate listener");
+		}
+#endif // !GR_DIST
 
 		state->eventCallbacks[type].Pushback(listener);
 	}
 
 	void UnregisterEventListener(EventType type, PFN_OnEvent listener)
 	{
-		///TODO: unregister event
+		GRASSERT_DEBUG(state->eventCallbacks[type].GetRawElements());
+
+		for (u32 i = 0; i < state->eventCallbacks[type].Size(); ++i)
+		{
+			if (state->eventCallbacks[type][i] == listener)
+			{
+				state->eventCallbacks[type].PopAt(i);
+				return;
+			}
+		}
+
+		GRASSERT_MSG(false, "Tried to remove listener that isn't listening");
 	}
 
 	void InvokeEvent(EventType type, EventData data)
