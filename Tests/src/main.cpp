@@ -31,6 +31,7 @@ int main()
 	GR::GameConfig config = {};
 	config.width = 0;
 	config.height = 0;
+	config.windowTitle = L"Testing window";
 	config.game_instance_memory_requirement = RESERVED_GAME_MEMORY;
 	GR::InitializeEngine(config);
 

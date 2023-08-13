@@ -22,7 +22,7 @@ namespace GR
 			GRFATAL("Logger failed to initialize");
 			return false;
 		}
-		if (!InitializePlatform())
+		if (!InitializePlatform(config.windowTitle))
 		{
 			GRFATAL("Platform failed to initialize");
 			return false;

@@ -4,7 +4,7 @@
 
 namespace GR
 {
-	b8 InitializePlatform();
+	b8 InitializePlatform(const wchar_t* windowName);
 
 	void ShutdownPlatform();
 

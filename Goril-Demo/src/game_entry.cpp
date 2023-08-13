@@ -8,6 +8,7 @@ GR::GameConfig GetGameConfig()
 	GR::GameConfig config = {};
 	
 	config.game_instance_memory_requirement = sizeof(Game) + 16;
+	config.windowTitle = L"Test game";
 	config.width = 1280;
 	config.height = 720;
 
