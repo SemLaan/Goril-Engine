@@ -1,6 +1,7 @@
 #include "test_manager.h"
 #include <vector>
 #include "test_defines.h"
+#include <core/timer.h>
 
 static std::vector<PFN_test> tests;
 static std::vector<std::string> test_names;

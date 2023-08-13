@@ -2,7 +2,6 @@
 
 #include "test_defines.h"
 #include "../test_manager.h"
-#include <goril.h>
 #include <containers/darray.h>
 
 using namespace GR;

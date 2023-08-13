@@ -1,6 +1,6 @@
 #pragma once
-#include <goril.h>
-
+#include "defines.h"
+#include <string>
 
 typedef b8(*PFN_test)();
 

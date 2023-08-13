@@ -1,5 +1,5 @@
 #include "game.h"
-#include <goril.h>
+#include <core/gr_memory.h>
 
 using namespace GR;
 

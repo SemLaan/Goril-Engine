@@ -1,5 +1,3 @@
-#include <goril.h>
-
 #include "game.h"
 #include <entrypoint.h>
 

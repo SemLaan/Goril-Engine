@@ -1,5 +1,6 @@
 #pragma once
 #include "core/gr_memory.h"
+#include "core/asserts.h"
 #include <new>
 
 

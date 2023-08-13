@@ -1,7 +1,7 @@
 #include "timer_tests.h"
 
 #include "../test_manager.h"
-#include <goril.h>
+#include <core/timer.h>
 #include <chrono>
 #include <thread>
 #include "test_defines.h"

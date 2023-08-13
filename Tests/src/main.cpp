@@ -1,4 +1,3 @@
-#include <goril.h>
 #include "test_manager.h"
 #include <iostream>
 #include <core/application.h>

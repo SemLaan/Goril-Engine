@@ -1,5 +1,5 @@
 #pragma once
-#include <goril.h>
+#include <core/goril_game.h>
 
 class Game : public GR::GorilGame
 {

@@ -2,8 +2,7 @@
 
 #include "test_defines.h"
 #include "../test_manager.h"
-#include <goril.h>
-
+#include <containers/scope.h>
 using namespace GR;
 
 
