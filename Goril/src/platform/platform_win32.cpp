@@ -24,7 +24,7 @@ namespace GR
 	// Forward declaring window callbacks
 	LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	b8 InitializePlatform(const wchar_t* windowName)
+	b8 InitializePlatform(const wchar_t* windowName, b8 startMinimized)
 	{
 		state = (PlatformState*)GetSubsysBumpAllocator()->Alloc(sizeof(PlatformState), MEM_TAG_PLATFORM_SUBSYS);
 		Zero(state, sizeof(PlatformState));
@@ -49,9 +49,13 @@ namespace GR
 
 		RegisterClassEx(&wc);
 
+		u32 windowStyle = (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+		if (startMinimized)
+			windowStyle |= WS_MINIMIZE;
+
 		state->hwnd = CreateWindowEx(
 			NULL, className, windowName,
-			WS_OVERLAPPEDWINDOW, 
+			windowStyle,
 			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 			NULL, NULL, GetModuleHandle(NULL), NULL
 		);
