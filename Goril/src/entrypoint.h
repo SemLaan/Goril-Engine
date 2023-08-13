@@ -17,6 +17,7 @@ int main()
 		if (!GR::InitializeEngine(config))
 		{
 			GRFATAL("Failed to initialize engine, shutting down");
+			GR::ShutdownEngine();
 			return 1;
 		}
 	}
@@ -26,6 +27,8 @@ int main()
 	if (!CreateGameInstance(gameInstance))
 	{
 		GRFATAL("Failed to create game instance, shutting down");
+		GR::ShutdownEngine();
+		return 1;
 	}
 	GRASSERT_DEBUG(gameInstance);
 
@@ -33,6 +36,8 @@ int main()
 	if (!GR::RunEngine(gameInstance))
 	{
 		GRFATAL("Engine failed while running, shutting down");
+		GR::GetGlobalAllocator()->Free(gameInstance);
+		GR::ShutdownEngine();
 		return 1;
 	}
 

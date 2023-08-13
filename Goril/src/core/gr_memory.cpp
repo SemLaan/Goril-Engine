@@ -55,7 +55,7 @@ namespace GR
 		void* arena = malloc(totalArenaSize);
 		if (arena == nullptr)
 		{
-			GRFATAL("Couldn't allocate arena memory, initializing memory failed");
+			GRFATAL("Couldn't allocate arena memory, tried allocating {}B, initializing memory failed", totalArenaSize);
 			return false;
 		}
 

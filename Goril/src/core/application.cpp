@@ -49,8 +49,6 @@ namespace GR
 
 	b8 RunEngine(GorilGame* gameInstance)
 	{
-		if (!appRunning)
-			return true;
 		gameInstance->Init();
 
 		while (appRunning)
