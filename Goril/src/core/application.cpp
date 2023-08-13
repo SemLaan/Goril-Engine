@@ -7,6 +7,14 @@
 
 namespace GR
 {
+	static b8 appRunning = false;
+
+	b8 OnQuit(EventType type, EventData data)
+	{
+		appRunning = false;
+		return false;
+	}
+
 	b8 InitializeEngine(GameConfig config)
 	{
 		size_t engineMemoryRequirement = KiB * 5;
@@ -34,22 +42,25 @@ namespace GR
 			return false;
 		}
 
-		PrintMemoryStats();
-
+		RegisterEventListener(EVCODE_QUIT, OnQuit);
+		appRunning = true;
 		return true;
 	}
 
 	b8 RunEngine(GorilGame* gameInstance)
 	{
+		if (!appRunning)
+			return true;
 		gameInstance->Init();
 
-		while (true)
+		while (appRunning)
 		{
 			PlatformProcessMessage();
 			gameInstance->Update();
 			gameInstance->Render();
 		}
 
+		UnregisterEventListener(EVCODE_QUIT, OnQuit);
 		gameInstance->Shutdown();
 
 		return true;

@@ -9,6 +9,7 @@
 #include "core/logger.h"
 #include "core/asserts.h"
 #include "core/gr_memory.h"
+#include "core/event.h"
 
 
 namespace GR
@@ -114,8 +115,12 @@ namespace GR
 		switch (uMsg)
 		{
 		case WM_DESTROY:
+		{
+			EventData data = {};
+			InvokeEvent(EVCODE_QUIT, data);
 			PostQuitMessage(0);
 			return 0;
+		}
 		default:
 			return DefWindowProc(hwnd, uMsg, wParam, lParam);
 		}
