@@ -10,10 +10,12 @@ namespace GR
 		Darray<PFN_OnEvent> eventCallbacks[MAX_EVENTS];
 	};
 
-	static EventState* state;
+	static EventState* state = nullptr;
 
 	b8 InitializeEvent()
 	{
+		GRASSERT_DEBUG(state == nullptr); // If this triggers init got called twice
+		GRINFO("Initializing event subsystem...");
 		state = (EventState*)GetSubsysBumpAllocator()->Alloc(sizeof(EventState), MEM_TAG_EVENT_SUBSYS);
 		Zero(state, sizeof(EventState));
 
@@ -22,6 +24,16 @@ namespace GR
 
 	void ShutdownEvent()
 	{
+		if (state == nullptr)
+		{
+			GRINFO("Events startup failed, skipping shutdown");
+			return;
+		}
+		else
+		{
+			GRINFO("Shutting down events subsystem...");
+		}
+
 		for (Darray<PFN_OnEvent>& callbackDarray : state->eventCallbacks)
 		{
 			if (callbackDarray.GetRawElements())

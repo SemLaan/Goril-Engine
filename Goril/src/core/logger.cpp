@@ -17,21 +17,15 @@ namespace GR
 
 	b8 InitializeLogger()
 	{
+		GRINFO("Initializing logging subsystem...");
 		// TODO: create file to write logs to
-
-		// Testing logging functions
-		GRFATAL("Testing log functions: {}", "succesfull");
-		GRERROR("Testing log functions: {}", "succesfull");
-		GRWARN("Testing log functions: {}", "succesfull");
-		GRINFO("Testing log functions: {}", "succesfull");
-		GRDEBUG("Testing log functions: {}", "succesfull");
-		GRTRACE("Testing log functions: {}", "succesfull");
 
 		return true;
 	}
 
 	void ShutdownLogger()
 	{
+		GRINFO("Shutting down logging subsystem...");
 		// TODO: write logs to file
 	}
 

@@ -40,6 +40,8 @@ namespace GR
 
 	b8 InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 	{
+		GRASSERT_DEBUG(state == nullptr); // If this fails it means init was called twice
+		GRINFO("Initializing memory subsystem...");
 		initialized = false;
 
 		// Getting the required memory for the memory subsystem state and the global allocator
@@ -97,6 +99,16 @@ namespace GR
 
 	void ShutdownMemory()
 	{
+		if (state == nullptr)
+		{
+			GRINFO("Memory startup failed, skipping shutdown");
+			return;
+		}
+		else
+		{
+			GRINFO("Shutting down memory subsystem...");
+		}
+
 		GetGlobalAllocator()->Free(state->subsysBumpAllocator->GetArenaPointer());
 		GetGlobalAllocator()->Free(state->subsysBumpAllocator);
 

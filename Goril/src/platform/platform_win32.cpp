@@ -27,6 +27,8 @@ namespace GR
 
 	b8 InitializePlatform(const wchar_t* windowName, b8 startMinimized)
 	{
+		GRASSERT_DEBUG(state == nullptr); // If this fails init platform was called twice
+		GRINFO("Initializing platform subsystem...");
 		state = (PlatformState*)GetSubsysBumpAllocator()->Alloc(sizeof(PlatformState), MEM_TAG_PLATFORM_SUBSYS);
 		Zero(state, sizeof(PlatformState));
 
@@ -64,6 +66,8 @@ namespace GR
 		if (state->hwnd == NULL)
 		{
 			GRFATAL("Creating window failed");
+			GetSubsysBumpAllocator()->Free(state);
+			state = nullptr;
 			return false;
 		}
 
@@ -74,6 +78,16 @@ namespace GR
 
 	void ShutdownPlatform()
 	{
+		if (state == nullptr) 
+		{
+			GRINFO("Platform startup failed, skipping shutdown");
+			return;
+		}
+		else 
+		{
+			GRINFO("Shutting down platform subsystem...");
+		}
+
 		GetSubsysBumpAllocator()->Free(state);
 	}
 

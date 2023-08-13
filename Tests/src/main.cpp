@@ -37,6 +37,14 @@ int main()
 	config.game_instance_memory_requirement = RESERVED_GAME_MEMORY;
 	GR::InitializeEngine(config);
 
+	// Testing logging functions
+	GRFATAL("Testing log functions: {}", "succesfull");
+	GRERROR("Testing log functions: {}", "succesfull");
+	GRWARN("Testing log functions: {}", "succesfull");
+	GRINFO("Testing log functions: {}", "succesfull");
+	GRDEBUG("Testing log functions: {}", "succesfull");
+	GRTRACE("Testing log functions: {}", "succesfull");
+
 	// Run tests
 	b8 result = run_tests();
 
