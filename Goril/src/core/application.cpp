@@ -10,7 +10,7 @@ namespace GR
 {
 	static b8 appRunning = false;
 
-	b8 OnQuit(EventType type, EventData data)
+	b8 OnQuit(EventCode type, EventData data)
 	{
 		appRunning = false;
 		return false;

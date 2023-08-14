@@ -10,21 +10,21 @@ static EventData g_data;
 static EventData g_data1;
 static EventData g_data2;
 
-b8 TestListener(EventType type, EventData data)
+b8 TestListener(EventCode type, EventData data)
 {
 	g_data = data;
 	//GRDEBUG("Test, {}, {}, {}, {}", data.u32[0], data.u32[1], data.u32[2], data.u32[3]);
 	return false;
 }
 
-b8 TestListener1(EventType type, EventData data)
+b8 TestListener1(EventCode type, EventData data)
 {
 	g_data1 = data;
 	//GRDEBUG("Test, {}, {}, {}, {}", data.u32[0], data.u32[1], data.u32[2], data.u32[3]);
 	return true;
 }
 
-b8 TestListener2(EventType type, EventData data)
+b8 TestListener2(EventCode type, EventData data)
 {
 	g_data2 = data;
 	//GRDEBUG("Test, {}, {}, {}, {}", data.u32[0], data.u32[1], data.u32[2], data.u32[3]);
@@ -57,8 +57,8 @@ b8 event_test()
 
 	InvokeEvent(EVCODE_TEST, testData);
 
-	expect_to_be_true(g_data1.b8[0]);
-	expect_to_be_false(g_data2.b8[0]);
+	expect_to_be_true((bool)g_data1.b8[0]);
+	expect_to_be_false((bool)g_data2.b8[0]);
 
 	UnregisterEventListener(EVCODE_TEST, TestListener1);
 	UnregisterEventListener(EVCODE_TEST, TestListener2);

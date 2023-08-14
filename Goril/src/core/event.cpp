@@ -44,7 +44,7 @@ namespace GR
 		GetSubsysBumpAllocator()->Free(state);
 	}
 
-	void RegisterEventListener(EventType type, PFN_OnEvent listener)
+	void RegisterEventListener(EventCode type, PFN_OnEvent listener)
 	{
 		if (!state->eventCallbacks[type].GetRawElements())
 		{
@@ -61,7 +61,7 @@ namespace GR
 		state->eventCallbacks[type].Pushback(listener);
 	}
 
-	void UnregisterEventListener(EventType type, PFN_OnEvent listener)
+	void UnregisterEventListener(EventCode type, PFN_OnEvent listener)
 	{
 		GRASSERT_DEBUG(state->eventCallbacks[type].GetRawElements());
 
@@ -77,7 +77,7 @@ namespace GR
 		GRASSERT_MSG(false, "Tried to remove listener that isn't listening");
 	}
 
-	void InvokeEvent(EventType type, EventData data)
+	void InvokeEvent(EventCode type, EventData data)
 	{
 		if (state->eventCallbacks[type].GetRawElements())
 		{

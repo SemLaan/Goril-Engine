@@ -7,10 +7,10 @@ namespace GR
 	{
 		BUTTON_LEFTMOUSEBTN = 0x01, //Left mouse button
 		BUTTON_RIGHTMOUSEBTN = 0x02, //Right mouse button
-		BUTTON_CTRLBRKPRCS = 0x03, //Control-break processing
+		//BUTTON_CTRLBRKPRCS = 0x03, //Control-break processing
 		BUTTON_MIDMOUSEBTN = 0x04, //Middle mouse button
-		BUTTON_THUMBFORWARD = 0x05, //Thumb button back on mouse aka X1
-		BUTTON_THUMBBACK = 0x06, //Thumb button forward on mouse aka X2
+		//BUTTON_THUMBFORWARD = 0x05, //Thumb button back on mouse aka X1
+		//BUTTON_THUMBBACK = 0x06, //Thumb button forward on mouse aka X2
 	};
 
 	enum KeyCode
@@ -261,10 +261,14 @@ namespace GR
 
 	void UpdateInput();
 
-	GRAPI bool GetKeyDown(KeyCode key);
-	GRAPI bool GetKeyDownPrevious(KeyCode key);
+	GRAPI b8 GetKeyDown(KeyCode key);
+	GRAPI b8 GetKeyDownPrevious(KeyCode key);
+	GRAPI b8 GetButtonDown(ButtonCode button);
+	GRAPI b8 GetButtonDownPrevious(ButtonCode button);
+	GRAPI void GetMousePos(i32* x, i32* y);
+	GRAPI void GetMousePosPrevious(i32* x, i32* y);
 
 	void ProcessKey(b8 down, KeyCode key);
 	void ProcessButton(b8 down, ButtonCode button);
-	void ProcessMouseMove(float x, float y);
+	void ProcessMouseMove(i32 x, i32 y);
 }

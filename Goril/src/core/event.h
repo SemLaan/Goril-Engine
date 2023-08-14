@@ -28,7 +28,7 @@ namespace GR
 		};
 	};
 
-	enum EventType
+	enum EventCode
 	{ /// NOTE: always add new event types just before MAX_EVENTS
 		EVCODE_QUIT,
 		EVCODE_TEST,
@@ -40,14 +40,14 @@ namespace GR
 		MAX_EVENTS
 	};
 
-	typedef b8 (*PFN_OnEvent)(EventType type, EventData data);
+	typedef b8 (*PFN_OnEvent)(EventCode type, EventData data);
 
 	b8 InitializeEvent();
 
 	void ShutdownEvent();
 
-	GRAPI void RegisterEventListener(EventType type, PFN_OnEvent listener);
-	GRAPI void UnregisterEventListener(EventType type, PFN_OnEvent listener);
+	GRAPI void RegisterEventListener(EventCode type, PFN_OnEvent listener);
+	GRAPI void UnregisterEventListener(EventCode type, PFN_OnEvent listener);
 
-	GRAPI void InvokeEvent(EventType type, EventData data);
+	GRAPI void InvokeEvent(EventCode type, EventData data);
 }

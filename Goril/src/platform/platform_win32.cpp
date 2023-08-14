@@ -6,6 +6,7 @@
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
+#include "windowsx.h"
 #include "core/logger.h"
 #include "core/asserts.h"
 #include "core/gr_memory.h"
@@ -136,6 +137,32 @@ namespace GR
 			PostQuitMessage(0);
 			return 0;
 		}
+		// ======= Input processing ===============
+		case WM_MOUSEMOVE:
+		{
+			i32 xPos = GET_X_LPARAM(lParam);
+			i32 yPos = GET_Y_LPARAM(lParam);
+			ProcessMouseMove(xPos, yPos);
+			break;
+		}
+		case WM_LBUTTONDOWN:
+			ProcessButton(true, BUTTON_LEFTMOUSEBTN);
+			break;
+		case WM_LBUTTONUP:
+			ProcessButton(false, BUTTON_LEFTMOUSEBTN);
+			break;
+		case WM_MBUTTONDOWN:
+			ProcessButton(true, BUTTON_MIDMOUSEBTN);
+			break;
+		case WM_MBUTTONUP:
+			ProcessButton(false, BUTTON_MIDMOUSEBTN);
+			break;
+		case WM_RBUTTONDOWN:
+			ProcessButton(true, BUTTON_RIGHTMOUSEBTN);
+			break;
+		case WM_RBUTTONUP:
+			ProcessButton(false, BUTTON_RIGHTMOUSEBTN);
+			break;
 		case WM_KEYDOWN:
 			if (wParam == 0x12)
 				break;
