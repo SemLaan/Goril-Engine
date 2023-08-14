@@ -2,6 +2,8 @@
 #include <iostream>
 #include <core/application.h>
 #include "test_defines.h"
+#include <core/platform.h>
+#include <core/input.h>
 
 #include "core/timer_tests.h"
 #include "core/memory_tests.h"
@@ -57,11 +59,16 @@ int main()
 		GRINFO("=============== All tests succesfull ==============");
 	}
 
+	while (true)
+	{
+		GR::PlatformProcessMessage();
+		if (GR::GetKeyDown(GR::KEY_ESCAPE))
+			break;
+	}
+
 	// Shutdown
 	GR::ShutdownEngine();
 	shutdown_test_manager();
-
-	std::cin.get();
 
 	return 0;
 }

@@ -8,7 +8,7 @@ namespace GR
 
 	void ShutdownPlatform();
 
-	void PlatformProcessMessage();
+	GRAPI void PlatformProcessMessage();
 
 	void PlatformLogString(log_level level, const char* message);
 }

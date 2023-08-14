@@ -63,6 +63,8 @@ namespace GR
 			PlatformProcessMessage();
 			gameInstance->Update();
 			gameInstance->Render();
+			if (GetKeyDown(KEY_ESCAPE))
+				appRunning = false;
 		}
 
 		UnregisterEventListener(EVCODE_QUIT, OnQuit);
