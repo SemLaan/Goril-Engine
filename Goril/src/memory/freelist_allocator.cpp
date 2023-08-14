@@ -50,6 +50,20 @@ namespace GR
 		return sizeof(AllocHeader);
 	}
 
+	u32 FreelistAllocator::GetFreeNodes()
+	{
+		u32 count = 0;
+		Node* node = m_head;
+
+		while (node)
+		{
+			count++;
+			node = node->next;
+		}
+
+		return count;
+	}
+
 	bool FreelistAllocator::Owns(void* block)
 	{
 		return (block >= m_arenaStart) && (block < m_arenaEnd);
