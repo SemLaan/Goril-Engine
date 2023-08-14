@@ -4,6 +4,7 @@
 #include "platform.h"
 #include "gr_memory.h"
 #include "event.h"
+#include "input.h"
 
 namespace GR
 {
@@ -36,6 +37,11 @@ namespace GR
 			GRFATAL("Event system failed to initialize");
 			return false;
 		}
+		if (!InitializeInput())
+		{
+			GRFATAL("Input system failed to initialize");
+			return false;
+		}
 		if (!InitializePlatform(config.windowTitle, config.startMinimized))
 		{
 			GRFATAL("Platform failed to initialize");
@@ -53,6 +59,7 @@ namespace GR
 
 		while (appRunning)
 		{
+			UpdateInput();
 			PlatformProcessMessage();
 			gameInstance->Update();
 			gameInstance->Render();
@@ -68,6 +75,7 @@ namespace GR
 	{
 		// Shutdown subsystems
 		ShutdownPlatform();
+		ShutdownInput();
 		ShutdownEvent();
 		ShutdownLogger();
 		ShutdownMemory();

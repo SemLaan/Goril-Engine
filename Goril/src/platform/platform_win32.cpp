@@ -10,6 +10,7 @@
 #include "core/asserts.h"
 #include "core/gr_memory.h"
 #include "core/event.h"
+#include "core/input.h"
 
 
 namespace GR
@@ -135,9 +136,19 @@ namespace GR
 			PostQuitMessage(0);
 			return 0;
 		}
-		default:
-			return DefWindowProc(hwnd, uMsg, wParam, lParam);
+		case WM_KEYDOWN:
+			if (wParam == 0x12)
+				break;
+			ProcessKey(true, (KeyCode)wParam);
+			break;
+		case WM_KEYUP:
+			if (wParam == 0x12)
+				break;
+			ProcessKey(false, (KeyCode)wParam);
+			break;
+			/// TODO: process syskeys, if you want to suffer
 		}
+		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 }
 #endif

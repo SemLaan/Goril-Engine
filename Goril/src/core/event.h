@@ -32,6 +32,11 @@ namespace GR
 	{ /// NOTE: always add new event types just before MAX_EVENTS
 		EVCODE_QUIT,
 		EVCODE_TEST,
+		EVCODE_KEY_DOWN,
+		EVCODE_KEY_UP,
+		EVCODE_BUTTON_DOWN,
+		EVCODE_BUTTON_UP,
+		EVCODE_MOUSE_MOVED,
 		MAX_EVENTS
 	};
 

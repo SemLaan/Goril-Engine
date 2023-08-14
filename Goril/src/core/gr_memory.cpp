@@ -8,13 +8,14 @@ namespace GR
 {
 #ifndef GR_DIST
 	static const char* memTagToText[mem_tag::MAX_MEMORY_TAGS] = {
-		"LOCAL_ALLOC        ",
-		"SUB_ARENA          ",
-		"MEMORY_SUBSYS      ",
-		"LOGGING_SUBSYS     ",
-		"PLATFORM_SUBSYS    ",
-		"EVENT_SUBSYS       ",
-		"RENDERER_SUBSYS    ",
+		"LOCAL ALLOC        ",
+		"SUB ARENA          ",
+		"MEMORY SUBSYS      ",
+		"LOGGING SUBSYS     ",
+		"PLATFORM SUBSYS    ",
+		"EVENT SUBSYS       ",
+		"RENDERER SUBSYS    ",
+		"INPUT SUBSYS       ",
 		"GAME               ",
 		"TEST               ",
 		"DARRAY             ",
