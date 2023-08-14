@@ -30,6 +30,7 @@ namespace GR
 #ifndef GR_DIST
 		size_t memorySubsystemAllocSize;
 		size_t allocated;
+		size_t deferredMemory;
 		u64 netAllocationCount;
 		u32 perTagAllocCount[mem_tag::MAX_MEMORY_TAGS];
 #endif // !GR_DIST
@@ -76,6 +77,7 @@ namespace GR
 		state->arenaSize = totalArenaSize;
 #ifndef GR_DIST
 		state->allocated = 0;
+		state->deferredMemory = 0;
 		state->memorySubsystemAllocSize = sizeof(MemoryState) + sizeof(FreelistAllocator) + freelistNodeMemory + FreelistAllocator::GetAllocHeaderSize();
 		state->netAllocationCount = 0;
 		for (u32 i = 0; i < mem_tag::MAX_MEMORY_TAGS; i++)
@@ -146,6 +148,8 @@ namespace GR
 			return;
 		if (tag != MEM_TAG_SUB_ARENA)
 			state->allocated += size;
+		else
+			state->deferredMemory += size;
 		if (state->allocated > state->arenaSize)
 			GRERROR("Allocating more memory than the application initially asked for, you should probably increase the amount of requested memory in the game config");
 		state->netAllocationCount++;
@@ -165,6 +169,8 @@ namespace GR
 			return;
 		if (tag != MEM_TAG_SUB_ARENA)
 			state->allocated -= size;
+		else
+			state->deferredMemory -= size;
 		if (state->allocated < 0)
 			GRFATAL("Somehow deallocated more memory than was allocated, very impressive and efficient use of memory");
 		state->netAllocationCount--;
@@ -209,6 +215,7 @@ namespace GR
 	{
 #ifndef GR_DIST
 		GRINFO("Printing memory stats:");
+		GRINFO("Memory deferred to local allocators: {}B", state->deferredMemory);
 		GRINFO("Total allocated memory and total arena size (bytes): {}/{}", state->allocated, state->arenaSize);
 		GRINFO("Percent allocated: {:.2f}%%", 100 * (f32)state->allocated / (f32)state->arenaSize);
 		GRINFO("Total allocations: {}", state->netAllocationCount);
