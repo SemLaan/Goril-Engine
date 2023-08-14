@@ -32,14 +32,14 @@ namespace GR
 				return;
 			// Separate object destruction from deallocation
 			m_ptr->~T();
-			GetGlobalAllocator()->Free(m_ptr);
+			GFree(m_ptr);
 		}
 
 		void Reset()
 		{
 			GRASSERT_DEBUG(m_ptr);
 			m_ptr->~T();
-			GetGlobalAllocator()->Free(m_ptr);
+			GFree(m_ptr);
 			m_ptr = nullptr;
 		}
 
@@ -70,7 +70,7 @@ namespace GR
 	Scope<T> CreateScope(mem_tag tag, Types&&... args)
 	{
 		// Separate allocation from object initialization
-		T* temp = (T*)GetGlobalAllocator()->Alloc(sizeof(T), tag);
+		T* temp = (T*)GAlloc(sizeof(T), tag);
 		return Scope<T>(new(temp) T(std::forward<Types>(args)...));
 	};
 }

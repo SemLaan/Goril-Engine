@@ -16,7 +16,7 @@ GR::GameConfig GetGameConfig()
 
 b8 CreateGameInstance(GR::GorilGame*& out_game)
 {
-	out_game = (GR::GorilGame*)GR::GetGlobalAllocator()->Alloc(sizeof(Game), GR::MEM_TAG_GAME);
+	out_game = (GR::GorilGame*)GR::GAlloc(sizeof(Game), GR::MEM_TAG_GAME);
 	out_game = new(out_game) Game();
 
 	return true;

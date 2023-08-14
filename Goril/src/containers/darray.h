@@ -22,12 +22,12 @@ namespace GR
 			size = 0;
 			capacity = reserveCapacity;
 			scalingFactor = _scalingFactor;
-			elements = (T*)GetGlobalAllocator()->Alloc(sizeof(T) * capacity, tag);
+			elements = (T*)GAlloc(sizeof(T) * capacity, tag);
 		}
 
 		void Deinitialize()
 		{
-			GetGlobalAllocator()->Free(elements);
+			GFree(elements);
 		}
 
 		T* GetRawElements()
@@ -50,7 +50,7 @@ namespace GR
 		{
 			if (size > newCapacity)
 				size = newCapacity;
-			elements = (T*)GetGlobalAllocator()->ReAlloc(elements, newCapacity * sizeof(T));
+			elements = (T*)GReAlloc(elements, newCapacity * sizeof(T));
 		}
 
 		void Pushback(T&& element)
@@ -58,7 +58,7 @@ namespace GR
 			if (size >= capacity)
 			{
 				capacity = (size_t)ceil(capacity * scalingFactor);
-				elements = (T*)GetGlobalAllocator()->ReAlloc(elements, capacity * sizeof(T));
+				elements = (T*)GReAlloc(elements, capacity * sizeof(T));
 			}
 			elements[size] = element;
 			size++;
@@ -69,7 +69,7 @@ namespace GR
 			if (size >= capacity)
 			{
 				capacity = (size_t)ceil(capacity * scalingFactor);
-				elements = (T*)GetGlobalAllocator()->ReAlloc(elements, capacity * sizeof(T));
+				elements = (T*)GReAlloc(elements, capacity * sizeof(T));
 			}
 			elements[size] = element;
 			size++;

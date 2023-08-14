@@ -112,8 +112,8 @@ namespace GR
 			GRINFO("Shutting down memory subsystem...");
 		}
 
-		GetGlobalAllocator()->Free(state->subsysBumpAllocator->GetArenaPointer());
-		GetGlobalAllocator()->Free(state->subsysBumpAllocator);
+		GFree(state->subsysBumpAllocator->GetArenaPointer());
+		GFree(state->subsysBumpAllocator);
 
 #ifndef GR_DIST
 		// Removing all the allocation info from the state to print memory stats one last time for debugging 
@@ -125,7 +125,7 @@ namespace GR
 
 		initialized = false;
 
-		GetGlobalAllocator()->Free(state);
+		GFree(state);
 		// We dont have to destroy the global allocator because that does nothing
 
 		// Return all the application memory back to the OS
@@ -140,6 +140,21 @@ namespace GR
 	BumpAllocator* GetSubsysBumpAllocator()
 	{
 		return state->subsysBumpAllocator;
+	}
+
+	void* GAlloc(size_t size, mem_tag tag)
+	{
+		return state->globalAllocator->Alloc(size, tag);
+	}
+
+	void* GReAlloc(void* block, size_t size)
+	{
+		return state->globalAllocator->ReAlloc(block, size);
+	}
+
+	void GFree(void* block)
+	{
+		state->globalAllocator->Free(block);
 	}
 
 #ifndef GR_DIST // These functions only get compiled if it's not a distribution build
@@ -189,10 +204,10 @@ namespace GR
 		// Checking if destination and source overlap
 		if ((u8*)destination + size > source && destination < (u8*)source + size)
 		{
-			void* intermediateBlock = GetGlobalAllocator()->Alloc(size, MEM_TAG_MEMORY_SUBSYS);
+			void* intermediateBlock = GAlloc(size, MEM_TAG_MEMORY_SUBSYS);
 			memcpy(intermediateBlock, source, size);
 			memcpy(destination, intermediateBlock, size);
-			GetGlobalAllocator()->Free(intermediateBlock);
+			GFree(intermediateBlock);
 		}
 		else // If the blocks don't overlap just copy them
 		{

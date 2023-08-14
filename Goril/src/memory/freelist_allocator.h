@@ -49,4 +49,4 @@ namespace GR
 		Node* GetNodeFromPool();
 		void ReturnNodeToPool(Node* node);
 	};
-}
+} 

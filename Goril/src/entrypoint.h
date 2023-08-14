@@ -36,12 +36,12 @@ int main()
 	if (!GR::RunEngine(gameInstance))
 	{
 		GRFATAL("Engine failed while running, shutting down");
-		GR::GetGlobalAllocator()->Free(gameInstance);
+		GR::GFree(gameInstance);
 		GR::ShutdownEngine();
 		return 1;
 	}
 
-	GR::GetGlobalAllocator()->Free(gameInstance);
+	GR::GFree(gameInstance);
 
 	GR::ShutdownEngine();
 	

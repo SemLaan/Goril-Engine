@@ -26,7 +26,11 @@ namespace GR
 	void ShutdownMemory();
 
 	GRAPI inline FreelistAllocator* GetGlobalAllocator();
-	GRAPI inline BumpAllocator* GetSubsysBumpAllocator();
+	BumpAllocator* GetSubsysBumpAllocator();
+
+	GRAPI inline void* GAlloc(size_t size, mem_tag tag);
+	GRAPI inline void* GReAlloc(void* block, size_t size);
+	GRAPI inline void GFree(void* block);
 
 	GRAPI inline void AllocInfo(size_t size, mem_tag tag);
 
