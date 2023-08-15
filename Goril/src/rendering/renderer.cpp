@@ -18,6 +18,9 @@ namespace GR
 
 	b8 InitializeRenderer()
 	{
+		GRASSERT_DEBUG(state == nullptr); // If this triggers init got called twice
+		GRINFO("Initializing renderer subsystem...");
+
 		state = (RendererState*)GAlloc(sizeof(RendererState), MEM_TAG_RENDERER_SUBSYS);
 
 		VkApplicationInfo appInfo = {};
@@ -66,6 +69,16 @@ namespace GR
 
 	void ShutdownRenderer()
 	{
+		if (state == nullptr)
+		{
+			GRINFO("Renderer startup failed, skipping shutdown");
+			return;
+		}
+		else
+		{
+			GRINFO("Shutting down renderer subsystem...");
+		}
+
 		vkDestroyInstance(state->instance, nullptr);
 		GFree(state);
 	}
