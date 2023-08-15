@@ -35,7 +35,7 @@ namespace GR
 			return elements;
 		}
 
-		size_t Size()
+		size_t& Size()
 		{
 			return size;
 		}

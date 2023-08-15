@@ -5,6 +5,7 @@
 #include "gr_memory.h"
 #include "event.h"
 #include "input.h"
+#include "rendering/renderer.h"
 
 namespace GR
 {
@@ -18,8 +19,8 @@ namespace GR
 
 	b8 InitializeEngine(GameConfig config)
 	{
-		size_t engineMemoryRequirement = KiB * 5;
-		size_t subsysAllocatorRequirement = KiB;
+		size_t engineMemoryRequirement = KiB * 20;
+		size_t subsysAllocatorRequirement = KiB * 5;
 
 		// Initialize subsystems
 		if (!InitializeMemory(config.game_instance_memory_requirement + engineMemoryRequirement, subsysAllocatorRequirement))
@@ -45,6 +46,11 @@ namespace GR
 		if (!InitializePlatform(config.windowTitle, config.startMinimized))
 		{
 			GRFATAL("Platform failed to initialize");
+			return false;
+		}
+		if (!InitializeRenderer())
+		{
+			GRFATAL("Renderer system failed to initialize");
 			return false;
 		}
 
@@ -76,6 +82,7 @@ namespace GR
 	void ShutdownEngine()
 	{
 		// Shutdown subsystems
+		ShutdownRenderer();
 		ShutdownPlatform();
 		ShutdownInput();
 		ShutdownEvent();
