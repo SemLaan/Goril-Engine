@@ -58,6 +58,7 @@ workspace "Goril"
 		{
 			"%{prj.name}/linking/include",
 			"%{prj.name}/src",
+			"%VULKAN_SDK%/Include",
 		}
 
 		libdirs 
@@ -66,7 +67,8 @@ workspace "Goril"
 		}
 
 		links 
-		{ 
+		{
+			"%VULKAN_SDK%/Lib/vulkan-1.lib"
 		}
 
 		defines 
