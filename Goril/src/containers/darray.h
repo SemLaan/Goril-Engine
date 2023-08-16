@@ -35,7 +35,17 @@ namespace GR
 			return elements;
 		}
 
+		const T* GetRawElements() const
+		{
+			return elements;
+		}
+
 		size_t& Size()
+		{
+			return size;
+		}
+
+		const size_t& Size() const
 		{
 			return size;
 		}
