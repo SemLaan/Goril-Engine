@@ -1,12 +1,15 @@
 // This code only implements platform.h if the platform is windows
 // Otherwise this entire script does nothing
 #ifdef __win__
-#include "../core/platform.h"
+// Both of these headers are implemented here
+#include "core/platform.h"
+#include "rendering/vulkan/vulkan_platform.h" 
 
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
-#include "windows.h"
-#include "windowsx.h"
+#include <windows.h>
+#include <windowsx.h>
+#include <vulkan/vulkan_win32.h>
 #include "core/logger.h"
 #include "core/asserts.h"
 #include "core/gr_memory.h"
@@ -176,6 +179,30 @@ namespace GR
 			/// TODO: process syskeys, if you want to suffer
 		}
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	}
+
+	// ============ Vulkan platform implementation =======================
+	void GetPlatformExtensions(Darray<const void*>* extensionNames)
+	{
+		extensionNames->Pushback(&"VK_KHR_win32_surface");
+	}
+
+	b8 PlatformCreateSurface(VkInstance instance, VkAllocationCallbacks* allocator, VkSurfaceKHR* out_surface)
+	{
+		VkWin32SurfaceCreateInfoKHR createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+		createInfo.pNext = nullptr;
+		createInfo.flags = 0;
+		createInfo.hinstance = GetModuleHandle(NULL);
+		createInfo.hwnd = state->hwnd;
+
+		if (VK_SUCCESS != vkCreateWin32SurfaceKHR(instance, &createInfo, allocator, out_surface))
+		{
+			Zero(out_surface, sizeof(VkSurfaceKHR));
+			return false;
+		}
+
+		return true;
 	}
 }
 #endif
