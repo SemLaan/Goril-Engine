@@ -11,6 +11,7 @@ namespace GR
 	struct RendererState
 	{
 		VkInstance instance;
+		VkPhysicalDevice physicalDevice;
 		VkAllocationCallbacks* allocator;
 #ifndef GR_DIST
 		VkDebugUtilsMessengerEXT debugMessenger;
@@ -191,6 +192,42 @@ namespace GR
 		}
 #endif // !GR_DIST
 
+		// ================ Getting a physical device ==============================
+		{
+			state->physicalDevice = VK_NULL_HANDLE;
+
+			u32 deviceCount = 0;
+			vkEnumeratePhysicalDevices(state->instance, &deviceCount, nullptr);
+			if (deviceCount == 0)
+			{
+				GRFATAL("No Vulkan devices found");
+				/// TODO: ifndef gr dist destroy debug utils messenger
+				vkDestroyInstance(state->instance, nullptr);
+				GFree(state);
+				state = nullptr;
+				return false;
+			}
+
+			Darray<VkPhysicalDevice> availableDevices = Darray<VkPhysicalDevice>();
+			availableDevices.Initialize(MEM_TAG_RENDERER_SUBSYS, deviceCount);
+			availableDevices.Size() = deviceCount;
+			vkEnumeratePhysicalDevices(state->instance, &deviceCount, availableDevices.GetRawElements());
+
+			/// TODO: better device selection
+			for (u32 i = 0; i < availableDevices.Size(); ++i)
+			{
+				VkPhysicalDeviceProperties properties;
+				vkGetPhysicalDeviceProperties(availableDevices[i], &properties);
+				if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+				{
+					state->physicalDevice = availableDevices[i];
+					break;
+				}
+			}
+
+			availableDevices.Deinitialize();
+		}
+
 		return true;
 	}
 
@@ -213,6 +250,7 @@ namespace GR
 		
 		vkDestroyInstance(state->instance, nullptr);
 		GFree(state);
+		state = nullptr;
 	}
 
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
