@@ -11,6 +11,7 @@ namespace GR
 	struct RendererState
 	{
 		VkInstance instance;
+		VkAllocationCallbacks* allocator;
 	};
 
 	static RendererState* state = nullptr;
@@ -22,6 +23,7 @@ namespace GR
 		GRINFO("Initializing renderer subsystem...");
 
 		state = (RendererState*)GAlloc(sizeof(RendererState), MEM_TAG_RENDERER_SUBSYS);
+		state->allocator = nullptr;
 
 		// ================ App info =============================================
 		VkApplicationInfo appInfo = {};
@@ -51,12 +53,9 @@ namespace GR
 		u32 availableRequiredExtensions = 0;
 		for (u32 i = 0; i < requiredExtensions.Size(); ++i)
 		{
-			char requiredExtensionName[VK_MAX_EXTENSION_NAME_SIZE] = {};
-			strncpy(requiredExtensionName, (const char*)requiredExtensions[i], VK_MAX_EXTENSION_NAME_SIZE);
-			requiredExtensionName[VK_MAX_EXTENSION_NAME_SIZE - 1] = '\0';
 			for (u32 j = 0; j < availableExtensionCount; ++j)
 			{
-				if (0 == memcmp(requiredExtensionName, availableExtensions[j].extensionName, VK_MAX_EXTENSION_NAME_SIZE))
+				if (0 == strncmp((const char*)requiredExtensions[i], availableExtensions[j].extensionName, VK_MAX_EXTENSION_NAME_SIZE))
 				{
 					availableRequiredExtensions++;
 				}
@@ -89,7 +88,7 @@ namespace GR
 		createInfo.enabledExtensionCount = (u32)requiredExtensions.Size();
 		createInfo.ppEnabledExtensionNames = (const char* const*)requiredExtensions.GetRawElements();
 
-		VkResult result = vkCreateInstance(&createInfo, nullptr, &state->instance);
+		VkResult result = vkCreateInstance(&createInfo, state->allocator, &state->instance);
 
 		requiredExtensions.Deinitialize();
 		availableExtensions.Deinitialize();
