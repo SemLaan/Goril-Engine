@@ -64,9 +64,28 @@ b8 darray_pop_test()
 	return true;
 }
 
+b8 darray_contains_test()
+{
+	Darray<int> darray = Darray<int>();
+	darray.Initialize();
+
+	darray.Pushback(1);
+	darray.Pushback(3);
+	darray.Pushback(4);
+	darray.Pushback(5);
+
+	expect_to_be_true(darray.Contains(4));
+	expect_to_be_false(darray.Contains(2));
+
+	darray.Deinitialize();
+
+	return true;
+}
+
 
 void register_darray_tests()
 {
 	register_test(darray_pushback_test, "Darray: pushback");
 	register_test(darray_pop_test, "Darray: pop");
+	register_test(darray_contains_test, "Darray: contains");
 }
