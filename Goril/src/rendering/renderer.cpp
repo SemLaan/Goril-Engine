@@ -23,6 +23,7 @@ namespace GR
 
 		state = (RendererState*)GAlloc(sizeof(RendererState), MEM_TAG_RENDERER_SUBSYS);
 
+		// ================ App info =============================================
 		VkApplicationInfo appInfo = {};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 		appInfo.pNext = nullptr;
@@ -32,23 +33,52 @@ namespace GR
 		appInfo.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
 		appInfo.apiVersion = VK_API_VERSION_1_3;
 
-		Darray<const void*> extensionNames = Darray<const void*>();
-		extensionNames.Initialize(MEM_TAG_RENDERER_SUBSYS);
-		extensionNames.Pushback(&VK_KHR_SURFACE_EXTENSION_NAME);
-		extensionNames.Pushback(&"VK_KHR_win32_surface");
+		// ================== Getting extensions ================================
+		// Getting required extensions
+		Darray<const void*> requiredExtensions = Darray<const void*>();
+		requiredExtensions.Initialize(MEM_TAG_RENDERER_SUBSYS);
+		requiredExtensions.Pushback(&VK_KHR_SURFACE_EXTENSION_NAME);
+		requiredExtensions.Pushback(&"VK_KHR_win32_surface");
 
+		// Checking if required extensions are available
 		u32 availableExtensionCount = 0;
 		vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, nullptr);
 		Darray<VkExtensionProperties> availableExtensions = Darray<VkExtensionProperties>();
 		availableExtensions.Initialize(MEM_TAG_RENDERER_SUBSYS, availableExtensionCount);
 		availableExtensions.Size() = availableExtensionCount;
 		vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, availableExtensions.GetRawElements());
-
-		for (u32 i = 0; i < availableExtensionCount; ++i)
+		
+		u32 availableRequiredExtensions = 0;
+		for (u32 i = 0; i < requiredExtensions.Size(); ++i)
 		{
-			GRDEBUG("{}", availableExtensions[i].extensionName);
+			char requiredExtensionName[VK_MAX_EXTENSION_NAME_SIZE] = {};
+			strncpy(requiredExtensionName, (const char*)requiredExtensions[i], VK_MAX_EXTENSION_NAME_SIZE);
+			requiredExtensionName[VK_MAX_EXTENSION_NAME_SIZE - 1] = '\0';
+			for (u32 j = 0; j < availableExtensionCount; ++j)
+			{
+				if (0 == memcmp(requiredExtensionName, availableExtensions[j].extensionName, VK_MAX_EXTENSION_NAME_SIZE))
+				{
+					availableRequiredExtensions++;
+				}
+			}
 		}
 
+		if (availableRequiredExtensions < requiredExtensions.Size())
+		{
+			GRFATAL("Couldn't find required Vulkan extensions");
+			requiredExtensions.Deinitialize();
+			availableExtensions.Deinitialize();
+			GFree(state);
+			state = nullptr;
+			return false;
+		}
+		else
+			GRTRACE("Required Vulkan extensions found");
+
+		// ================ Getting layers ===============================
+
+
+		// ================== Creating instance =================================
 		VkInstanceCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		createInfo.pNext = nullptr;
@@ -56,13 +86,21 @@ namespace GR
 		createInfo.pApplicationInfo = &appInfo;
 		createInfo.enabledLayerCount = 0;
 		createInfo.ppEnabledLayerNames = nullptr;
-		createInfo.enabledExtensionCount = extensionNames.Size();
-		createInfo.ppEnabledExtensionNames = (const char* const*)extensionNames.GetRawElements();
+		createInfo.enabledExtensionCount = (u32)requiredExtensions.Size();
+		createInfo.ppEnabledExtensionNames = (const char* const*)requiredExtensions.GetRawElements();
 
 		VkResult result = vkCreateInstance(&createInfo, nullptr, &state->instance);
 
-		extensionNames.Deinitialize();
+		requiredExtensions.Deinitialize();
 		availableExtensions.Deinitialize();
+
+		if (result != VK_SUCCESS)
+		{
+			GRFATAL("Failed to create Vulkan instance");
+			GFree(state);
+			state = nullptr;
+			return false;
+		}
 
 		return true;
 	}

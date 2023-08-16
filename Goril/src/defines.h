@@ -7,6 +7,12 @@
 #define GRAPI __declspec(dllimport)
 #endif
 
+#ifdef _MSC_VER // Stupid compiler doesn't think I know what i'm doing
+#pragma warning(disable : 4996)
+#pragma warning(disable : 6386)
+#endif
+
+
 // Unsigned int types.
 typedef std::uint8_t u8;
 typedef std::uint16_t u16;

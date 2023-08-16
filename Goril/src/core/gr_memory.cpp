@@ -64,11 +64,8 @@ namespace GR
 		// Creating the global allocator
 		FreelistAllocator* allocator = (FreelistAllocator*)arena;
 		// The allocator can see the entire arena, except for the memory where itself sits
-#pragma warning( push ) // ==================================================== This pragma suppresses a warning about buffer overrun, the warning is obviously incorrect but
-#pragma warning( disable : 6386 ) // ========================================== the code analysis is confused because i'm using malloc to allocate one big block of memory for the entire program
 		allocator = new(allocator) FreelistAllocator();
 		allocator->Initialize((u8*)arena + sizeof(FreelistAllocator), totalArenaSize - sizeof(FreelistAllocator), freelistNodeCount);
-#pragma warning( pop )
 
 		// Creating the memory state
 		state = (MemoryState*)allocator->Alloc(sizeof(MemoryState), mem_tag::MEM_TAG_MEMORY_SUBSYS);
