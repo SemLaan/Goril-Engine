@@ -75,6 +75,18 @@ namespace GR
 			size++;
 		}
 
+		b8 Contains(const T& element)
+		{
+			for (u32 i = 0; i < size; ++i)
+			{
+				if (0 == memcmp(&element, &elements[i], sizeof(T)))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
 		T PopAt(u32 index)
 		{
 			T popped = elements[index];
