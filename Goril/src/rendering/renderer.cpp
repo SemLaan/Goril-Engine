@@ -7,11 +7,18 @@
 
 namespace GR
 {
+	struct QueueFamilyIndices
+	{
+		u32 graphicsFamilyIndex;
+	};
 
 	struct RendererState
 	{
 		VkInstance instance;
 		VkPhysicalDevice physicalDevice;
+		VkDevice device;
+		VkQueue graphicsQueue;
+		QueueFamilyIndices queueIndices;
 		VkAllocationCallbacks* allocator;
 #ifndef GR_DIST
 		VkDebugUtilsMessengerEXT debugMessenger;
@@ -32,6 +39,7 @@ namespace GR
 		GRINFO("Initializing renderer subsystem...");
 
 		state = (RendererState*)GAlloc(sizeof(RendererState), MEM_TAG_RENDERER_SUBSYS);
+		Zero(state, sizeof(RendererState));
 		state->allocator = nullptr;
 
 		// ================ App info =============================================
@@ -81,8 +89,6 @@ namespace GR
 			{
 				GRFATAL("Couldn't find required Vulkan extensions");
 				requiredExtensions.Deinitialize();
-				GFree(state);
-				state = nullptr;
 				return false;
 			}
 			else
@@ -124,8 +130,6 @@ namespace GR
 				GRFATAL("Couldn't find required Vulkan layers");
 				requiredExtensions.Deinitialize();
 				requiredLayers.Deinitialize();
-				GFree(state);
-				state = nullptr;
 				return false;
 			}
 			else
@@ -165,13 +169,11 @@ namespace GR
 			VkResult result = vkCreateInstance(&createInfo, state->allocator, &state->instance);
 
 			requiredExtensions.Deinitialize();
-			requiredLayers.Deinitialize();
 
 			if (result != VK_SUCCESS)
 			{
 				GRFATAL("Failed to create Vulkan instance");
-				GFree(state);
-				state = nullptr;
+				requiredLayers.Deinitialize();
 				return false;
 			}
 		}
@@ -184,9 +186,7 @@ namespace GR
 			if (VK_SUCCESS != vkCreateDebugUtilsMessengerEXT(state->instance, &debugMessengerCreateInfo, state->allocator, &state->debugMessenger))
 			{
 				GRFATAL("Failed to create Vulkan debug utils messenger");
-				vkDestroyInstance(state->instance, nullptr);
-				GFree(state);
-				state = nullptr;
+				requiredLayers.Deinitialize();
 				return false;
 			}
 		}
@@ -201,10 +201,7 @@ namespace GR
 			if (deviceCount == 0)
 			{
 				GRFATAL("No Vulkan devices found");
-				/// TODO: ifndef gr dist destroy debug utils messenger
-				vkDestroyInstance(state->instance, nullptr);
-				GFree(state);
-				state = nullptr;
+				requiredLayers.Deinitialize();
 				return false;
 			}
 
@@ -228,6 +225,75 @@ namespace GR
 			availableDevices.Deinitialize();
 		}
 
+		// ================== Getting device queue families ==============================
+		{
+			u32 queueFamilyCount = 0;
+			vkGetPhysicalDeviceQueueFamilyProperties(state->physicalDevice, &queueFamilyCount, nullptr);
+			Darray<VkQueueFamilyProperties> availableQueueFamilies = Darray<VkQueueFamilyProperties>();
+			availableQueueFamilies.Initialize(MEM_TAG_RENDERER_SUBSYS, queueFamilyCount);
+			availableQueueFamilies.Size() = queueFamilyCount;
+			vkGetPhysicalDeviceQueueFamilyProperties(state->physicalDevice, &queueFamilyCount, availableQueueFamilies.GetRawElements());
+
+			for (u32 i = 0; i < queueFamilyCount; ++i)
+			{
+				if (availableQueueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+				{
+					state->queueIndices.graphicsFamilyIndex = i;
+					break;
+				}
+			}
+
+			availableQueueFamilies.Deinitialize();
+		}
+
+		{
+			// ===================== Specifying queues for logical device =================================
+			f32 queuePriority = 1.0f;
+
+			VkDeviceQueueCreateInfo queueCreateInfo = {};
+			queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+			queueCreateInfo.pNext = nullptr;
+			queueCreateInfo.flags = 0;
+			queueCreateInfo.queueFamilyIndex = state->queueIndices.graphicsFamilyIndex;
+			queueCreateInfo.queueCount = 1;
+			queueCreateInfo.pQueuePriorities = &queuePriority;
+
+			// ===================== Specifying features for logical device ==============================
+			VkPhysicalDeviceFeatures deviceFeatures = {};
+			/// TODO: add required device features here, these should be retrieved from the application config
+
+			// ===================== Creating logical device =============================================
+			VkDeviceCreateInfo createInfo = {};
+			createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+			createInfo.pNext = nullptr;
+			createInfo.flags = 0;
+			createInfo.queueCreateInfoCount = 1;
+			createInfo.pQueueCreateInfos = &queueCreateInfo;
+#ifndef GR_DIST
+			createInfo.enabledLayerCount = requiredLayers.Size();
+			createInfo.ppEnabledLayerNames = (const char* const*)requiredLayers.GetRawElements();
+#else
+			createInfo.enabledLayerCount = 0;
+			createInfo.ppEnabledLayerNames = nullptr;
+#endif // !GR_DIST
+			createInfo.enabledExtensionCount = 0;
+			createInfo.ppEnabledExtensionNames = nullptr;
+			createInfo.pEnabledFeatures = &deviceFeatures;
+
+			u32 result = vkCreateDevice(state->physicalDevice, &createInfo, state->allocator, &state->device);
+
+			requiredLayers.Deinitialize();
+
+			if (result != VK_SUCCESS)
+			{
+				GRFATAL("Failed to create Vulkan logical device");
+				return false;
+			}
+		}
+
+		// =================== Getting the device queues ======================================================
+		vkGetDeviceQueue(state->device, state->queueIndices.graphicsFamilyIndex, 0, &state->graphicsQueue);
+
 		return true;
 	}
 
@@ -243,12 +309,20 @@ namespace GR
 			GRINFO("Shutting down renderer subsystem...");
 		}
 
+		// ===================== Destroying logical device if it was created =================================
+		if (state->device)
+			vkDestroyDevice(state->device, state->allocator);
+
 #ifndef GR_DIST
 		PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(state->instance, "vkDestroyDebugUtilsMessengerEXT");
-		vkDestroyDebugUtilsMessengerEXT(state->instance, state->debugMessenger, state->allocator);
+		// ===================== Destroying debug messenger if it was created =================================
+		if (state->debugMessenger)
+			vkDestroyDebugUtilsMessengerEXT(state->instance, state->debugMessenger, state->allocator);
 #endif // !GR_DIST
 		
-		vkDestroyInstance(state->instance, nullptr);
+		// ======================= Destroying instance if it was created =======================================
+		if (state->instance)
+			vkDestroyInstance(state->instance, nullptr);
 		GFree(state);
 		state = nullptr;
 	}
