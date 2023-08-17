@@ -12,6 +12,7 @@
 #include "vulkan_swapchain.h"
 #include "vulkan_graphics_pipeline.h"
 #include "vulkan_renderpass.h"
+#include "vulkan_command_pool.h"
 
 namespace GR
 {
@@ -113,6 +114,10 @@ namespace GR
 		if (!CreateSwapchainFramebuffers(state))
 			return false;
 
+		// ========================== Create command pool =======================================
+		if (!CreateCommandPool(state))
+			return false;
+
 		return true;
 	}
 
@@ -127,6 +132,9 @@ namespace GR
 		{
 			GRINFO("Shutting down renderer subsystem...");
 		}
+
+		// ======================== Destroying command pool if it was created ====================================
+		DestroyCommandPool(state);
 
 		// ====================== Destroying swapchain framebuffers if they were created ================================
 		DestroySwapchainFramebuffers(state);

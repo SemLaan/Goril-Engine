@@ -36,6 +36,8 @@ namespace GR
 		VkPipelineLayout pipelineLayout;
 		VkPipeline graphicsPipeline;
 		Darray<VkFramebuffer> swapchainFramebuffers;
+		VkCommandPool commandPool;
+		VkCommandBuffer commandBuffer;
 		VkAllocationCallbacks* allocator;
 #ifndef GR_DIST
 		VkDebugUtilsMessengerEXT debugMessenger;
