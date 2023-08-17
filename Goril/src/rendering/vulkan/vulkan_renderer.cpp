@@ -118,6 +118,10 @@ namespace GR
 		if (!CreateCommandPool(state))
 			return false;
 
+		// ============================ Allocate a command buffer =======================================
+		if (!AllocateCommandBuffer(state))
+			return false;
+
 		return true;
 	}
 
