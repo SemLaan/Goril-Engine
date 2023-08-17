@@ -109,6 +109,10 @@ namespace GR
 		if (!CreateGraphicsPipeline(state))
 			return false;
 
+		// ======================= Create swapchain framebuffers ============================================
+		if (!CreateSwapchainFramebuffers(state))
+			return false;
+
 		return true;
 	}
 
@@ -123,6 +127,9 @@ namespace GR
 		{
 			GRINFO("Shutting down renderer subsystem...");
 		}
+
+		// ====================== Destroying swapchain framebuffers if they were created ================================
+		DestroySwapchainFramebuffers(state);
 
 		// ====================== Destroying graphics pipeline if it was created ================================
 		DestroyGraphicsPipeline(state);

@@ -35,6 +35,7 @@ namespace GR
 		VkRenderPass renderpass;
 		VkPipelineLayout pipelineLayout;
 		VkPipeline graphicsPipeline;
+		Darray<VkFramebuffer> swapchainFramebuffers;
 		VkAllocationCallbacks* allocator;
 #ifndef GR_DIST
 		VkDebugUtilsMessengerEXT debugMessenger;

@@ -126,4 +126,45 @@ namespace GR
 		if (state->swapchainImageViews.GetRawElements())
 			state->swapchainImageViews.Deinitialize();
 	}
+
+	b8 CreateSwapchainFramebuffers(RendererState* state)
+	{
+		state->swapchainFramebuffers = CreateDarrayWithSize<VkFramebuffer>(MEM_TAG_RENDERER_SUBSYS, (u32)state->swapchainImages.Size());
+
+		for (u32 i = 0; i < state->swapchainFramebuffers.Size(); ++i)
+		{
+			VkImageView attachments[] = { state->swapchainImageViews[i] };
+
+			VkFramebufferCreateInfo createInfo = {};
+			createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+			createInfo.pNext = nullptr;
+			createInfo.flags = 0;
+			createInfo.renderPass = state->renderpass;
+			createInfo.attachmentCount = 1;
+			createInfo.pAttachments = attachments;
+			createInfo.width = state->swapchainExtent.width;
+			createInfo.height = state->swapchainExtent.height;
+			createInfo.layers = 1;
+
+			if (VK_SUCCESS != vkCreateFramebuffer(state->device, &createInfo, state->allocator, &state->swapchainFramebuffers[i]))
+			{
+				GRFATAL("Swapchain framebuffer creation failed");
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	void DestroySwapchainFramebuffers(RendererState* state)
+	{
+		if (state->swapchainFramebuffers.GetRawElements())
+		{
+			for (u32 i = 0; i < state->swapchainFramebuffers.Size(); ++i)
+			{
+				vkDestroyFramebuffer(state->device, state->swapchainFramebuffers[i], state->allocator);
+			}
+			state->swapchainFramebuffers.Deinitialize();
+		}
+	}
 }
