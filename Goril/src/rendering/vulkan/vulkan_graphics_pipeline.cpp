@@ -158,6 +158,35 @@ namespace GR
 			return false;
 		}
 
+		VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
+		graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		graphicsPipelineCreateInfo.pNext = nullptr;
+		graphicsPipelineCreateInfo.flags = 0;
+		graphicsPipelineCreateInfo.stageCount = 2;
+		graphicsPipelineCreateInfo.pStages = shaderStagesCreateInfo;
+		graphicsPipelineCreateInfo.pVertexInputState = &vertexInputCreateInfo;
+		graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssemblerCreateInfo;
+		graphicsPipelineCreateInfo.pTessellationState = nullptr;
+		graphicsPipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
+		graphicsPipelineCreateInfo.pRasterizationState = &rasterizerCreateInfo;
+		graphicsPipelineCreateInfo.pMultisampleState = &multisamplingCreateInfo;
+		graphicsPipelineCreateInfo.pDepthStencilState = nullptr;
+		graphicsPipelineCreateInfo.pColorBlendState = &blendStateCreateInfo;
+		graphicsPipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
+		graphicsPipelineCreateInfo.layout = state->pipelineLayout;
+		graphicsPipelineCreateInfo.renderPass = state->renderpass;
+		graphicsPipelineCreateInfo.subpass = 0;
+		graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
+		graphicsPipelineCreateInfo.basePipelineIndex = -1;
+
+		if (VK_SUCCESS != vkCreateGraphicsPipelines(state->device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, state->allocator, &state->graphicsPipeline))
+		{
+			GRFATAL("Vulkan graphics pipeline creation failed");
+			vkDestroyShaderModule(state->device, vertShaderModule, state->allocator);
+			vkDestroyShaderModule(state->device, fragShaderModule, state->allocator);
+			return false;
+		}
+
 		vkDestroyShaderModule(state->device, vertShaderModule, state->allocator);
 		vkDestroyShaderModule(state->device, fragShaderModule, state->allocator);
 
@@ -166,6 +195,8 @@ namespace GR
 
 	void DestroyGraphicsPipeline(RendererState* state)
 	{
+		if (state->graphicsPipeline)
+			vkDestroyPipeline(state->device, state->graphicsPipeline, state->allocator);
 		if (state->pipelineLayout)
 			vkDestroyPipelineLayout(state->device, state->pipelineLayout, state->allocator);
 	}

@@ -11,6 +11,7 @@
 #include "vulkan_device.h"
 #include "vulkan_swapchain.h"
 #include "vulkan_graphics_pipeline.h"
+#include "vulkan_renderpass.h"
 
 namespace GR
 {
@@ -100,6 +101,10 @@ namespace GR
 		if (!CreateSwapchain(state))
 			return false;
 
+		// ========================== Creating renderpass ==============================================
+		if (!CreateRenderpass(state))
+			return false;
+
 		// ======================== Creating graphics pipeline ============================================
 		if (!CreateGraphicsPipeline(state))
 			return false;
@@ -121,6 +126,9 @@ namespace GR
 
 		// ====================== Destroying graphics pipeline if it was created ================================
 		DestroyGraphicsPipeline(state);
+
+		// ======================== Destroying renderpass if it was created =====================================
+		DestroyRenderpass(state);
 
 		// ====================== Destroying swapchain if it was created ================================
 		DestroySwapchain(state);
