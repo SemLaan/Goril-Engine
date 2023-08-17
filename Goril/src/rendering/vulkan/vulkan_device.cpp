@@ -178,5 +178,9 @@ namespace GR
 	{
 		if (state->device)
 			vkDestroyDevice(state->device, state->allocator);
+		if (state->swapchainSupport.formats.GetRawElements())
+			state->swapchainSupport.formats.Deinitialize();
+		if (state->swapchainSupport.presentModes.GetRawElements())
+			state->swapchainSupport.presentModes.Deinitialize();
 	}
 }

@@ -120,11 +120,6 @@ namespace GR
 			GRINFO("Shutting down renderer subsystem...");
 		}
 
-		if (state->swapchainSupport.formats.GetRawElements())
-			state->swapchainSupport.formats.Deinitialize();
-		if (state->swapchainSupport.presentModes.GetRawElements())
-			state->swapchainSupport.presentModes.Deinitialize();
-
 		// ====================== Destroying swapchain if it was created ================================
 		DestroySwapchain(state);
 

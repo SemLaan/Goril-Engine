@@ -28,6 +28,10 @@ namespace GR
 		VkSurfaceKHR surface;
 		SwapchainSupportDetails swapchainSupport;
 		VkSwapchainKHR swapchain;
+		Darray<VkImage> swapchainImages;
+		Darray<VkImageView> swapchainImageViews;
+		VkFormat swapchainFormat;
+		VkExtent2D swapchainExtent;
 		VkAllocationCallbacks* allocator;
 #ifndef GR_DIST
 		VkDebugUtilsMessengerEXT debugMessenger;

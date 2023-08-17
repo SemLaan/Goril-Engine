@@ -57,6 +57,12 @@ namespace GR
 			return elements[index];
 		}
 
+		T& operator[](int index)
+		{
+			GRASSERT_DEBUG(index < size);
+			return elements[index];
+		}
+
 		void SetSize(u32 newSize)
 		{
 			GRASSERT_DEBUG(newSize > size);

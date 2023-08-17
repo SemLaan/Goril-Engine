@@ -69,12 +69,61 @@ namespace GR
 			return false;
 		}
 
+		state->swapchainFormat = format.format;
+		state->swapchainExtent = swapchainExtent;
+
+		u32 swapchainImageCount = 0;
+		vkGetSwapchainImagesKHR(state->device, state->swapchain, &swapchainImageCount, nullptr);
+		state->swapchainImages = CreateDarrayWithSize<VkImage>(MEM_TAG_RENDERER_SUBSYS, swapchainImageCount);
+		vkGetSwapchainImagesKHR(state->device, state->swapchain, &swapchainImageCount, state->swapchainImages.GetRawElements());
+
+		state->swapchainImageViews = CreateDarrayWithSize<VkImageView>(MEM_TAG_RENDERER_SUBSYS, swapchainImageCount);
+
+		for (u32 i = 0; i < swapchainImageCount; ++i)
+		{
+			VkImageViewCreateInfo viewCreateInfo = {};
+			viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			viewCreateInfo.pNext = nullptr;
+			viewCreateInfo.flags = 0;
+			viewCreateInfo.image = state->swapchainImages[i];
+			viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			viewCreateInfo.format = state->swapchainFormat;
+			viewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+			viewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+			viewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+			viewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+			viewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			viewCreateInfo.subresourceRange.baseArrayLayer = 0;
+			viewCreateInfo.subresourceRange.layerCount = 1;
+			viewCreateInfo.subresourceRange.baseMipLevel = 0;
+			viewCreateInfo.subresourceRange.levelCount = 1;
+
+			if (VK_SUCCESS != vkCreateImageView(state->device, &viewCreateInfo, state->allocator, &state->swapchainImageViews[i]))
+			{
+				GRFATAL("Swapchain image view creation failed");
+				return false;
+			}
+		}
+
 		return true;
 	}
 
 	void DestroySwapchain(RendererState* state)
 	{
+		if (state->swapchainImageViews.GetRawElements())
+		{
+			for (u32 i = 0; i < state->swapchainImageViews.Size(); ++i)
+			{
+				vkDestroyImageView(state->device, state->swapchainImageViews[i], state->allocator);
+			}
+		}
+
 		if (state->swapchain)
 			vkDestroySwapchainKHR(state->device, state->swapchain, state->allocator);
+
+		if (state->swapchainImages.GetRawElements())
+			state->swapchainImages.Deinitialize();
+		if (state->swapchainImageViews.GetRawElements())
+			state->swapchainImageViews.Deinitialize();
 	}
 }
