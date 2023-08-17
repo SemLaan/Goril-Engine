@@ -68,6 +68,7 @@ namespace GR
 			UpdateInput();
 			PlatformProcessMessage();
 			gameInstance->Update();
+			UpdateRenderer();
 			gameInstance->Render();
 			if (GetKeyDown(KEY_ESCAPE))
 				appRunning = false;

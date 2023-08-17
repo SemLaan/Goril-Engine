@@ -38,6 +38,9 @@ namespace GR
 		Darray<VkFramebuffer> swapchainFramebuffers;
 		VkCommandPool commandPool;
 		VkCommandBuffer commandBuffer;
+		VkSemaphore imageAvailableSemaphore;
+		VkSemaphore renderFinishedSemaphore;
+		VkFence inFlightFence;
 		VkAllocationCallbacks* allocator;
 #ifndef GR_DIST
 		VkDebugUtilsMessengerEXT debugMessenger;

@@ -13,6 +13,7 @@
 #include "vulkan_graphics_pipeline.h"
 #include "vulkan_renderpass.h"
 #include "vulkan_command_pool.h"
+#include "vulkan_sync_objects.h"
 
 namespace GR
 {
@@ -122,7 +123,16 @@ namespace GR
 		if (!AllocateCommandBuffer(state))
 			return false;
 
+		// ================================ Create sync objects ===========================================
+		if (!CreateSyncObjects(state))
+			return false;
+
 		return true;
+	}
+
+	void UpdateRenderer()
+	{
+
 	}
 
 	void ShutdownRenderer()
@@ -136,6 +146,9 @@ namespace GR
 		{
 			GRINFO("Shutting down renderer subsystem...");
 		}
+
+		// ================================ Destroy sync objects if they were created ===========================================
+		DestroySyncObjects(state);
 
 		// ======================== Destroying command pool if it was created ====================================
 		DestroyCommandPool(state);
