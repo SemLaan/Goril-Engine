@@ -32,6 +32,7 @@ namespace GR
 		Darray<VkImageView> swapchainImageViews;
 		VkFormat swapchainFormat;
 		VkExtent2D swapchainExtent;
+		VkPipelineLayout pipelineLayout;
 		VkAllocationCallbacks* allocator;
 #ifndef GR_DIST
 		VkDebugUtilsMessengerEXT debugMessenger;

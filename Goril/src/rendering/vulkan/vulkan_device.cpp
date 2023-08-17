@@ -171,6 +171,10 @@ namespace GR
 			return false;
 		}
 
+		// =================== Getting the device queues ======================================================
+		vkGetDeviceQueue(state->device, state->queueIndices.graphicsFamily, 0, &state->graphicsQueue);
+		vkGetDeviceQueue(state->device, state->queueIndices.presentFamily, 0, &state->presentQueue);
+
 		return true;
 	}
 

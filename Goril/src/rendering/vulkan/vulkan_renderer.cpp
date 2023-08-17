@@ -10,6 +10,7 @@
 #include "vulkan_instance.h"
 #include "vulkan_device.h"
 #include "vulkan_swapchain.h"
+#include "vulkan_graphics_pipeline.h"
 
 namespace GR
 {
@@ -95,15 +96,13 @@ namespace GR
 		requiredLayers.Deinitialize();
 		requiredDeviceExtensions.Deinitialize();
 
-		// =================== Getting the device queues ======================================================
-		vkGetDeviceQueue(state->device, state->queueIndices.graphicsFamily, 0, &state->graphicsQueue);
-		vkGetDeviceQueue(state->device, state->queueIndices.presentFamily, 0, &state->presentQueue);
-
 		// ======================== Creating the swapchain ===============================================
 		if (!CreateSwapchain(state))
-		{
 			return false;
-		}
+
+		// ======================== Creating graphics pipeline ============================================
+		if (!CreateGraphicsPipeline(state))
+			return false;
 
 		return true;
 	}
@@ -119,6 +118,9 @@ namespace GR
 		{
 			GRINFO("Shutting down renderer subsystem...");
 		}
+
+		// ====================== Destroying graphics pipeline if it was created ================================
+		DestroyGraphicsPipeline(state);
 
 		// ====================== Destroying swapchain if it was created ================================
 		DestroySwapchain(state);
