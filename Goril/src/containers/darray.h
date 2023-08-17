@@ -23,6 +23,7 @@ namespace GR
 			capacity = reserveCapacity;
 			scalingFactor = _scalingFactor;
 			elements = (T*)GAlloc(sizeof(T) * capacity, tag);
+			Zero(elements, sizeof(T) * capacity);
 		}
 
 		void Deinitialize()
@@ -52,8 +53,21 @@ namespace GR
 
 		T const& operator[](int index) const
 		{
-			GRASSERT(index < size)
+			GRASSERT_DEBUG(index < size);
 			return elements[index];
+		}
+
+		void SetSize(u32 newSize)
+		{
+			GRASSERT_DEBUG(newSize > size);
+			if (capacity < newSize)
+			{
+				elements = (T*)GReAlloc(elements, newSize * sizeof(T));
+				capacity = newSize;
+			}
+
+			Zero(elements + size, sizeof(T) * (newSize - size));
+			size = newSize;
 		}
 
 		void SetCapacity(u32 newCapacity)
@@ -112,4 +126,32 @@ namespace GR
 			return elements[size];
 		}
 	};
+
+	template<typename T>
+	Darray<T> CreateDarrayWithSize(mem_tag tag = MEM_TAG_DARRAY, u32 size = 0, f32 _scalingFactor = 1.6f)
+	{
+		Darray<T> darray = Darray<T>();
+
+		if (size)
+		{
+			darray.Initialize(tag, size, _scalingFactor);
+			darray.SetSize(size);
+		}
+		else
+		{
+			darray.Initialize(tag, 1, _scalingFactor);
+		}
+
+		return darray;
+	}
+
+	template<typename T>
+	Darray<T> CreateDarrayWithCapacity(mem_tag tag = MEM_TAG_DARRAY, u32 reserveCapacity = 1, f32 _scalingFactor = 1.6f)
+	{
+		Darray<T> darray = Darray<T>();
+
+		darray.Initialize(tag, reserveCapacity, _scalingFactor);
+
+		return darray;
+	}
 }

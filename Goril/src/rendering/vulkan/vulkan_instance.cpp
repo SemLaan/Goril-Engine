@@ -20,9 +20,7 @@ namespace GR
 			// Checking if required extensions are available
 			u32 availableExtensionCount = 0;
 			vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, nullptr);
-			Darray<VkExtensionProperties> availableExtensions = Darray<VkExtensionProperties>();
-			availableExtensions.Initialize(MEM_TAG_RENDERER_SUBSYS, availableExtensionCount);
-			availableExtensions.Size() = availableExtensionCount;
+			Darray<VkExtensionProperties> availableExtensions = CreateDarrayWithSize<VkExtensionProperties>(MEM_TAG_RENDERER_SUBSYS, availableExtensionCount);
 			vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, availableExtensions.GetRawElements());
 
 			u32 availableRequiredExtensions = 0;
@@ -54,9 +52,7 @@ namespace GR
 			// Checking if required layers are available
 			u32 availableLayerCount = 0;
 			vkEnumerateInstanceLayerProperties(&availableLayerCount, nullptr);
-			Darray<VkLayerProperties> availableLayers = Darray<VkLayerProperties>();
-			availableLayers.Initialize(MEM_TAG_RENDERER_SUBSYS, availableLayerCount);
-			availableLayers.Size() = availableLayerCount;
+			Darray<VkLayerProperties> availableLayers = CreateDarrayWithSize<VkLayerProperties>(MEM_TAG_RENDERER_SUBSYS, availableLayerCount);
 			vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers.GetRawElements());
 
 			u32 availableRequiredLayers = 0;

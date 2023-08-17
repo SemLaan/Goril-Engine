@@ -19,7 +19,7 @@ namespace GR
 
 	b8 InitializeEngine(GameConfig config)
 	{
-		size_t engineMemoryRequirement = KiB * 20;
+		size_t engineMemoryRequirement = MiB;
 		size_t subsysAllocatorRequirement = KiB * 5;
 
 		// Initialize subsystems

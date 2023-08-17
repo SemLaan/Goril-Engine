@@ -8,6 +8,8 @@
 #include "vulkan_types.h"
 #include "vulkan_debug_messenger.h"
 #include "vulkan_instance.h"
+#include "vulkan_device.h"
+#include "vulkan_swapchain.h"
 
 namespace GR
 {
@@ -71,130 +73,37 @@ namespace GR
 		// ================ Getting a physical device ==============================
 		Darray<const void*> requiredDeviceExtensions = Darray<const void*>();
 		requiredDeviceExtensions.Initialize(MEM_TAG_RENDERER_SUBSYS);
-		GetPlatformExtensions(&requiredDeviceExtensions);
-		requiredDeviceExtensions.Pushback(&VK_KHR_SURFACE_EXTENSION_NAME);
-		requiredDeviceExtensions.Deinitialize();
+		requiredDeviceExtensions.Pushback(&VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+		
+		if (!SelectPhysicalDevice(state, &requiredDeviceExtensions))
 		{
-			state->physicalDevice = VK_NULL_HANDLE;
-
-			u32 deviceCount = 0;
-			vkEnumeratePhysicalDevices(state->instance, &deviceCount, nullptr);
-			if (deviceCount == 0)
-			{
-				GRFATAL("No Vulkan devices found");
-				requiredLayers.Deinitialize();
-				return false;
-			}
-
-			Darray<VkPhysicalDevice> availableDevices = Darray<VkPhysicalDevice>();
-			availableDevices.Initialize(MEM_TAG_RENDERER_SUBSYS, deviceCount);
-			availableDevices.Size() = deviceCount;
-			vkEnumeratePhysicalDevices(state->instance, &deviceCount, availableDevices.GetRawElements());
-
-			/// TODO: better device selection
-			for (u32 i = 0; i < availableDevices.Size(); ++i)
-			{
-				VkPhysicalDeviceProperties properties;
-				vkGetPhysicalDeviceProperties(availableDevices[i], &properties);
-				b8 isDiscrete = properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
-				if (isDiscrete)
-				{
-					state->physicalDevice = availableDevices[i];
-					break;
-				}
-			}
-
-			availableDevices.Deinitialize();
+			requiredDeviceExtensions.Deinitialize();
+			requiredLayers.Deinitialize();
+			return false;
 		}
 
 		// ================== Getting device queue families ==============================
+		SelectQueueFamilies(state);
+
+		// ===================== Creating logical device =============================================
+		if (!CreateLogicalDevice(state, &requiredDeviceExtensions, &requiredLayers))
 		{
-			u32 queueFamilyCount = 0;
-			vkGetPhysicalDeviceQueueFamilyProperties(state->physicalDevice, &queueFamilyCount, nullptr);
-			Darray<VkQueueFamilyProperties> availableQueueFamilies = Darray<VkQueueFamilyProperties>();
-			availableQueueFamilies.Initialize(MEM_TAG_RENDERER_SUBSYS, queueFamilyCount);
-			availableQueueFamilies.Size() = queueFamilyCount;
-			vkGetPhysicalDeviceQueueFamilyProperties(state->physicalDevice, &queueFamilyCount, availableQueueFamilies.GetRawElements());
-
-			for (u32 i = 0; i < queueFamilyCount; ++i)
-			{
-				VkBool32 presentSupport = false;
-				vkGetPhysicalDeviceSurfaceSupportKHR(state->physicalDevice, i, state->surface, &presentSupport);
-				b8 graphicsSupport = availableQueueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT;
-				if (graphicsSupport)
-					state->queueIndices.graphicsFamily = i;
-				if (presentSupport)
-					state->queueIndices.presentFamily = i;
-			}
-			/// TODO: check if the device even has queue families for all these things, if not fail startup
-			availableQueueFamilies.Deinitialize();
-		}
-
-		{
-			// ===================== Specifying queues for logical device =================================
-			Darray<VkDeviceQueueCreateInfo> queueCreateInfos = Darray<VkDeviceQueueCreateInfo>();
-			queueCreateInfos.Initialize(MEM_TAG_RENDERER_SUBSYS);
-
-			Darray<u32> uniqueQueueFamilies = Darray<u32>();
-			uniqueQueueFamilies.Initialize(MEM_TAG_RENDERER_SUBSYS);
-			if (!uniqueQueueFamilies.Contains(state->queueIndices.graphicsFamily))
-				uniqueQueueFamilies.Pushback(state->queueIndices.graphicsFamily);
-			if (!uniqueQueueFamilies.Contains(state->queueIndices.presentFamily))
-				uniqueQueueFamilies.Pushback(state->queueIndices.presentFamily);
-
-			f32 queuePriority = 1.0f;
-
-			for (u32 i = 0; i < uniqueQueueFamilies.Size(); ++i)
-			{
-				VkDeviceQueueCreateInfo queueCreateInfo = {};
-				queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-				queueCreateInfo.pNext = nullptr;
-				queueCreateInfo.flags = 0;
-				queueCreateInfo.queueFamilyIndex = uniqueQueueFamilies[i];
-				queueCreateInfo.queueCount = 1;
-				queueCreateInfo.pQueuePriorities = &queuePriority;
-				queueCreateInfos.Pushback(queueCreateInfo);
-			}
-
-			uniqueQueueFamilies.Deinitialize();
-
-			// ===================== Specifying features for logical device ==============================
-			VkPhysicalDeviceFeatures deviceFeatures = {};
-			/// TODO: add required device features here, these should be retrieved from the application config
-
-			// ===================== Creating logical device =============================================
-			VkDeviceCreateInfo createInfo = {};
-			createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-			createInfo.pNext = nullptr;
-			createInfo.flags = 0;
-			createInfo.queueCreateInfoCount = (u32)queueCreateInfos.Size();
-			createInfo.pQueueCreateInfos = queueCreateInfos.GetRawElements();
-#ifndef GR_DIST
-			createInfo.enabledLayerCount = (u32)requiredLayers.Size();
-			createInfo.ppEnabledLayerNames = (const char* const*)requiredLayers.GetRawElements();
-#else
-			createInfo.enabledLayerCount = 0;
-			createInfo.ppEnabledLayerNames = nullptr;
-#endif // !GR_DIST
-			createInfo.enabledExtensionCount = 0;
-			createInfo.ppEnabledExtensionNames = nullptr;
-			createInfo.pEnabledFeatures = &deviceFeatures;
-
-			u32 result = vkCreateDevice(state->physicalDevice, &createInfo, state->allocator, &state->device);
-
 			requiredLayers.Deinitialize();
-			queueCreateInfos.Deinitialize();
-
-			if (result != VK_SUCCESS)
-			{
-				GRFATAL("Failed to create Vulkan logical device");
-				return false;
-			}
+			requiredDeviceExtensions.Deinitialize();
+			return false;
 		}
+		requiredLayers.Deinitialize();
+		requiredDeviceExtensions.Deinitialize();
 
 		// =================== Getting the device queues ======================================================
 		vkGetDeviceQueue(state->device, state->queueIndices.graphicsFamily, 0, &state->graphicsQueue);
 		vkGetDeviceQueue(state->device, state->queueIndices.presentFamily, 0, &state->presentQueue);
+
+		// ======================== Creating the swapchain ===============================================
+		if (!CreateSwapchain(state))
+		{
+			return false;
+		}
 
 		return true;
 	}
@@ -211,12 +120,18 @@ namespace GR
 			GRINFO("Shutting down renderer subsystem...");
 		}
 
+		if (state->swapchainSupport.formats.GetRawElements())
+			state->swapchainSupport.formats.Deinitialize();
+		if (state->swapchainSupport.presentModes.GetRawElements())
+			state->swapchainSupport.presentModes.Deinitialize();
+
+		// ====================== Destroying swapchain if it was created ================================
+		DestroySwapchain(state);
+
 		// ===================== Destroying logical device if it was created =================================
-		if (state->device)
-			vkDestroyDevice(state->device, state->allocator);
+		DestroyLogicalDevice(state);
 
 		// ======================= Destroying the surface if it was created ==================================
-		
 		if (state->surface)
 			vkDestroySurfaceKHR(state->instance, state->surface, state->allocator);
 

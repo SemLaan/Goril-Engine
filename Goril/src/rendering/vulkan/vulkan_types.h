@@ -1,9 +1,15 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include "defines.h"
+#include "containers/darray.h"
 
 namespace GR
 {
+	struct SwapchainSupportDetails {
+		VkSurfaceCapabilitiesKHR capabilities;
+		Darray<VkSurfaceFormatKHR> formats;
+		Darray<VkPresentModeKHR> presentModes;
+	};
 
 	struct QueueFamilyIndices
 	{
@@ -20,6 +26,8 @@ namespace GR
 		VkQueue presentQueue;
 		QueueFamilyIndices queueIndices;
 		VkSurfaceKHR surface;
+		SwapchainSupportDetails swapchainSupport;
+		VkSwapchainKHR swapchain;
 		VkAllocationCallbacks* allocator;
 #ifndef GR_DIST
 		VkDebugUtilsMessengerEXT debugMessenger;
