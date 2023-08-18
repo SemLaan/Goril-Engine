@@ -9,7 +9,7 @@ namespace GR
 
 	void DestroyCommandPool(RendererState* state);
 
-	b8 AllocateCommandBuffer(RendererState* state);
+	b8 AllocateCommandBuffers(RendererState* state);
 
-	b8 RecordCommandBuffer(RendererState* state, u32 imageIndex);
+	b8 RecordCommandBuffer(RendererState* state, VkCommandBuffer commandBuffer, u32 imageIndex);
 }

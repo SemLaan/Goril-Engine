@@ -37,10 +37,12 @@ namespace GR
 		VkPipeline graphicsPipeline;
 		Darray<VkFramebuffer> swapchainFramebuffers;
 		VkCommandPool commandPool;
-		VkCommandBuffer commandBuffer;
-		VkSemaphore imageAvailableSemaphore;
-		VkSemaphore renderFinishedSemaphore;
-		VkFence inFlightFence;
+		Darray<VkCommandBuffer> commandBuffers;
+		Darray<VkSemaphore> imageAvailableSemaphores;
+		Darray<VkSemaphore> renderFinishedSemaphores;
+		Darray<VkFence> inFlightFences;
+		i32 maxFramesInFlight;
+		u32 currentFrame;
 		VkAllocationCallbacks* allocator;
 #ifndef GR_DIST
 		VkDebugUtilsMessengerEXT debugMessenger;

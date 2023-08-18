@@ -29,6 +29,8 @@ namespace GR
 		Zero(state, sizeof(RendererState));
 		state->allocator = nullptr;
 
+		state->maxFramesInFlight = 2;
+		state->currentFrame = 0;
 
 		// ================== Getting required extensions and layers ================================
 		// Getting required extensions
@@ -120,7 +122,7 @@ namespace GR
 			return false;
 
 		// ============================ Allocate a command buffer =======================================
-		if (!AllocateCommandBuffer(state))
+		if (!AllocateCommandBuffers	(state))
 			return false;
 
 		// ================================ Create sync objects ===========================================
@@ -132,19 +134,19 @@ namespace GR
 
 	void UpdateRenderer()
 	{
-		vkWaitForFences(state->device, 1, &state->inFlightFence, VK_TRUE, UINT64_MAX);
+		vkWaitForFences(state->device, 1, &state->inFlightFences[state->currentFrame], VK_TRUE, UINT64_MAX);
 
-		vkResetFences(state->device, 1, &state->inFlightFence);
+		vkResetFences(state->device, 1, &state->inFlightFences[state->currentFrame]);
 
 		u32 imageIndex;
-		vkAcquireNextImageKHR(state->device, state->swapchain, UINT64_MAX, state->imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+		vkAcquireNextImageKHR(state->device, state->swapchain, UINT64_MAX, state->imageAvailableSemaphores[state->currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-		vkResetCommandBuffer(state->commandBuffer, 0);
+		vkResetCommandBuffer(state->commandBuffers[state->currentFrame], 0);
 
-		RecordCommandBuffer(state, imageIndex);
+		RecordCommandBuffer(state, state->commandBuffers[state->currentFrame], imageIndex);
 
-		VkSemaphore waitSemaphores[] = { state->imageAvailableSemaphore };
-		VkSemaphore signalSemaphores[] = { state->renderFinishedSemaphore };
+		VkSemaphore waitSemaphores[] = { state->imageAvailableSemaphores[state->currentFrame] };
+		VkSemaphore signalSemaphores[] = { state->renderFinishedSemaphores[state->currentFrame] };
 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
 		VkSubmitInfo submitInfo = {};
@@ -154,11 +156,11 @@ namespace GR
 		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &state->commandBuffer;
+		submitInfo.pCommandBuffers = &state->commandBuffers[state->currentFrame];
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
-		if (VK_SUCCESS != vkQueueSubmit(state->graphicsQueue, 1, &submitInfo, state->inFlightFence))
+		if (VK_SUCCESS != vkQueueSubmit(state->graphicsQueue, 1, &submitInfo, state->inFlightFences[state->currentFrame]))
 		{
 			GRERROR("Failed to submit queue");
 			return;
@@ -177,6 +179,8 @@ namespace GR
 		presentInfo.pResults = nullptr;
 
 		vkQueuePresentKHR(state->graphicsQueue, &presentInfo);
+
+		state->currentFrame = (state->currentFrame + 1) % state->maxFramesInFlight;
 	}
 
 	void ShutdownRenderer()

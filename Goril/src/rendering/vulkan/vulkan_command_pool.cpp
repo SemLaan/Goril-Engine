@@ -25,18 +25,23 @@ namespace GR
 	{
 		if (state->commandPool)
 			vkDestroyCommandPool(state->device, state->commandPool, state->allocator);
+
+		if (state->commandBuffers.GetRawElements())
+			state->commandBuffers.Deinitialize();
 	}
 
-	b8 AllocateCommandBuffer(RendererState* state)
+	b8 AllocateCommandBuffers(RendererState* state)
 	{
+		state->commandBuffers = CreateDarrayWithSize<VkCommandBuffer>(MEM_TAG_RENDERER_SUBSYS, state->maxFramesInFlight);
+
 		VkCommandBufferAllocateInfo allocateInfo = {};
 		allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocateInfo.pNext = nullptr;
 		allocateInfo.commandPool = state->commandPool;
 		allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocateInfo.commandBufferCount = 1;
+		allocateInfo.commandBufferCount = state->maxFramesInFlight;
 
-		if (VK_SUCCESS != vkAllocateCommandBuffers(state->device, &allocateInfo, &state->commandBuffer))
+		if (VK_SUCCESS != vkAllocateCommandBuffers(state->device, &allocateInfo, state->commandBuffers.GetRawElements()))
 		{
 			GRFATAL("Failed to allocate command buffer(s)");
 			return false;
@@ -45,7 +50,7 @@ namespace GR
 		return true;
 	}
 
-	b8 RecordCommandBuffer(RendererState* state, u32 imageIndex)
+	b8 RecordCommandBuffer(RendererState* state, VkCommandBuffer commandBuffer, u32 imageIndex)
 	{
 		VkCommandBufferBeginInfo beginInfo = {};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -53,7 +58,7 @@ namespace GR
 		beginInfo.flags = 0;
 		beginInfo.pInheritanceInfo = nullptr;
 
-		if (VK_SUCCESS != vkBeginCommandBuffer(state->commandBuffer, &beginInfo))
+		if (VK_SUCCESS != vkBeginCommandBuffer(commandBuffer, &beginInfo))
 		{
 			GRFATAL("Beginning command buffer failed");
 			return false;
@@ -71,9 +76,9 @@ namespace GR
 		renderpassBeginInfo.clearValueCount = 1;
 		renderpassBeginInfo.pClearValues = &clearColor;
 
-		vkCmdBeginRenderPass(state->commandBuffer, &renderpassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(commandBuffer, &renderpassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-		vkCmdBindPipeline(state->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, state->graphicsPipeline);
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, state->graphicsPipeline);
 
 		// Viewport and scissor
 		VkViewport viewport = {};
@@ -83,18 +88,18 @@ namespace GR
 		viewport.height = (f32)state->swapchainExtent.height;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(state->commandBuffer, 0, 1, &viewport);
+		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
 		VkRect2D scissor = {};
 		scissor.offset = { 0, 0 };
 		scissor.extent = state->swapchainExtent;
-		vkCmdSetScissor(state->commandBuffer, 0, 1, &scissor);
+		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		vkCmdDraw(state->commandBuffer, 3, 1, 0, 0);
+		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
-		vkCmdEndRenderPass(state->commandBuffer);
+		vkCmdEndRenderPass(commandBuffer);
 
-		if (VK_SUCCESS != vkEndCommandBuffer(state->commandBuffer))
+		if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer))
 		{
 			GRFATAL("Failed to record command buffer");
 			return false;
