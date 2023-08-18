@@ -132,7 +132,51 @@ namespace GR
 
 	void UpdateRenderer()
 	{
+		vkWaitForFences(state->device, 1, &state->inFlightFence, VK_TRUE, UINT64_MAX);
 
+		vkResetFences(state->device, 1, &state->inFlightFence);
+
+		u32 imageIndex;
+		vkAcquireNextImageKHR(state->device, state->swapchain, UINT64_MAX, state->imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+
+		vkResetCommandBuffer(state->commandBuffer, 0);
+
+		RecordCommandBuffer(state, imageIndex);
+
+		VkSemaphore waitSemaphores[] = { state->imageAvailableSemaphore };
+		VkSemaphore signalSemaphores[] = { state->renderFinishedSemaphore };
+		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
+		VkSubmitInfo submitInfo = {};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.pNext = nullptr;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = waitSemaphores;
+		submitInfo.pWaitDstStageMask = waitStages;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &state->commandBuffer;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = signalSemaphores;
+
+		if (VK_SUCCESS != vkQueueSubmit(state->graphicsQueue, 1, &submitInfo, state->inFlightFence))
+		{
+			GRERROR("Failed to submit queue");
+			return;
+		}
+
+		VkSwapchainKHR swapchains[] = { state->swapchain };
+
+		VkPresentInfoKHR presentInfo = {};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.pNext = nullptr;
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = signalSemaphores;
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = swapchains;
+		presentInfo.pImageIndices = &imageIndex;
+		presentInfo.pResults = nullptr;
+
+		vkQueuePresentKHR(state->graphicsQueue, &presentInfo);
 	}
 
 	void ShutdownRenderer()
@@ -146,6 +190,8 @@ namespace GR
 		{
 			GRINFO("Shutting down renderer subsystem...");
 		}
+
+		vkDeviceWaitIdle(state->device);
 
 		// ================================ Destroy sync objects if they were created ===========================================
 		DestroySyncObjects(state);

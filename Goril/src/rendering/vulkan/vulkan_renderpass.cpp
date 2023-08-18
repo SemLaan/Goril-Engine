@@ -33,6 +33,15 @@ namespace GR
 		subpass.preserveAttachmentCount = 0;
 		subpass.pPreserveAttachments = nullptr;
 
+		VkSubpassDependency subpassDependency = {};
+		subpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		subpassDependency.dstSubpass = 0;
+		subpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		subpassDependency.srcAccessMask = 0;
+		subpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		subpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		subpassDependency.dependencyFlags = 0;
+
 		VkRenderPassCreateInfo renderpassCreateInfo = {};
 		renderpassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 		renderpassCreateInfo.pNext = nullptr;
@@ -41,8 +50,8 @@ namespace GR
 		renderpassCreateInfo.pAttachments = &colorAttachment;
 		renderpassCreateInfo.subpassCount = 1;
 		renderpassCreateInfo.pSubpasses = &subpass;
-		renderpassCreateInfo.dependencyCount = 0;
-		renderpassCreateInfo.pDependencies = nullptr;
+		renderpassCreateInfo.dependencyCount = 1;
+		renderpassCreateInfo.pDependencies = &subpassDependency;
 
 		if (VK_SUCCESS != vkCreateRenderPass(state->device, &renderpassCreateInfo, state->allocator, &state->renderpass))
 		{

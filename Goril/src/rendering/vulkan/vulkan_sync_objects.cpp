@@ -11,6 +11,7 @@ namespace GR
 
 		VkFenceCreateInfo fenceCreateInfo = {};
 		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 		if ((VK_SUCCESS != vkCreateSemaphore(state->device, &semaphoreCreateInfo, state->allocator, &state->imageAvailableSemaphore)) ||
 			(VK_SUCCESS != vkCreateSemaphore(state->device, &semaphoreCreateInfo, state->allocator, &state->renderFinishedSemaphore)) ||
