@@ -46,6 +46,9 @@ namespace GR
 		void Free(void* block);
 
 	private:
+		void* AllocInFreelist(size_t size);
+		b8 TryReAllocInFreelist(void* block, size_t oldSize, size_t newSize);
+		void FreeInFreelist(void* block, size_t size);
 		Node* GetNodeFromPool();
 		void ReturnNodeToPool(Node* node);
 	};
