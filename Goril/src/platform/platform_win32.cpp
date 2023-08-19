@@ -25,8 +25,12 @@ namespace GR
 		HWND hwnd;
 		u32 width;
 		u32 height;
-		u32 widthPreMaximize;
-		u32 heightPreMaximize;
+		u32 xPosPreMaximize, yPosPreMaximize;
+		u32 widthPreMaximize, heightPreMaximize;
+		DWORD windowStyle;
+		DWORD windowExStyle;
+		b8 fullscreenKeyDown;
+		b8 fullscreenActive;
 	};
 
 	static PlatformState* state = nullptr;
@@ -61,11 +65,12 @@ namespace GR
 
 		RegisterClassEx(&wc);
 
-		u32 windowStyle = (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+		state->windowStyle = WS_OVERLAPPEDWINDOW;
+		state->windowExStyle = WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW;
 
 		state->hwnd = CreateWindowEx(
-			NULL, className, windowName,
-			windowStyle,
+			state->windowExStyle, className, windowName,
+			state->windowStyle,
 			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 			NULL, NULL, GetModuleHandle(NULL), NULL
 		);
@@ -144,6 +149,78 @@ namespace GR
 		*height = state->height;
 	}
 
+	void ToggleFullscreen()
+	{
+		SetFullscreen(!state->fullscreenActive);
+	}
+
+	void SetFullscreen(b8 enabled)
+	{
+		if (enabled == state->fullscreenActive)
+			return;
+
+		state->fullscreenActive = enabled;
+
+		if (enabled)
+		{
+			SetWindowLongW(state->hwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+			SetWindowLongW(state->hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
+
+			HMONITOR monitor = MonitorFromWindow(state->hwnd, MONITOR_DEFAULTTONEAREST);
+			MONITORINFOEXW monitorInfo{};
+			monitorInfo.cbSize = sizeof(monitorInfo);
+			if (GetMonitorInfoW(monitor, &monitorInfo))
+			{
+				RECT windowRect;
+				if (GetWindowRect(state->hwnd, &windowRect))
+				{
+					state->xPosPreMaximize = windowRect.left;
+					state->yPosPreMaximize = windowRect.top;
+				}
+				state->widthPreMaximize = state->width;
+				state->heightPreMaximize = state->height;
+				state->width = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
+				state->height = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
+
+				SetWindowPos(state->hwnd, nullptr,
+					monitorInfo.rcMonitor.left,
+					monitorInfo.rcMonitor.top,
+					monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+					monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
+					SWP_NOZORDER
+				);
+
+				EventData eventData{};
+				eventData.u32[0] = state->width;
+				eventData.u32[1] = state->height;
+				InvokeEvent(EVCODE_WINDOW_RESIZED, eventData);
+			}
+		}
+		else
+		{
+			SetWindowLongW(state->hwnd, GWL_STYLE, state->windowStyle);
+			SetWindowLongW(state->hwnd, GWL_EXSTYLE, state->windowExStyle);
+
+			ShowWindow(state->hwnd, SW_SHOW);
+
+			SetWindowPos(state->hwnd, nullptr,
+				state->xPosPreMaximize,
+				state->yPosPreMaximize,
+				state->widthPreMaximize,
+				state->heightPreMaximize,
+				NULL
+			);
+
+			state->width = state->widthPreMaximize;
+			state->height = state->heightPreMaximize;
+
+			EventData eventData{};
+			eventData.u32[0] = state->width;
+			eventData.u32[1] = state->height;
+			InvokeEvent(EVCODE_WINDOW_RESIZED, eventData);
+		}
+	}
+
 	LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		switch (uMsg)
@@ -193,7 +270,7 @@ namespace GR
 				break;
 			ProcessKey(false, (KeyCode)wParam);
 			break;
-			/// TODO: process syskeys, if you want to suffer
+			/// TODO: process syskeys for input, if you want to suffer
 		case WM_SIZE:
 		{
 			RECT clientRect;

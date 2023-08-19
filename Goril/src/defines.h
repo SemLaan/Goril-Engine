@@ -31,7 +31,7 @@ typedef double f64;
 
 // Boolean types
 typedef std::int32_t b32;
-typedef std::uint8_t b8;
+typedef bool b8;
 
 #define KiB ((size_t)1024u)
 #define MiB ((size_t)1024u * (size_t)1024u)

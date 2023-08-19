@@ -92,6 +92,7 @@ namespace GR
 		if (state->keyStates[key] != down)
 		{
 			state->keyStates[key] = down;
+			//GRDEBUG("Key down: {}", (char)key);
 			EventData data{};
 			data.u8[0] = key;
 			if (down)

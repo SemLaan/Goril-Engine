@@ -266,7 +266,7 @@ namespace GR
 			if ((node == nullptr) ? true : node->address > freeAddress)
 			{
 				// True if previous exists and end of previous aligns with start of freed block
-				b8 aligns = previous ? ((u8*)previous->address + previous->size) == freeAddress : false;
+				u8 aligns = previous ? ((u8*)previous->address + previous->size) == freeAddress : false;
 				// True if the end of the freed block aligns with the start of the next node (also checks if node exist in case we are at the end of the list)
 				aligns |= node ? (((u8*)freeAddress + header->size) == node->address) << 1 : false;
 

@@ -14,7 +14,7 @@ namespace GR
 
 	b8 OnQuit(EventCode type, EventData data);
 	b8 OnResize(EventCode type, EventData data);
-
+	b8 OnKeyDown(EventCode type, EventData data);
 
 	b8 InitializeEngine(GameConfig config)
 	{
@@ -55,6 +55,7 @@ namespace GR
 
 		RegisterEventListener(EVCODE_QUIT, OnQuit);
 		RegisterEventListener(EVCODE_WINDOW_RESIZED, OnResize);
+		RegisterEventListener(EVCODE_KEY_DOWN, OnKeyDown);
 		appRunning = true;
 		return true;
 	}
@@ -80,6 +81,7 @@ namespace GR
 
 		UnregisterEventListener(EVCODE_QUIT, OnQuit);
 		UnregisterEventListener(EVCODE_WINDOW_RESIZED, OnResize);
+		UnregisterEventListener(EVCODE_KEY_DOWN, OnKeyDown);
 		gameInstance->Shutdown();
 
 		return true;
@@ -114,6 +116,13 @@ namespace GR
 			appSuspended = false;
 			GRINFO("App unsuspended");
 		}
+		return false;
+	}
+
+	b8 OnKeyDown(EventCode type, EventData data)
+	{
+		if (data.u8[0] == KEY_F11)
+			ToggleFullscreen();
 		return false;
 	}
 }
