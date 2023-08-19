@@ -48,7 +48,6 @@ workspace "Goril"
 		files
 		{
 			"%{prj.name}/linking/include/**.h",
-			"%{prj.name}/linking/include/**glad.c",
 			"%{prj.name}/linking/libs/**",
 			"%{prj.name}/src/**.h",
 			"%{prj.name}/src/**.cpp"
@@ -95,13 +94,12 @@ workspace "Goril"
 
 		includedirs
 		{
-			"%{wks.location}/Goril/linking/include",
+			"%VULKAN_SDK%/Include",
 			"%{wks.location}/Goril/src",
 		}
 		
 		libdirs 
 		{ 
-			"%{wks.location}/Goril/linking/libs" 
 		}
 		
 		links 
@@ -130,14 +128,13 @@ workspace "Goril"
 
 		includedirs
 		{
-			"%{wks.location}/Goril/linking/include",
+			"%VULKAN_SDK%/Include",
 			"%{wks.location}/Goril/src",
 			"%{prj.name}/src",
 		}
 		
 		libdirs 
 		{ 
-			"%{wks.location}/Goril/linking/libs" 
 		}
 		
 		links 
