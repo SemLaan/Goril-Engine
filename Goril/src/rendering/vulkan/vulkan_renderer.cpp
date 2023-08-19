@@ -2,6 +2,7 @@
 
 #include "core/logger.h"
 #include "core/gr_memory.h"
+#include "core/event.h"
 #include "containers/darray.h"
 
 #include "vulkan_platform.h"
@@ -20,6 +21,8 @@ namespace GR
 
 	static RendererState* state = nullptr;
 
+	b8 OnWindowResize(EventCode type, EventData data);
+
 	b8 InitializeRenderer()
 	{
 		GRASSERT_DEBUG(state == nullptr); // If this triggers init got called twice
@@ -31,6 +34,9 @@ namespace GR
 
 		state->maxFramesInFlight = 2;
 		state->currentFrame = 0;
+		state->shouldRecreateSwapchain = false;
+
+		RegisterEventListener(EVCODE_WINDOW_RESIZED, OnWindowResize);
 
 		// ================== Getting required extensions and layers ================================
 		// Getting required extensions
@@ -132,14 +138,33 @@ namespace GR
 		return true;
 	}
 
-	void UpdateRenderer()
+	b8 UpdateRenderer()
 	{
+		if (state->shouldRecreateSwapchain)
+			RecreateSwapchain();
+
 		vkWaitForFences(state->device, 1, &state->inFlightFences[state->currentFrame], VK_TRUE, UINT64_MAX);
 
-		vkResetFences(state->device, 1, &state->inFlightFences[state->currentFrame]);
-
 		u32 imageIndex;
-		vkAcquireNextImageKHR(state->device, state->swapchain, UINT64_MAX, state->imageAvailableSemaphores[state->currentFrame], VK_NULL_HANDLE, &imageIndex);
+		VkResult result = vkAcquireNextImageKHR(state->device, state->swapchain, UINT64_MAX, state->imageAvailableSemaphores[state->currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+		if (result == VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			state->shouldRecreateSwapchain = true;
+			return false;
+		}
+		else if (result == VK_SUBOPTIMAL_KHR)
+		{
+			// Sets recreate swapchain to true BUT DOES NOT RETURN because the image has been acquired so we can continue rendering for this frame
+			state->shouldRecreateSwapchain = true;
+		}
+		else if (result != VK_SUCCESS)
+		{
+			GRWARN("Failed to acquire next swapchain image");
+			return false;
+		}
+
+		vkResetFences(state->device, 1, &state->inFlightFences[state->currentFrame]);
 
 		vkResetCommandBuffer(state->commandBuffers[state->currentFrame], 0);
 
@@ -163,7 +188,7 @@ namespace GR
 		if (VK_SUCCESS != vkQueueSubmit(state->graphicsQueue, 1, &submitInfo, state->inFlightFences[state->currentFrame]))
 		{
 			GRERROR("Failed to submit queue");
-			return;
+			return false;
 		}
 
 		VkSwapchainKHR swapchains[] = { state->swapchain };
@@ -181,6 +206,8 @@ namespace GR
 		vkQueuePresentKHR(state->graphicsQueue, &presentInfo);
 
 		state->currentFrame = (state->currentFrame + 1) % state->maxFramesInFlight;
+
+		return true;
 	}
 
 	void ShutdownRenderer()
@@ -194,6 +221,8 @@ namespace GR
 		{
 			GRINFO("Shutting down renderer subsystem...");
 		}
+
+		UnregisterEventListener(EVCODE_WINDOW_RESIZED, OnWindowResize);
 
 		vkDeviceWaitIdle(state->device);
 
@@ -231,5 +260,25 @@ namespace GR
 		DestroyVulkanInstance(state);
 		GFree(state);
 		state = nullptr;
+	}
+
+	void RecreateSwapchain()
+	{
+		vkDeviceWaitIdle(state->device);
+
+		DestroySwapchainFramebuffers(state);
+		DestroySwapchain(state);
+
+		CreateSwapchain(state);
+		CreateSwapchainFramebuffers(state);
+
+		state->shouldRecreateSwapchain = false;
+		GRINFO("Vulkan Swapchain resized");
+	}
+
+	b8 OnWindowResize(EventCode type, EventData data)
+	{
+		state->shouldRecreateSwapchain = true;
+		return false;
 	}
 }

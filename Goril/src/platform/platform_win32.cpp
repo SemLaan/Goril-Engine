@@ -23,6 +23,8 @@ namespace GR
 	struct PlatformState
 	{
 		HWND hwnd;
+		u32 width;
+		u32 height;
 	};
 
 	static PlatformState* state = nullptr;
@@ -78,6 +80,13 @@ namespace GR
 
 		ShowWindow(state->hwnd, SW_SHOW);
 
+		RECT clientRect;
+		if (GetClientRect(state->hwnd, &clientRect))
+		{
+			state->width = clientRect.right - clientRect.left;
+			state->height = clientRect.bottom - clientRect.top;
+		}
+
 		return true;
 	}
 
@@ -129,17 +138,25 @@ namespace GR
 		printf(message);
 	}
 
+	void GetPlatformWindowSize(u32* width, u32* height)
+	{
+		*width = state->width;
+		*height = state->height;
+	}
+
 	LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		switch (uMsg)
 		{
-		case WM_DESTROY:
+		case WM_CLOSE:
 		{
 			EventData data = {};
 			InvokeEvent(EVCODE_QUIT, data);
+			break;
+		}
+		case WM_DESTROY:
 			PostQuitMessage(0);
 			return 0;
-		}
 		// ======= Input processing ===============
 		case WM_MOUSEMOVE:
 		{
@@ -177,6 +194,27 @@ namespace GR
 			ProcessKey(false, (KeyCode)wParam);
 			break;
 			/// TODO: process syskeys, if you want to suffer
+		case WM_SIZE:
+		{
+			RECT clientRect;
+			u32 width, height;
+			if (GetClientRect(hwnd, &clientRect))
+			{
+				width = clientRect.right - clientRect.left;
+				height = clientRect.bottom - clientRect.top;
+				if (width != state->width || height != state->height)
+				{
+					GRDEBUG("Window resized");
+					state->width = width;
+					state->height = height;
+					EventData eventData{};
+					eventData.u32[0] = state->width;
+					eventData.u32[1] = state->height;
+					InvokeEvent(EVCODE_WINDOW_RESIZED, eventData);
+					break;
+				}
+			}
+		}
 		}
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}

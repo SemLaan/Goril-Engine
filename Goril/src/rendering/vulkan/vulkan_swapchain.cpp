@@ -1,5 +1,6 @@
 #include "vulkan_swapchain.h"
-
+#include "core/platform.h"
+#include "vulkan_device.h"
 
 namespace GR
 {
@@ -24,8 +25,22 @@ namespace GR
 				presentMode = availablePresentMode;
 		}
 
-		// Setting swapchain resolution
-		VkExtent2D swapchainExtent = state->swapchainSupport.capabilities.currentExtent;
+		// Setting swapchain resolution to window size
+		u32 windowWidth, windowHeight;
+		GetPlatformWindowSize(&windowWidth, &windowHeight);
+		VkExtent2D swapchainExtent = { windowWidth, windowHeight };
+		// Making sure the swapchain isn't too big or too small
+		state->swapchainSupport.formats.Deinitialize();
+		state->swapchainSupport.presentModes.Deinitialize();
+		state->swapchainSupport = QuerySwapchainSupport(state->physicalDevice, state->surface);
+		if (swapchainExtent.width > state->swapchainSupport.capabilities.maxImageExtent.width)
+			swapchainExtent.width = state->swapchainSupport.capabilities.maxImageExtent.width;
+		if (swapchainExtent.height > state->swapchainSupport.capabilities.maxImageExtent.height)
+			swapchainExtent.height = state->swapchainSupport.capabilities.maxImageExtent.height;
+		if (swapchainExtent.width < state->swapchainSupport.capabilities.minImageExtent.width)
+			swapchainExtent.width = state->swapchainSupport.capabilities.minImageExtent.width;
+		if (swapchainExtent.height < state->swapchainSupport.capabilities.minImageExtent.height)
+			swapchainExtent.height = state->swapchainSupport.capabilities.minImageExtent.height;
 
 		u32 imageCount = state->swapchainSupport.capabilities.minImageCount + 1;
 		if (imageCount > state->swapchainSupport.capabilities.maxImageCount)

@@ -7,7 +7,9 @@ namespace GR
 
 	b8 InitializeRenderer();
 
-	void UpdateRenderer();
+	b8 UpdateRenderer();
 
 	void ShutdownRenderer();
+
+	void RecreateSwapchain();
 }

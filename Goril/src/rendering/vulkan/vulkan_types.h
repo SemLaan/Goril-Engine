@@ -43,6 +43,7 @@ namespace GR
 		Darray<VkFence> inFlightFences;
 		i32 maxFramesInFlight;
 		u32 currentFrame;
+		b8 shouldRecreateSwapchain;
 		VkAllocationCallbacks* allocator;
 #ifndef GR_DIST
 		VkDebugUtilsMessengerEXT debugMessenger;
