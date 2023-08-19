@@ -10,12 +10,11 @@
 namespace GR
 {
 	static b8 appRunning = false;
+	static b8 appSuspended = false;
 
-	b8 OnQuit(EventCode type, EventData data)
-	{
-		appRunning = false;
-		return false;
-	}
+	b8 OnQuit(EventCode type, EventData data);
+	b8 OnResize(EventCode type, EventData data);
+
 
 	b8 InitializeEngine(GameConfig config)
 	{
@@ -55,6 +54,7 @@ namespace GR
 		}
 
 		RegisterEventListener(EVCODE_QUIT, OnQuit);
+		RegisterEventListener(EVCODE_WINDOW_RESIZED, OnResize);
 		appRunning = true;
 		return true;
 	}
@@ -66,16 +66,20 @@ namespace GR
 		while (appRunning)
 		{
 			UpdateInput();
-			PlatformProcessMessage();
-			gameInstance->Update();
-			b8 succesfull = UpdateRenderer();
-			if (succesfull)
-				gameInstance->Render();
-			if (GetKeyDown(KEY_ESCAPE))
-				appRunning = false;
+			PlatformProcessMessage(); /// TODO: sleep platform every loop if app suspended to not waste pc resources
+			if (!appSuspended)
+			{
+				gameInstance->Update();
+				b8 succesfull = UpdateRenderer();
+				if (succesfull)
+					gameInstance->Render();
+				if (GetKeyDown(KEY_ESCAPE))
+					appRunning = false;
+			}
 		}
 
 		UnregisterEventListener(EVCODE_QUIT, OnQuit);
+		UnregisterEventListener(EVCODE_WINDOW_RESIZED, OnResize);
 		gameInstance->Shutdown();
 
 		return true;
@@ -90,5 +94,26 @@ namespace GR
 		ShutdownEvent();
 		ShutdownLogger();
 		ShutdownMemory();
+	}
+
+	b8 OnQuit(EventCode type, EventData data)
+	{
+		appRunning = false;
+		return false;
+	}
+
+	b8 OnResize(EventCode type, EventData data)
+	{
+		if (data.u32[0] == 0 || data.u32[1] == 0)
+		{
+			appSuspended = true;
+			GRINFO("App suspended");
+		}
+		else if (appSuspended)
+		{
+			appSuspended = false;
+			GRINFO("App unsuspended");
+		}
+		return false;
 	}
 }
