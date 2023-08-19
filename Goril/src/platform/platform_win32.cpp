@@ -25,6 +25,8 @@ namespace GR
 		HWND hwnd;
 		u32 width;
 		u32 height;
+		u32 widthPreMaximize;
+		u32 heightPreMaximize;
 	};
 
 	static PlatformState* state = nullptr;
@@ -32,7 +34,7 @@ namespace GR
 	// Forward declaring window callbacks
 	LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	b8 InitializePlatform(const wchar_t* windowName, b8 startMinimized)
+	b8 InitializePlatform(const wchar_t* windowName)
 	{
 		GRASSERT_DEBUG(state == nullptr); // If this fails init platform was called twice
 		GRINFO("Initializing platform subsystem...");
@@ -60,8 +62,6 @@ namespace GR
 		RegisterClassEx(&wc);
 
 		u32 windowStyle = (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
-		if (startMinimized)
-			windowStyle |= WS_MINIMIZE;
 
 		state->hwnd = CreateWindowEx(
 			NULL, className, windowName,

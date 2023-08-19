@@ -9,7 +9,6 @@ namespace GR
 		const wchar_t* windowTitle;
 		u32 width;
 		u32 height;
-		b8 startMinimized;
 	};
 
 	class GRAPI GorilGame

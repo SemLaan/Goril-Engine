@@ -42,7 +42,7 @@ namespace GR
 			GRFATAL("Input system failed to initialize");
 			return false;
 		}
-		if (!InitializePlatform(config.windowTitle, config.startMinimized))
+		if (!InitializePlatform(config.windowTitle))
 		{
 			GRFATAL("Platform failed to initialize");
 			return false;
