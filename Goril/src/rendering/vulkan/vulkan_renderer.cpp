@@ -15,26 +15,27 @@
 #include "vulkan_renderpass.h"
 #include "vulkan_command_pool.h"
 #include "vulkan_sync_objects.h"
+#include "../buffer.h"
 
 namespace GR
 {
 
-	static RendererState* state = nullptr;
+	RendererState* vk_state = nullptr;
 
 	b8 OnWindowResize(EventCode type, EventData data);
 
 	b8 InitializeRenderer()
 	{
-		GRASSERT_DEBUG(state == nullptr); // If this triggers init got called twice
+		GRASSERT_DEBUG(vk_state == nullptr); // If this triggers init got called twice
 		GRINFO("Initializing renderer subsystem...");
 
-		state = (RendererState*)GRAlloc(sizeof(RendererState), MEM_TAG_RENDERER_SUBSYS);
-		Zero(state, sizeof(RendererState));
-		state->allocator = nullptr;
+		vk_state = (RendererState*)GRAlloc(sizeof(RendererState), MEM_TAG_RENDERER_SUBSYS);
+		Zero(vk_state, sizeof(RendererState));
+		vk_state->allocator = nullptr;
 
-		state->maxFramesInFlight = 2;
-		state->currentFrame = 0;
-		state->shouldRecreateSwapchain = false;
+		vk_state->maxFramesInFlight = 2;
+		vk_state->currentFrame = 0;
+		vk_state->shouldRecreateSwapchain = false;
 
 		RegisterEventListener(EVCODE_WINDOW_RESIZED, OnWindowResize);
 
@@ -57,7 +58,7 @@ namespace GR
 
 
 		// ================== Creating instance =================================
-		if (!CreateVulkanInstance(state, requiredExtensions, requiredLayers))
+		if (!CreateVulkanInstance(vk_state, requiredExtensions, requiredLayers))
 		{
 			requiredExtensions.Deinitialize();
 			requiredLayers.Deinitialize();
@@ -67,7 +68,7 @@ namespace GR
 
 		// =============== Creating debug messenger ============================
 #ifndef GR_DIST
-		if (!CreateDebugMessenger(state))
+		if (!CreateDebugMessenger(vk_state))
 		{
 			requiredLayers.Deinitialize();
 			return false;
@@ -75,7 +76,7 @@ namespace GR
 #endif // !GR_DIST
 
 		// ================ Creating a surface =====================================
-		if (!PlatformCreateSurface(state->instance, state->allocator, &state->surface))
+		if (!PlatformCreateSurface(vk_state->instance, vk_state->allocator, &vk_state->surface))
 		{
 			GRFATAL("Failed to create Vulkan surface");
 			requiredLayers.Deinitialize();
@@ -87,7 +88,7 @@ namespace GR
 		requiredDeviceExtensions.Initialize(MEM_TAG_RENDERER_SUBSYS);
 		requiredDeviceExtensions.Pushback(&VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		
-		if (!SelectPhysicalDevice(state, &requiredDeviceExtensions))
+		if (!SelectPhysicalDevice(vk_state, &requiredDeviceExtensions))
 		{
 			requiredDeviceExtensions.Deinitialize();
 			requiredLayers.Deinitialize();
@@ -95,10 +96,10 @@ namespace GR
 		}
 
 		// ================== Getting device queue families ==============================
-		SelectQueueFamilies(state);
+		SelectQueueFamilies(vk_state);
 
 		// ===================== Creating logical device =============================================
-		if (!CreateLogicalDevice(state, &requiredDeviceExtensions, &requiredLayers))
+		if (!CreateLogicalDevice(vk_state, &requiredDeviceExtensions, &requiredLayers))
 		{
 			requiredLayers.Deinitialize();
 			requiredDeviceExtensions.Deinitialize();
@@ -108,55 +109,57 @@ namespace GR
 		requiredDeviceExtensions.Deinitialize();
 
 		// ======================== Creating the swapchain ===============================================
-		if (!CreateSwapchain(state))
+		if (!CreateSwapchain(vk_state))
 			return false;
 
 		// ========================== Creating renderpass ==============================================
-		if (!CreateRenderpass(state))
+		if (!CreateRenderpass(vk_state))
 			return false;
 
 		// ======================== Creating graphics pipeline ============================================
-		if (!CreateGraphicsPipeline(state))
+		if (!CreateGraphicsPipeline(vk_state))
 			return false;
 
 		// ======================= Create swapchain framebuffers ============================================
-		if (!CreateSwapchainFramebuffers(state))
+		if (!CreateSwapchainFramebuffers(vk_state))
 			return false;
 
 		// ========================== Create command pool =======================================
-		if (!CreateCommandPool(state))
+		if (!CreateCommandPool(vk_state))
 			return false;
 
 		// ============================ Allocate a command buffer =======================================
-		if (!AllocateCommandBuffers	(state))
+		if (!AllocateCommandBuffers(vk_state))
 			return false;
 
 		// ================================ Create sync objects ===========================================
-		if (!CreateSyncObjects(state))
+		if (!CreateSyncObjects(vk_state))
 			return false;
+
+		vk_state->vertexBuffer = CreateVertexBuffer();
 
 		return true;
 	}
 
 	b8 UpdateRenderer()
 	{
-		if (state->shouldRecreateSwapchain)
+		if (vk_state->shouldRecreateSwapchain)
 			RecreateSwapchain();
 
-		vkWaitForFences(state->device, 1, &state->inFlightFences[state->currentFrame], VK_TRUE, UINT64_MAX);
+		vkWaitForFences(vk_state->device, 1, &vk_state->inFlightFences[vk_state->currentFrame], VK_TRUE, UINT64_MAX);
 
 		u32 imageIndex;
-		VkResult result = vkAcquireNextImageKHR(state->device, state->swapchain, UINT64_MAX, state->imageAvailableSemaphores[state->currentFrame], VK_NULL_HANDLE, &imageIndex);
+		VkResult result = vkAcquireNextImageKHR(vk_state->device, vk_state->swapchain, UINT64_MAX, vk_state->imageAvailableSemaphores[vk_state->currentFrame], VK_NULL_HANDLE, &imageIndex);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
 		{
-			state->shouldRecreateSwapchain = true;
+			vk_state->shouldRecreateSwapchain = true;
 			return false;
 		}
 		else if (result == VK_SUBOPTIMAL_KHR)
 		{
 			// Sets recreate swapchain to true BUT DOES NOT RETURN because the image has been acquired so we can continue rendering for this frame
-			state->shouldRecreateSwapchain = true;
+			vk_state->shouldRecreateSwapchain = true;
 		}
 		else if (result != VK_SUCCESS)
 		{
@@ -164,14 +167,14 @@ namespace GR
 			return false;
 		}
 
-		vkResetFences(state->device, 1, &state->inFlightFences[state->currentFrame]);
+		vkResetFences(vk_state->device, 1, &vk_state->inFlightFences[vk_state->currentFrame]);
 
-		vkResetCommandBuffer(state->commandBuffers[state->currentFrame], 0);
+		vkResetCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame], 0);
 
-		RecordCommandBuffer(state, state->commandBuffers[state->currentFrame], imageIndex);
+		RecordCommandBuffer(vk_state, vk_state->commandBuffers[vk_state->currentFrame], imageIndex);
 
-		VkSemaphore waitSemaphores[] = { state->imageAvailableSemaphores[state->currentFrame] };
-		VkSemaphore signalSemaphores[] = { state->renderFinishedSemaphores[state->currentFrame] };
+		VkSemaphore waitSemaphores[] = { vk_state->imageAvailableSemaphores[vk_state->currentFrame] };
+		VkSemaphore signalSemaphores[] = { vk_state->renderFinishedSemaphores[vk_state->currentFrame] };
 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
 		VkSubmitInfo submitInfo = {};
@@ -181,17 +184,17 @@ namespace GR
 		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &state->commandBuffers[state->currentFrame];
+		submitInfo.pCommandBuffers = &vk_state->commandBuffers[vk_state->currentFrame];
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
-		if (VK_SUCCESS != vkQueueSubmit(state->graphicsQueue, 1, &submitInfo, state->inFlightFences[state->currentFrame]))
+		if (VK_SUCCESS != vkQueueSubmit(vk_state->graphicsQueue, 1, &submitInfo, vk_state->inFlightFences[vk_state->currentFrame]))
 		{
 			GRERROR("Failed to submit queue");
 			return false;
 		}
 
-		VkSwapchainKHR swapchains[] = { state->swapchain };
+		VkSwapchainKHR swapchains[] = { vk_state->swapchain };
 
 		VkPresentInfoKHR presentInfo = {};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -203,16 +206,16 @@ namespace GR
 		presentInfo.pImageIndices = &imageIndex;
 		presentInfo.pResults = nullptr;
 
-		vkQueuePresentKHR(state->graphicsQueue, &presentInfo);
+		vkQueuePresentKHR(vk_state->graphicsQueue, &presentInfo);
 
-		state->currentFrame = (state->currentFrame + 1) % state->maxFramesInFlight;
+		vk_state->currentFrame = (vk_state->currentFrame + 1) % vk_state->maxFramesInFlight;
 
 		return true;
 	}
 
 	void ShutdownRenderer()
 	{
-		if (state == nullptr)
+		if (vk_state == nullptr)
 		{
 			GRINFO("Renderer startup failed, skipping shutdown");
 			return;
@@ -224,61 +227,64 @@ namespace GR
 
 		UnregisterEventListener(EVCODE_WINDOW_RESIZED, OnWindowResize);
 
-		vkDeviceWaitIdle(state->device);
+		vkDeviceWaitIdle(vk_state->device);
+
+		if (vk_state->vertexBuffer)
+			DestroyVertexBuffer(vk_state->vertexBuffer);
 
 		// ================================ Destroy sync objects if they were created ===========================================
-		DestroySyncObjects(state);
+		DestroySyncObjects(vk_state);
 
 		// ======================== Destroying command pool if it was created ====================================
-		DestroyCommandPool(state);
+		DestroyCommandPool(vk_state);
 
 		// ====================== Destroying swapchain framebuffers if they were created ================================
-		DestroySwapchainFramebuffers(state);
+		DestroySwapchainFramebuffers(vk_state);
 
 		// ====================== Destroying graphics pipeline if it was created ================================
-		DestroyGraphicsPipeline(state);
+		DestroyGraphicsPipeline(vk_state);
 
 		// ======================== Destroying renderpass if it was created =====================================
-		DestroyRenderpass(state);
+		DestroyRenderpass(vk_state);
 
 		// ====================== Destroying swapchain if it was created ================================
-		DestroySwapchain(state);
+		DestroySwapchain(vk_state);
 
 		// ===================== Destroying logical device if it was created =================================
-		DestroyLogicalDevice(state);
+		DestroyLogicalDevice(vk_state);
 
 		// ======================= Destroying the surface if it was created ==================================
-		if (state->surface)
-			vkDestroySurfaceKHR(state->instance, state->surface, state->allocator);
+		if (vk_state->surface)
+			vkDestroySurfaceKHR(vk_state->instance, vk_state->surface, vk_state->allocator);
 
 		// ===================== Destroying debug messenger if it was created =================================
 #ifndef GR_DIST
-		DestroyDebugMessenger(state);
+		DestroyDebugMessenger(vk_state);
 #endif // !GR_DIST
 		
 		// ======================= Destroying instance if it was created =======================================
-		DestroyVulkanInstance(state);
-		GRFree(state);
-		state = nullptr;
+		DestroyVulkanInstance(vk_state);
+		GRFree(vk_state);
+		vk_state = nullptr;
 	}
 
 	void RecreateSwapchain()
 	{
-		vkDeviceWaitIdle(state->device);
+		vkDeviceWaitIdle(vk_state->device);
 
-		DestroySwapchainFramebuffers(state);
-		DestroySwapchain(state);
+		DestroySwapchainFramebuffers(vk_state);
+		DestroySwapchain(vk_state);
 
-		CreateSwapchain(state);
-		CreateSwapchainFramebuffers(state);
+		CreateSwapchain(vk_state);
+		CreateSwapchainFramebuffers(vk_state);
 
-		state->shouldRecreateSwapchain = false;
+		vk_state->shouldRecreateSwapchain = false;
 		GRINFO("Vulkan Swapchain resized");
 	}
 
 	b8 OnWindowResize(EventCode type, EventData data)
 	{
-		state->shouldRecreateSwapchain = true;
+		vk_state->shouldRecreateSwapchain = true;
 		return false;
 	}
 }

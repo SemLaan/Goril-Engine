@@ -2,9 +2,20 @@
 #include <vulkan/vulkan.h>
 #include "defines.h"
 #include "containers/darray.h"
+#include "../buffer.h"
 
 namespace GR
 {
+	struct RendererState;
+	extern RendererState* vk_state;
+
+	struct VulkanVertexBuffer
+	{
+		Darray<Vertex> vertices;
+		VkBuffer handle;
+		VkDeviceMemory memory;
+	};
+
 	struct SwapchainSupportDetails {
 		VkSurfaceCapabilitiesKHR capabilities;
 		Darray<VkSurfaceFormatKHR> formats;
@@ -44,6 +55,7 @@ namespace GR
 		i32 maxFramesInFlight;
 		u32 currentFrame;
 		b8 shouldRecreateSwapchain;
+		VertexBuffer* vertexBuffer;
 		VkAllocationCallbacks* allocator;
 #ifndef GR_DIST
 		VkDebugUtilsMessengerEXT debugMessenger;

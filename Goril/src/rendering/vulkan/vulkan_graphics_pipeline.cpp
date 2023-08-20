@@ -1,6 +1,7 @@
 #include "vulkan_graphics_pipeline.h"
 
 #include "vulkan_shader_loader.h"
+#include "../buffer.h"
 
 namespace GR
 {
@@ -50,14 +51,30 @@ namespace GR
 		dynamicStateCreateInfo.pDynamicStates = dynamicStates;
 
 		// Vertex input
+		VkVertexInputBindingDescription bindingDescription = {};
+		bindingDescription.binding = 0;
+		bindingDescription.stride = sizeof(Vertex);
+		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+		VkVertexInputAttributeDescription attributeDescriptions[2] = {};
+		attributeDescriptions[0].location = 0;
+		attributeDescriptions[0].binding = 0;
+		attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+		attributeDescriptions[0].offset = offsetof(Vertex, position);
+
+		attributeDescriptions[1].location = 1;
+		attributeDescriptions[1].binding = 0;
+		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[1].offset = offsetof(Vertex, color);
+
 		VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo = {};
 		vertexInputCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		vertexInputCreateInfo.pNext = nullptr;
 		vertexInputCreateInfo.flags = 0;
-		vertexInputCreateInfo.vertexBindingDescriptionCount = 0;
-		vertexInputCreateInfo.pVertexBindingDescriptions = nullptr;
-		vertexInputCreateInfo.vertexAttributeDescriptionCount = 0;
-		vertexInputCreateInfo.pVertexAttributeDescriptions = nullptr;
+		vertexInputCreateInfo.vertexBindingDescriptionCount = 1;
+		vertexInputCreateInfo.pVertexBindingDescriptions = &bindingDescription;
+		vertexInputCreateInfo.vertexAttributeDescriptionCount = 2;
+		vertexInputCreateInfo.pVertexAttributeDescriptions = attributeDescriptions;
 
 		// Input assembler
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblerCreateInfo = {};

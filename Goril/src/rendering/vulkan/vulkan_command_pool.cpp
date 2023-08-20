@@ -95,7 +95,11 @@ namespace GR
 		scissor.extent = state->swapchainExtent;
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+		VulkanVertexBuffer* vertexBuffer = (VulkanVertexBuffer*)vk_state->vertexBuffer->internalState;
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer->handle, offsets);
+
+		vkCmdDraw(commandBuffer, (u32)vertexBuffer->vertices.Size(), 1, 0, 0);
 
 		vkCmdEndRenderPass(commandBuffer);
 
