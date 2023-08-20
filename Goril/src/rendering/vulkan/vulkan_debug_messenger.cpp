@@ -61,11 +61,11 @@ namespace GR
 		return debugMessengerCreateInfo;
 	}
 
-	b8 CreateDebugMessenger(RendererState* state)
+	b8 CreateDebugMessenger()
 	{
-		PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(state->instance, "vkCreateDebugUtilsMessengerEXT");
+		PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(vk_state->instance, "vkCreateDebugUtilsMessengerEXT");
 		VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo = GetDebugMessengerCreateInfo();
-		if (VK_SUCCESS != vkCreateDebugUtilsMessengerEXT(state->instance, &messengerCreateInfo, state->allocator, &state->debugMessenger))
+		if (VK_SUCCESS != vkCreateDebugUtilsMessengerEXT(vk_state->instance, &messengerCreateInfo, vk_state->allocator, &vk_state->debugMessenger))
 		{
 			GRFATAL("Failed to create Vulkan debug utils messenger");
 			return false;
@@ -74,11 +74,11 @@ namespace GR
 		return true;
 	}
 
-	void DestroyDebugMessenger(RendererState* state)
+	void DestroyDebugMessenger()
 	{
-		PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(state->instance, "vkDestroyDebugUtilsMessengerEXT");
-		if (state->debugMessenger)
-			vkDestroyDebugUtilsMessengerEXT(state->instance, state->debugMessenger, state->allocator);
+		PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(vk_state->instance, "vkDestroyDebugUtilsMessengerEXT");
+		if (vk_state->debugMessenger)
+			vkDestroyDebugUtilsMessengerEXT(vk_state->instance, vk_state->debugMessenger, vk_state->allocator);
 	}
 #endif // !GR_DIST
 }

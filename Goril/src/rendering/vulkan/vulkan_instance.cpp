@@ -4,7 +4,7 @@
 
 namespace GR
 {
-	b8 CreateVulkanInstance(RendererState* state, const Darray<const void*>& requiredExtensions, const Darray<const void*>& requiredLayers)
+	b8 CreateVulkanInstance(const Darray<const void*>& requiredExtensions, const Darray<const void*>& requiredLayers)
 	{
 		// ================ App info =============================================
 		VkApplicationInfo appInfo = {};
@@ -96,7 +96,7 @@ namespace GR
 			createInfo.enabledExtensionCount = (u32)requiredExtensions.Size();
 			createInfo.ppEnabledExtensionNames = (const char* const*)requiredExtensions.GetRawElements();
 
-			VkResult result = vkCreateInstance(&createInfo, state->allocator, &state->instance);
+			VkResult result = vkCreateInstance(&createInfo, vk_state->allocator, &vk_state->instance);
 
 			if (result != VK_SUCCESS)
 			{
@@ -108,9 +108,9 @@ namespace GR
 		return true;
 	}
 
-	void DestroyVulkanInstance(RendererState* state)
+	void DestroyVulkanInstance()
 	{
-		if (state->instance)
-			vkDestroyInstance(state->instance, state->allocator);
+		if (vk_state->instance)
+			vkDestroyInstance(vk_state->instance, vk_state->allocator);
 	}
 }

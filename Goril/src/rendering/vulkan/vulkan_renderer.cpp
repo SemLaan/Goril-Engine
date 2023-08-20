@@ -58,7 +58,7 @@ namespace GR
 
 
 		// ================== Creating instance =================================
-		if (!CreateVulkanInstance(vk_state, requiredExtensions, requiredLayers))
+		if (!CreateVulkanInstance(requiredExtensions, requiredLayers))
 		{
 			requiredExtensions.Deinitialize();
 			requiredLayers.Deinitialize();
@@ -68,7 +68,7 @@ namespace GR
 
 		// =============== Creating debug messenger ============================
 #ifndef GR_DIST
-		if (!CreateDebugMessenger(vk_state))
+		if (!CreateDebugMessenger())
 		{
 			requiredLayers.Deinitialize();
 			return false;
@@ -259,11 +259,11 @@ namespace GR
 
 		// ===================== Destroying debug messenger if it was created =================================
 #ifndef GR_DIST
-		DestroyDebugMessenger(vk_state);
+		DestroyDebugMessenger();
 #endif // !GR_DIST
 		
 		// ======================= Destroying instance if it was created =======================================
-		DestroyVulkanInstance(vk_state);
+		DestroyVulkanInstance();
 		GRFree(vk_state);
 		vk_state = nullptr;
 	}

@@ -8,7 +8,7 @@ namespace GR
 #ifndef GR_DIST
 	VkDebugUtilsMessengerCreateInfoEXT GetDebugMessengerCreateInfo();
 
-	b8 CreateDebugMessenger(RendererState* state);
-	void DestroyDebugMessenger(RendererState* state);
+	b8 CreateDebugMessenger();
+	void DestroyDebugMessenger();
 #endif // !GR_DIST
 }

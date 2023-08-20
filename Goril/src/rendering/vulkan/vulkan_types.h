@@ -25,7 +25,9 @@ namespace GR
 	struct QueueFamilyIndices
 	{
 		u32 graphicsFamily;
+		//u32 computeFamily;
 		u32 presentFamily;
+		u32 transferFamily;
 	};
 
 	struct RendererState
@@ -35,6 +37,7 @@ namespace GR
 		VkDevice device;
 		VkQueue graphicsQueue;
 		VkQueue presentQueue;
+		VkQueue transferQueue;
 		QueueFamilyIndices queueIndices;
 		VkSurfaceKHR surface;
 		SwapchainSupportDetails swapchainSupport;

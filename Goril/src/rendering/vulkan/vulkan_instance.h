@@ -5,7 +5,7 @@
 
 namespace GR
 {
-	b8 CreateVulkanInstance(RendererState* state, const Darray<const void*>& requiredExtensions, const Darray<const void*>& requiredLayers);
+	b8 CreateVulkanInstance(const Darray<const void*>& requiredExtensions, const Darray<const void*>& requiredLayers);
 
-	void DestroyVulkanInstance(RendererState* state);
+	void DestroyVulkanInstance();
 }

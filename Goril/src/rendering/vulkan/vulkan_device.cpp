@@ -95,17 +95,25 @@ namespace GR
 		Darray<VkQueueFamilyProperties> availableQueueFamilies = CreateDarrayWithSize<VkQueueFamilyProperties>(MEM_TAG_RENDERER_SUBSYS, queueFamilyCount);
 		vkGetPhysicalDeviceQueueFamilyProperties(state->physicalDevice, &queueFamilyCount, availableQueueFamilies.GetRawElements());
 
+		state->queueIndices.transferFamily = UINT32_MAX;
+
 		for (u32 i = 0; i < queueFamilyCount; ++i)
 		{
 			VkBool32 presentSupport = false;
 			vkGetPhysicalDeviceSurfaceSupportKHR(state->physicalDevice, i, state->surface, &presentSupport);
 			b8 graphicsSupport = availableQueueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT;
+			b8 transferSupport = availableQueueFamilies[i].queueFlags & VK_QUEUE_TRANSFER_BIT;
 			if (graphicsSupport)
 				state->queueIndices.graphicsFamily = i;
 			if (presentSupport)
 				state->queueIndices.presentFamily = i;
+			if (transferSupport && !graphicsSupport)
+				state->queueIndices.transferFamily = i;
 		}
-		/// TODO: check if the device even has queue families for all these things, if not fail startup
+
+		if (state->queueIndices.transferFamily == UINT32_MAX)
+			state->queueIndices.transferFamily = state->queueIndices.graphicsFamily;
+		/// TODO: check if the device even has queue families for all these things, if not fail startup (is this even required? i think implementations need at least transfer and graphics(?), and compute and present are implied by the existence of the extensions)
 		availableQueueFamilies.Deinitialize();
 	}
 
@@ -122,6 +130,8 @@ namespace GR
 			uniqueQueueFamilies.Pushback(state->queueIndices.graphicsFamily);
 		if (!uniqueQueueFamilies.Contains(state->queueIndices.presentFamily))
 			uniqueQueueFamilies.Pushback(state->queueIndices.presentFamily);
+		if (!uniqueQueueFamilies.Contains(state->queueIndices.transferFamily))
+			uniqueQueueFamilies.Pushback(state->queueIndices.transferFamily);
 
 		f32 queuePriority = 1.0f;
 
@@ -174,6 +184,7 @@ namespace GR
 		// =================== Getting the device queues ======================================================
 		vkGetDeviceQueue(state->device, state->queueIndices.graphicsFamily, 0, &state->graphicsQueue);
 		vkGetDeviceQueue(state->device, state->queueIndices.presentFamily, 0, &state->presentQueue);
+		vkGetDeviceQueue(state->device, state->queueIndices.transferFamily, 0, &state->transferQueue);
 
 		return true;
 	}
