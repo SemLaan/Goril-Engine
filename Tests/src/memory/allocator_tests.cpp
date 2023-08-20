@@ -71,13 +71,17 @@ b8 freelist_allocator_test()
 	void* temp = allocator->Alloc(1000 - allocator->GetAllocHeaderSize() - MIN_ALIGNMENT, MEM_TAG_TEST);
 	allocator->Free(temp);
 
+	expect_should_be(1, allocator->GetFreeNodes());
+
 	// Testing mixed allocs and deallocs
 	void* temp0 = allocator->Alloc(200, MEM_TAG_TEST);
 	void* temp1 = allocator->Alloc(300, MEM_TAG_TEST);
 	void* temp2 = allocator->Alloc(300, MEM_TAG_TEST);
+	expect_should_be(300, allocator->GetBlockSize(temp2));
 	void* temp3 = allocator->Alloc(80, MEM_TAG_TEST);
 	allocator->Free(temp1);
 	allocator->Free(temp2);
+	expect_should_be(2, allocator->GetFreeNodes());
 	void* temp4 = allocator->Alloc(500, MEM_TAG_TEST); // This will only allocate if it has properly combined free elements that are next to each other
 	allocator->Free(temp0);
 	allocator->Free(temp3);
@@ -108,6 +112,7 @@ b8 freelist_allocator_realloc_test()
 
 	void* temp = allocator->Alloc(700, MEM_TAG_TEST);
 	temp = allocator->ReAlloc(temp, 800);
+	expect_should_be(800, allocator->GetBlockSize(temp));
 	allocator->Free(temp);
 
 	void* temp4 = allocator->Alloc(1000, MEM_TAG_TEST);
@@ -117,6 +122,7 @@ b8 freelist_allocator_realloc_test()
 	void* temp1 = allocator->Alloc(200, MEM_TAG_TEST);
 	void* temp2 = allocator->Alloc(200, MEM_TAG_TEST);
 	temp1 = allocator->ReAlloc(temp1, 300);
+	expect_should_be(300, allocator->GetBlockSize(temp1));
 	allocator->Free(temp1);
 	allocator->Free(temp2);
 
@@ -125,6 +131,7 @@ b8 freelist_allocator_realloc_test()
 
 	void* temp5 = allocator->Alloc(800, MEM_TAG_TEST);
 	temp5 = allocator->ReAlloc(temp5, 200);
+	expect_should_be(200, allocator->GetBlockSize(temp5));
 	void* temp6 = allocator->Alloc(500, MEM_TAG_TEST);
 	allocator->Free(temp5);
 	allocator->Free(temp6);

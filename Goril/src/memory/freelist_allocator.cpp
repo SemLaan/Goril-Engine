@@ -52,6 +52,12 @@ namespace GR
 		return sizeof(AllocHeader);
 	}
 
+	u32 FreelistAllocator::GetBlockSize(void* block)
+	{
+		AllocHeader* header = (AllocHeader*)block - 1;
+		return header->size;
+	}
+
 	u32 FreelistAllocator::GetFreeNodes()
 	{
 		u32 count = 0;
