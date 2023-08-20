@@ -229,12 +229,51 @@ namespace GR
 	}
 #endif // !GR_DIST
 
+	const char* GetMemoryScaleString(size_t bytes, size_t& out_scale)
+	{
+		if (bytes < KiB)
+		{
+			out_scale = 1;
+			return "B";
+		}
+		else if (bytes < MiB)
+		{
+			out_scale = KiB;
+			return "KiB";
+		}
+		else if (bytes < GiB)
+		{
+			out_scale = MiB;
+			return "MiB";
+		}
+		else
+		{
+			out_scale = GiB;
+			return "GiB";
+		}
+	}
+
+	std::string GetMemoryAmountString(size_t bytes, size_t scale)
+	{
+		return std::format("{:.2f}", (f32)bytes / scale);
+	}
+
 	void PrintMemoryStats()
 	{
 #ifndef GR_DIST
+
 		GRINFO("Printing memory stats:");
-		GRINFO("Memory deferred to local allocators: {}B", state->deferredMemory);
-		GRINFO("Total allocated memory and total arena size (bytes): {}/{}", state->allocated, state->arenaSize);
+		std::string number1;
+		std::string number2;
+		const char* scaleString;
+		size_t scale;
+		scaleString = GetMemoryScaleString(state->deferredMemory, scale);
+		number1 = GetMemoryAmountString(state->deferredMemory, scale);
+		GRINFO("Memory deferred to local allocators: {}{}", number1, scaleString);
+		scaleString = GetMemoryScaleString(state->arenaSize, scale);
+		number1 = GetMemoryAmountString(state->allocated, scale);
+		number2 = GetMemoryAmountString(state->arenaSize, scale);
+		GRINFO("Total allocated memory and total arena size ({}): {}/{}", scaleString, number1, number2);
 		GRINFO("Percent allocated: {:.2f}%%", 100 * (f32)state->allocated / (f32)state->arenaSize);
 		GRINFO("Total allocations: {}", state->netAllocationCount);
 		GRINFO("Fragmentation (amount of separate free blocks): {}", GetGlobalAllocator()->GetFreeNodes());
