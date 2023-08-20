@@ -28,9 +28,10 @@ namespace GR
 	GRAPI inline FreelistAllocator* GetGlobalAllocator();
 	BumpAllocator* GetSubsysBumpAllocator();
 
-	GRAPI inline void* GAlloc(size_t size, mem_tag tag);
+	GRAPI inline void* GRAlloc(size_t size, mem_tag tag);
+	GRAPI inline void* GRAlingedAlloc(size_t size, mem_tag tag, u32 alignment);
 	GRAPI inline void* GReAlloc(void* block, size_t size);
-	GRAPI inline void GFree(void* block);
+	GRAPI inline void GRFree(void* block);
 
 	GRAPI inline void AllocInfo(size_t size, mem_tag tag);
 

@@ -28,7 +28,7 @@ namespace GR
 		GRASSERT_DEBUG(state == nullptr); // If this triggers init got called twice
 		GRINFO("Initializing renderer subsystem...");
 
-		state = (RendererState*)GAlloc(sizeof(RendererState), MEM_TAG_RENDERER_SUBSYS);
+		state = (RendererState*)GRAlloc(sizeof(RendererState), MEM_TAG_RENDERER_SUBSYS);
 		Zero(state, sizeof(RendererState));
 		state->allocator = nullptr;
 
@@ -258,7 +258,7 @@ namespace GR
 		
 		// ======================= Destroying instance if it was created =======================================
 		DestroyVulkanInstance(state);
-		GFree(state);
+		GRFree(state);
 		state = nullptr;
 	}
 

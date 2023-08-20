@@ -3,6 +3,8 @@
 #include "core/gr_memory.h"
 #include "core/asserts.h"
 
+#define DARRAY_MIN_ALIGNMENT 64
+
 namespace GR
 {
 
@@ -22,13 +24,13 @@ namespace GR
 			size = 0;
 			capacity = reserveCapacity;
 			scalingFactor = _scalingFactor;
-			elements = (T*)GAlloc(sizeof(T) * capacity, tag);
+			elements = (T*)GRAlingedAlloc(sizeof(T) * capacity, tag, DARRAY_MIN_ALIGNMENT);
 			Zero(elements, sizeof(T) * capacity);
 		}
 
 		void Deinitialize()
 		{
-			GFree(elements);
+			GRFree(elements);
 		}
 
 		T* GetRawElements()

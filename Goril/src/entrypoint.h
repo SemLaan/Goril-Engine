@@ -38,13 +38,13 @@ int main()
 	if (!GR::RunEngine(gameInstance))
 	{
 		GRFATAL("Engine failed while running, shutting down");
-		GR::GFree(gameInstance);
+		GR::GRFree(gameInstance);
 		GR::ShutdownEngine();
 		GRASSERT_DEBUG(false);
 		return 1;
 	}
 
-	GR::GFree(gameInstance);
+	GR::GRFree(gameInstance);
 
 	GR::ShutdownEngine();
 	

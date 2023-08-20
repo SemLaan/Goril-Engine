@@ -36,3 +36,5 @@ typedef bool b8;
 #define KiB ((size_t)1024u)
 #define MiB ((size_t)1024u * (size_t)1024u)
 #define GiB ((size_t)1024u * (size_t)1024u * (size_t)1024u)
+
+#define MIN_ALIGNMENT 4

@@ -7,7 +7,9 @@ namespace GR
 	
 	struct AllocHeader
 	{
+		void* start;
 		u32 size; // Size of the allocation including the size of the alloc header that is stored before the allocation
+		u32 alignment;
 #ifndef GR_DIST
 		mem_tag tag; // Only for debugging, gets optimized out of dist builds
 #endif
@@ -71,61 +73,91 @@ namespace GR
 
 	void* FreelistAllocator::Alloc(size_t size, mem_tag tag)
 	{
-		u32 sizeWithHeader = (u32)size + sizeof(AllocHeader);
+		return AlignedAlloc(size, tag, MIN_ALIGNMENT);
+	}
+
+	void* FreelistAllocator::AlignedAlloc(size_t size, mem_tag tag, u32 alignment)
+	{
+		// Checking if the alignment is greater than min alignment and is a power of two
+		GRASSERT_DEBUG((alignment >= MIN_ALIGNMENT) && ((alignment & (alignment - 1)) == 0));
+
+		u32 requiredSize = (u32)size + sizeof(AllocHeader) + alignment;
 
 #ifndef GR_DIST
-		AllocInfo(sizeWithHeader, tag);
+		AllocInfo(requiredSize, tag);
 #endif
 
-		void* block = AllocInFreelist(sizeWithHeader);
+		void* block = AllocInFreelist(requiredSize);
+		u64 blockExcludingHeader = (u64)block + sizeof(AllocHeader);
+		// Gets the next address that is aligned on the requested boundary
+		void* alignedBlock = (void*)((blockExcludingHeader + alignment - 1) & ~((u64)alignment - 1));
 
 		// Putting in the header
-		AllocHeader* header = (AllocHeader*)block;
-		header->size = sizeWithHeader;
+		AllocHeader* header = (AllocHeader*)alignedBlock - 1;
+		header->start = block;
+		header->size = (u32)size;
+		header->alignment = alignment;
 #ifndef GR_DIST
 		header->tag = tag; // Debug only
 #endif
 		// return the block to the client
-		return (u8*)block + sizeof(AllocHeader);
+		return alignedBlock;
 	}
 
 	void* FreelistAllocator::ReAlloc(void* block, size_t size)
 	{
 		// Going slightly before the block and grabbing the alloc header that is stored there for debug info
 		AllocHeader* header = (AllocHeader*)block - 1;
-		GRASSERT(size != (header->size - sizeof(AllocHeader)));
-		size_t newTotalSize = size + sizeof(AllocHeader);
+		GRASSERT(size != header->size);
+		size_t newTotalSize = size + header->alignment + sizeof(AllocHeader);
+		size_t oldTotalSize = header->size + header->alignment + sizeof(AllocHeader);
 
 #ifndef GR_DIST
-		ReAllocInfo((i64)newTotalSize - header->size);
+		ReAllocInfo((i64)newTotalSize - oldTotalSize);
 #endif // !GR_DIST
 
-		if (TryReAllocInFreelist(header, header->size, newTotalSize))
+		// ================== If the realloc is smaller than the original alloc ==========================
+		// ===================== Or if there is enough space after the old alloc to just extend it ========================
+		if (TryReAllocInFreelist(header->start, oldTotalSize, newTotalSize))
 		{
-			header->size = (u32)newTotalSize;
+			header->size = (u32)size;
 			return block;
 		}
 
-		// Else if realloc failed make new allocation and copy data in there
+		// ==================== If there's no space at the old allocation ==========================================
+		// ======================= Copy it to a new allocation and delete the old one ===============================
+		// Get new allocation and align it
 		void* newBlock = AllocInFreelist(newTotalSize);
-		MemCopy(newBlock, header, header->size);
-		FreeInFreelist(header, header->size);
-		AllocHeader* newHeader = (AllocHeader*)newBlock;
-		newHeader->size = (u32)newTotalSize;
-		return (u8*)newBlock + sizeof(AllocHeader);
+		u64 blockExcludingHeader = (u64)newBlock + sizeof(AllocHeader);
+		void* alignedBlock = (void*)((blockExcludingHeader + header->alignment - 1) & ~((u64)header->alignment - 1));
+
+		// Copy the client data
+		MemCopy(alignedBlock, block, header->size);
+
+		// Fill in the header at the new memory location
+		AllocHeader* newHeader = (AllocHeader*)alignedBlock - 1;
+		newHeader->start = newBlock;
+		newHeader->size = (u32)size;
+		newHeader->alignment = header->alignment;
+		newHeader->tag = header->tag;
+
+		// Free the old data
+		FreeInFreelist(header->start, oldTotalSize);
+
+		return alignedBlock;
 	}
 
 	void FreelistAllocator::Free(void* block)
 	{
 		// Going slightly before the block and grabbing the alloc header that is stored there for debug info
 		AllocHeader* header = (AllocHeader*)block - 1;
-		void* freeAddress = header;
+		size_t totalFreeSize = header->size + header->alignment + sizeof(AllocHeader);
 
 #ifndef GR_DIST
-		FreeInfo(header->size, header->tag);
+		FreeInfo(totalFreeSize, header->tag);
 #endif
 
-		FreeInFreelist(freeAddress, header->size);
+		FreeInFreelist(header->start, totalFreeSize);
 	}
 
 	void* FreelistAllocator::AllocInFreelist(size_t size)

@@ -68,14 +68,14 @@ b8 freelist_allocator_test()
 	allocator->Initialize(arena, arena_size, required_nodes);
 
 	// Testing full allocation and deallocation
-	void* temp = allocator->Alloc(1000 - allocator->GetAllocHeaderSize(), MEM_TAG_TEST);
+	void* temp = allocator->Alloc(1000 - allocator->GetAllocHeaderSize() - MIN_ALIGNMENT, MEM_TAG_TEST);
 	allocator->Free(temp);
 
 	// Testing mixed allocs and deallocs
 	void* temp0 = allocator->Alloc(200, MEM_TAG_TEST);
 	void* temp1 = allocator->Alloc(300, MEM_TAG_TEST);
 	void* temp2 = allocator->Alloc(300, MEM_TAG_TEST);
-	void* temp3 = allocator->Alloc(100, MEM_TAG_TEST);
+	void* temp3 = allocator->Alloc(80, MEM_TAG_TEST);
 	allocator->Free(temp1);
 	allocator->Free(temp2);
 	void* temp4 = allocator->Alloc(500, MEM_TAG_TEST); // This will only allocate if it has properly combined free elements that are next to each other
@@ -83,7 +83,7 @@ b8 freelist_allocator_test()
 	allocator->Free(temp3);
 	allocator->Free(temp4);
 
-	temp = allocator->Alloc(1000 - allocator->GetAllocHeaderSize(), MEM_TAG_TEST);
+	temp = allocator->Alloc(1000 - allocator->GetAllocHeaderSize() - MIN_ALIGNMENT, MEM_TAG_TEST);
 	allocator->Free(temp);
 
 	delete allocator;
@@ -95,7 +95,7 @@ b8 freelist_allocator_test()
 
 b8 freelist_allocator_realloc_test()
 {
-	size_t arena_size = 1000 + FreelistAllocator::GetAllocHeaderSize();
+	size_t arena_size = 1000 + FreelistAllocator::GetAllocHeaderSize() + MIN_ALIGNMENT;
 	size_t required_node_memory;
 	u32 required_nodes;
 
