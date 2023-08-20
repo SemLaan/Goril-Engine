@@ -28,7 +28,8 @@ namespace GR
 		VkShaderModuleCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 		createInfo.codeSize = code.Size();
-		createInfo.pCode = (u32*)code.GetRawElements(); /// TODO: make sure darray allocates with worst case alignment or can be told what the alignment is
+		// This cast from char* to u32* is possible because darray's are aligned on 64B
+		createInfo.pCode = (u32*)code.GetRawElements();
 
 		if (VK_SUCCESS != vkCreateShaderModule(state->device, &createInfo, state->allocator, out_shaderModule))
 		{

@@ -3,6 +3,7 @@
 #include "core/gr_memory.h"
 #include "core/asserts.h"
 
+// This makes sure arrays are cache line aligned on most consumer hardware
 #define DARRAY_MIN_ALIGNMENT 64
 
 namespace GR
@@ -24,7 +25,7 @@ namespace GR
 			size = 0;
 			capacity = reserveCapacity;
 			scalingFactor = _scalingFactor;
-			elements = (T*)GRAlingedAlloc(sizeof(T) * capacity, tag, DARRAY_MIN_ALIGNMENT);
+			elements = (T*)GRAlignedAlloc(sizeof(T) * capacity, tag, DARRAY_MIN_ALIGNMENT);
 			Zero(elements, sizeof(T) * capacity);
 		}
 

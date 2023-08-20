@@ -144,7 +144,7 @@ namespace GR
 		return state->globalAllocator->AlignedAlloc(size, tag, MIN_ALIGNMENT);
 	}
 
-	void* GRAlingedAlloc(size_t size, mem_tag tag, u32 alignment)
+	void* GRAlignedAlloc(size_t size, mem_tag tag, u32 alignment)
 	{
 		return state->globalAllocator->AlignedAlloc(size, tag, alignment);
 	}
