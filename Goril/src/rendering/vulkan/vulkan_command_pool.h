@@ -5,11 +5,11 @@
 
 namespace GR
 {
-	b8 CreateCommandPool(RendererState* state);
+	b8 CreateCommandPool();
 
-	void DestroyCommandPool(RendererState* state);
+	void DestroyCommandPool();
 
-	b8 AllocateCommandBuffers(RendererState* state);
+	b8 AllocateCommandBuffers();
 
-	b8 RecordCommandBuffer(RendererState* state, VkCommandBuffer commandBuffer, u32 imageIndex);
+	b8 RecordCommandBuffer(VkCommandBuffer commandBuffer, u32 imageIndex);
 }

@@ -50,7 +50,8 @@ namespace GR
 		VkPipelineLayout pipelineLayout;
 		VkPipeline graphicsPipeline;
 		Darray<VkFramebuffer> swapchainFramebuffers;
-		VkCommandPool commandPool;
+		VkCommandPool graphicsCommandPool;
+		VkCommandPool transferCommandPool;
 		Darray<VkCommandBuffer> commandBuffers;
 		Darray<VkSemaphore> imageAvailableSemaphores;
 		Darray<VkSemaphore> renderFinishedSemaphores;

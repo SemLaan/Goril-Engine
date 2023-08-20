@@ -125,11 +125,11 @@ namespace GR
 			return false;
 
 		// ========================== Create command pool =======================================
-		if (!CreateCommandPool(vk_state))
+		if (!CreateCommandPool())
 			return false;
 
 		// ============================ Allocate a command buffer =======================================
-		if (!AllocateCommandBuffers(vk_state))
+		if (!AllocateCommandBuffers())
 			return false;
 
 		// ================================ Create sync objects ===========================================
@@ -171,7 +171,7 @@ namespace GR
 
 		vkResetCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame], 0);
 
-		RecordCommandBuffer(vk_state, vk_state->commandBuffers[vk_state->currentFrame], imageIndex);
+		RecordCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame], imageIndex);
 
 		VkSemaphore waitSemaphores[] = { vk_state->imageAvailableSemaphores[vk_state->currentFrame] };
 		VkSemaphore signalSemaphores[] = { vk_state->renderFinishedSemaphores[vk_state->currentFrame] };
@@ -236,7 +236,7 @@ namespace GR
 		DestroySyncObjects(vk_state);
 
 		// ======================== Destroying command pool if it was created ====================================
-		DestroyCommandPool(vk_state);
+		DestroyCommandPool();
 
 		// ====================== Destroying swapchain framebuffers if they were created ================================
 		DestroySwapchainFramebuffers(vk_state);
