@@ -136,7 +136,15 @@ namespace GR
 		if (!CreateSyncObjects(vk_state))
 			return false;
 
-		vk_state->vertexBuffer = CreateVertexBuffer();
+		/// TODO: put this in application code
+		Darray<Vertex> vertices = Darray<Vertex>();
+		vertices.Initialize(MEM_TAG_RENDERER_SUBSYS);
+		vertices.Pushback({ {-0.5f, -0.5f}, {1.f, 0.f, 0.f} });
+		vertices.Pushback({ {0.5f, -0.5f}, {0.f, 1.f, 0.f} });
+		vertices.Pushback({ {0.5f, 0.5f}, {0.f, 0.f, 1.f} });
+		vertices.Pushback({ {-0.5f, 0.5f}, {1.f, 1.f, 1.f} });
+		vk_state->vertexBuffer = CreateVertexBuffer(vertices.GetRawElements(), sizeof(Vertex) * vertices.Size());
+		vertices.Deinitialize();
 
 		return true;
 	}

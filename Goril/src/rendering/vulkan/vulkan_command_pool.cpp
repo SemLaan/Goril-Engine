@@ -111,7 +111,7 @@ namespace GR
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer->handle, offsets);
 
-		vkCmdDraw(commandBuffer, (u32)vertexBuffer->vertices.Size(), 1, 0, 0);
+		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
 		vkCmdEndRenderPass(commandBuffer);
 

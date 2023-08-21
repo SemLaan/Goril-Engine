@@ -66,15 +66,12 @@ namespace GR
 		vkFreeCommandBuffers(vk_state->device, vk_state->transferCommandPool, 1, &transferCommandBuffer);
 	}
 
-	VertexBuffer* CreateVertexBuffer()
+	VertexBuffer* CreateVertexBuffer(void* vertices, size_t size)
 	{
 		VertexBuffer* clientBuffer = (VertexBuffer*)GRAlloc(sizeof(VertexBuffer), MEM_TAG_RENDERER_SUBSYS);
 		clientBuffer->internalState = (VulkanVertexBuffer*)GRAlloc(sizeof(VulkanVertexBuffer), MEM_TAG_RENDERER_SUBSYS);
 		VulkanVertexBuffer* buffer = (VulkanVertexBuffer*)clientBuffer->internalState;
-		buffer->vertices.Initialize();
-		buffer->vertices.Pushback({ {0.0f, -0.5f}, {1.f, 0.f, 0.f} });
-		buffer->vertices.Pushback({ {0.5f, 0.5f}, {0.f, 1.f, 0.f} });
-		buffer->vertices.Pushback({ {-0.5f, 0.5f}, {0.f, 0.f, 1.f} });
+		buffer->size = size;
 
 		// ================ Staging buffer =========================
 		VkBuffer stagingBuffer;
@@ -84,7 +81,7 @@ namespace GR
 		stagingBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		stagingBufferCreateInfo.pNext = nullptr;
 		stagingBufferCreateInfo.flags = 0;
-		stagingBufferCreateInfo.size = sizeof(Vertex) * buffer->vertices.Size();
+		stagingBufferCreateInfo.size = buffer->size;
 		stagingBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 		stagingBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		stagingBufferCreateInfo.queueFamilyIndexCount = 0;
@@ -110,7 +107,7 @@ namespace GR
 		// ================= copying data into staging buffer ===============================
 		void* data;
 		vkMapMemory(vk_state->device, stagingMemory, 0, stagingBufferCreateInfo.size, 0, &data);
-		MemCopy(data, buffer->vertices.GetRawElements(), (size_t)stagingBufferCreateInfo.size);
+		MemCopy(data, vertices, (size_t)stagingBufferCreateInfo.size);
 		vkUnmapMemory(vk_state->device, stagingMemory);
 
 		// ================= creating the actual buffer =========================
@@ -118,7 +115,7 @@ namespace GR
 		bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		bufferCreateInfo.pNext = nullptr;
 		bufferCreateInfo.flags = 0;
-		bufferCreateInfo.size = sizeof(Vertex) * buffer->vertices.Size();
+		bufferCreateInfo.size = buffer->size;
 		bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 		bufferCreateInfo.sharingMode = VK_SHARING_MODE_CONCURRENT; /// TODO: use memory barriers instead of concurrent
 		bufferCreateInfo.queueFamilyIndexCount = 2;
@@ -157,7 +154,6 @@ namespace GR
 		vkDestroyBuffer(vk_state->device, buffer->handle, vk_state->allocator);
 		vkFreeMemory(vk_state->device, buffer->memory, vk_state->allocator);
 
-		buffer->vertices.Deinitialize();
 		GRFree(buffer);
 		GRFree(clientBuffer);
 	}

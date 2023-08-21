@@ -17,7 +17,7 @@ namespace GR
 		void* internalState;
 	};
 	
-	VertexBuffer* CreateVertexBuffer();
+	VertexBuffer* CreateVertexBuffer(void* vertices, size_t size);
 
 	void DestroyVertexBuffer(VertexBuffer* clientBuffer);
 }

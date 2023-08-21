@@ -11,7 +11,7 @@ namespace GR
 
 	struct VulkanVertexBuffer
 	{
-		Darray<Vertex> vertices;
+		VkDeviceSize size;
 		VkBuffer handle;
 		VkDeviceMemory memory;
 	};
