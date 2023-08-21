@@ -21,6 +21,51 @@ namespace GR
 		return 0;
 	}
 
+	void CopyBuffer(VkBuffer dstBuffer, VkBuffer srcBuffer, VkDeviceSize size)
+	{
+		VkCommandBufferAllocateInfo commandBufferAllocInfo = {};
+		commandBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		commandBufferAllocInfo.pNext = nullptr;
+		commandBufferAllocInfo.commandPool = vk_state->transferCommandPool;
+		commandBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		commandBufferAllocInfo.commandBufferCount = 1;
+
+		VkCommandBuffer transferCommandBuffer;
+
+		if (VK_SUCCESS != vkAllocateCommandBuffers(vk_state->device, &commandBufferAllocInfo, &transferCommandBuffer))
+		{
+			GRFATAL("Failed to allocate command buffer(s)");
+			GRASSERT(false);
+		}
+
+		VkCommandBufferBeginInfo beginInfo = {};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.pNext = nullptr;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		beginInfo.pInheritanceInfo = nullptr;
+
+		vkBeginCommandBuffer(transferCommandBuffer, &beginInfo);
+
+		VkBufferCopy copyRegion = {};
+		copyRegion.dstOffset = 0;
+		copyRegion.srcOffset = 0;
+		copyRegion.size = size;
+
+		vkCmdCopyBuffer(transferCommandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+		vkEndCommandBuffer(transferCommandBuffer);
+
+		VkSubmitInfo submitInfo = {};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &transferCommandBuffer;
+
+		vkQueueSubmit(vk_state->transferQueue, 1, &submitInfo, VK_NULL_HANDLE);
+		vkQueueWaitIdle(vk_state->transferQueue);
+
+		vkFreeCommandBuffers(vk_state->device, vk_state->transferCommandPool, 1, &transferCommandBuffer);
+	}
+
 	VertexBuffer* CreateVertexBuffer()
 	{
 		VertexBuffer* clientBuffer = (VertexBuffer*)GRAlloc(sizeof(VertexBuffer), MEM_TAG_RENDERER_SUBSYS);
@@ -96,6 +141,11 @@ namespace GR
 			GRASSERT(false);
 
 		vkBindBufferMemory(vk_state->device, buffer->handle, buffer->memory, 0);
+
+		CopyBuffer(buffer->handle, stagingBuffer, bufferCreateInfo.size);
+
+		vkDestroyBuffer(vk_state->device, stagingBuffer, vk_state->allocator);
+		vkFreeMemory(vk_state->device, stagingMemory, vk_state->allocator);
 
 		return clientBuffer;
 	}
