@@ -16,6 +16,14 @@ namespace GR
 		VkDeviceMemory memory;
 	};
 
+	struct VulkanIndexBuffer
+	{
+		VkDeviceSize size;
+		VkBuffer handle;
+		VkDeviceMemory memory;
+		size_t indexCount;
+	};
+
 	struct SwapchainSupportDetails {
 		VkSurfaceCapabilitiesKHR capabilities;
 		Darray<VkSurfaceFormatKHR> formats;
@@ -60,6 +68,7 @@ namespace GR
 		u32 currentFrame;
 		b8 shouldRecreateSwapchain;
 		VertexBuffer* vertexBuffer;
+		IndexBuffer* indexBuffer;
 		VkAllocationCallbacks* allocator;
 #ifndef GR_DIST
 		VkDebugUtilsMessengerEXT debugMessenger;

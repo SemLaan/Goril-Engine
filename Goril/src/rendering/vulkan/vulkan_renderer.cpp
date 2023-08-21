@@ -146,6 +146,10 @@ namespace GR
 		vk_state->vertexBuffer = CreateVertexBuffer(vertices.GetRawElements(), sizeof(Vertex) * vertices.Size());
 		vertices.Deinitialize();
 
+		constexpr u32 indexCount = 6;
+		u32 indices[indexCount] = { 0, 1, 2, 2, 3, 0 };
+		vk_state->indexBuffer = CreateIndexBuffer(indices, indexCount);
+
 		return true;
 	}
 
@@ -236,6 +240,9 @@ namespace GR
 		UnregisterEventListener(EVCODE_WINDOW_RESIZED, OnWindowResize);
 
 		vkDeviceWaitIdle(vk_state->device);
+
+		if (vk_state->indexBuffer)
+			DestroyIndexBuffer(vk_state->indexBuffer);
 
 		if (vk_state->vertexBuffer)
 			DestroyVertexBuffer(vk_state->vertexBuffer);
