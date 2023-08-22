@@ -77,6 +77,7 @@ namespace GR
 		Darray<VkFence> inFlightFences;
 		i32 maxFramesInFlight;
 		u32 currentFrame;
+		u32 currentSwapchainImageIndex;
 		b8 shouldRecreateSwapchain;
 		VertexBuffer* vertexBuffer;
 		IndexBuffer* indexBuffer;

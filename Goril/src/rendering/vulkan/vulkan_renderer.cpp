@@ -242,8 +242,7 @@ namespace GR
 
 		vkWaitForFences(vk_state->device, 1, &vk_state->inFlightFences[vk_state->currentFrame], VK_TRUE, UINT64_MAX);
 
-		u32 imageIndex;
-		VkResult result = vkAcquireNextImageKHR(vk_state->device, vk_state->swapchain, UINT64_MAX, vk_state->imageAvailableSemaphores[vk_state->currentFrame], VK_NULL_HANDLE, &imageIndex);
+		VkResult result = vkAcquireNextImageKHR(vk_state->device, vk_state->swapchain, UINT64_MAX, vk_state->imageAvailableSemaphores[vk_state->currentFrame], VK_NULL_HANDLE, &vk_state->currentSwapchainImageIndex);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
 		{
@@ -273,7 +272,7 @@ namespace GR
 		renderpassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderpassBeginInfo.pNext = nullptr;
 		renderpassBeginInfo.renderPass = vk_state->renderpass;
-		renderpassBeginInfo.framebuffer = vk_state->swapchainFramebuffers[imageIndex];
+		renderpassBeginInfo.framebuffer = vk_state->swapchainFramebuffers[vk_state->currentSwapchainImageIndex];
 		renderpassBeginInfo.renderArea.offset = { 0, 0 };
 		renderpassBeginInfo.renderArea.extent = vk_state->swapchainExtent;
 		renderpassBeginInfo.clearValueCount = 1;
@@ -309,8 +308,14 @@ namespace GR
 
 		vkCmdDrawIndexed(currentCommandBuffer, (u32)indexBuffer->indexCount, 1, 0, 0, 0);
 
+
+		return true;
+	}
+
+	void EndFrame()
+	{
 		/// TODO: end renderpass function
-		vkCmdEndRenderPass(currentCommandBuffer);
+		vkCmdEndRenderPass(vk_state->commandBuffers[vk_state->currentFrame]->handle);
 
 		// ==================== End command buffer recording ==================================================
 		EndCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame]);
@@ -330,17 +335,15 @@ namespace GR
 		presentInfo.pWaitSemaphores = signalSemaphores;
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = swapchains;
-		presentInfo.pImageIndices = &imageIndex;
+		presentInfo.pImageIndices = &vk_state->currentSwapchainImageIndex;
 		presentInfo.pResults = nullptr;
 
 		vkQueuePresentKHR(vk_state->presentQueue, &presentInfo);
 
 		vk_state->currentFrame = (vk_state->currentFrame + 1) % vk_state->maxFramesInFlight;
-
-		return true;
 	}
 
-	void EndFrame()
+	void DrawIndexed(VertexBuffer vertexBuffer, IndexBuffer indexBuffer)
 	{
 
 	}
