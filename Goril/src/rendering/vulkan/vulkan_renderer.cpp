@@ -218,7 +218,7 @@ namespace GR
 		presentInfo.pImageIndices = &imageIndex;
 		presentInfo.pResults = nullptr;
 
-		vkQueuePresentKHR(vk_state->graphicsQueue, &presentInfo);
+		vkQueuePresentKHR(vk_state->presentQueue, &presentInfo);
 
 		vk_state->currentFrame = (vk_state->currentFrame + 1) % vk_state->maxFramesInFlight;
 
