@@ -26,7 +26,7 @@ namespace GR
 		VkCommandBufferAllocateInfo commandBufferAllocInfo = {};
 		commandBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		commandBufferAllocInfo.pNext = nullptr;
-		commandBufferAllocInfo.commandPool = vk_state->transferCommandPool;
+		commandBufferAllocInfo.commandPool = vk_state->transferQueue.commandPool;
 		commandBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		commandBufferAllocInfo.commandBufferCount = 1;
 
@@ -60,10 +60,10 @@ namespace GR
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &transferCommandBuffer;
 
-		vkQueueSubmit(vk_state->transferQueue, 1, &submitInfo, VK_NULL_HANDLE);
-		vkQueueWaitIdle(vk_state->transferQueue);
+		vkQueueSubmit(vk_state->transferQueue.handle, 1, &submitInfo, VK_NULL_HANDLE);
+		vkQueueWaitIdle(vk_state->transferQueue.handle);
 
-		vkFreeCommandBuffers(vk_state->device, vk_state->transferCommandPool, 1, &transferCommandBuffer);
+		vkFreeCommandBuffers(vk_state->device, vk_state->transferQueue.commandPool, 1, &transferCommandBuffer);
 	}
 
 	VertexBuffer* CreateVertexBuffer(void* vertices, size_t size)

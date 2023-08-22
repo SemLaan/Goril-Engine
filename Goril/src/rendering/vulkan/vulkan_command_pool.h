@@ -5,11 +5,20 @@
 
 namespace GR
 {
-	b8 CreateCommandPool();
 
-	void DestroyCommandPool();
-
-	b8 AllocateCommandBuffers();
-
+	///TODO: replace
 	b8 RecordCommandBuffer(VkCommandBuffer commandBuffer, u32 imageIndex);
+
+
+	b8 AllocateCommandBuffer(QueueFamily* queueFamily, CommandBuffer* out_commandBuffer);
+	void FreeCommandBuffer(CommandBuffer* commandBuffer);
+
+	/// <summary>
+	/// Resets the command buffer, only supported if the command buffer was allocated from a command pool with the VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag.
+	/// </summary>
+	/// <param name="commandBuffer"></param>
+	void ResetCommandBuffer(CommandBuffer* commandBuffer);
+	b8 RecordCommandBuffer(CommandBuffer* commandBuffer);
+	b8 SubmitCommandBuffer(CommandBuffer* commandBuffer);
+	b8 WaitForCommandBufferExecutionFinish(CommandBuffer* commandBuffer);
 }

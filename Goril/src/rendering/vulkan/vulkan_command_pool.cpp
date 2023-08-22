@@ -4,61 +4,60 @@
 namespace GR
 {
 
-	b8 CreateCommandPool()
+	b8 AllocateCommandBuffer(QueueFamily* queueFamily, CommandBuffer* out_commandBuffer)
 	{
-		VkCommandPoolCreateInfo commandPoolCreateInfo = {};
-		commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		commandPoolCreateInfo.pNext = nullptr;
-		commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		commandPoolCreateInfo.queueFamilyIndex = vk_state->queueIndices.graphicsFamily;
-
-		if (VK_SUCCESS != vkCreateCommandPool(vk_state->device, &commandPoolCreateInfo, vk_state->allocator, &vk_state->graphicsCommandPool))
-		{
-			GRFATAL("Failed to create Vulkan graphics command pool");
-			return false;
-		}
-
-		commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
-		commandPoolCreateInfo.queueFamilyIndex = vk_state->queueIndices.transferFamily;
-
-		if (VK_SUCCESS != vkCreateCommandPool(vk_state->device, &commandPoolCreateInfo, vk_state->allocator, &vk_state->transferCommandPool))
-		{
-			GRFATAL("Failed to create Vulkan transfer command pool");
-			return false;
-		}
-
-		return true;
-	}
-
-	void DestroyCommandPool()
-	{
-		if (vk_state->graphicsCommandPool)
-			vkDestroyCommandPool(vk_state->device, vk_state->graphicsCommandPool, vk_state->allocator);
-
-		if (vk_state->transferCommandPool)
-			vkDestroyCommandPool(vk_state->device, vk_state->transferCommandPool, vk_state->allocator);
-
-		if (vk_state->commandBuffers.GetRawElements())
-			vk_state->commandBuffers.Deinitialize();
-	}
-
-	b8 AllocateCommandBuffers()
-	{
-		vk_state->commandBuffers = CreateDarrayWithSize<VkCommandBuffer>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
+		out_commandBuffer = (CommandBuffer*)GRAlloc(sizeof(CommandBuffer), MEM_TAG_RENDERER_SUBSYS);
 
 		VkCommandBufferAllocateInfo allocateInfo = {};
 		allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocateInfo.pNext = nullptr;
-		allocateInfo.commandPool = vk_state->graphicsCommandPool;
+		allocateInfo.commandPool = queueFamily->commandPool;
 		allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocateInfo.commandBufferCount = vk_state->maxFramesInFlight;
+		allocateInfo.commandBufferCount = 1;
 
-		if (VK_SUCCESS != vkAllocateCommandBuffers(vk_state->device, &allocateInfo, vk_state->commandBuffers.GetRawElements()))
+		if (VK_SUCCESS != vkAllocateCommandBuffers(vk_state->device, &allocateInfo, &out_commandBuffer->handle))
 		{
-			GRFATAL("Failed to allocate command buffer(s)");
+			GRFATAL("Failed to allocate command buffer");
+			GRFree(out_commandBuffer);
 			return false;
 		}
 
+		out_commandBuffer->queueFamily = queueFamily;
+		out_commandBuffer->state = COMMAND_BUFFER_STATE_INITIAL;
+
+
+		return true;
+	}
+
+	void FreeCommandBuffer(CommandBuffer* commandBuffer)
+	{
+		vkFreeCommandBuffers(vk_state->device, commandBuffer->queueFamily->commandPool, 1, &commandBuffer->handle);
+		GRFree(commandBuffer);
+	}
+
+	void ResetCommandBuffer(CommandBuffer* commandBuffer)
+	{
+#ifdef GR_DEBUG
+		if (commandBuffer->state == COMMAND_BUFFER_STATE_PENDING)
+			GRERROR("Command buffer still pending, try waiting for execution finish first");
+#endif // GR_DEBUG
+		
+		// No reset flags, because resources attached to the command buffer don't necessarily need to be freed and this allows Vulkan to decide whats best
+		vkResetCommandBuffer(commandBuffer->handle, 0);
+	}
+
+	b8 RecordCommandBuffer(CommandBuffer* commandBuffer)
+	{
+		return true;
+	}
+
+	b8 SubmitCommandBuffer(CommandBuffer* commandBuffer)
+	{
+		return true;
+	}
+
+	b8 WaitForCommandBufferExecutionFinish(CommandBuffer* commandBuffer)
+	{
 		return true;
 	}
 
@@ -76,6 +75,7 @@ namespace GR
 			return false;
 		}
 
+		///TODO: move this to renderpass
 		VkClearValue clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 		VkRenderPassBeginInfo renderpassBeginInfo = {};

@@ -99,6 +99,7 @@ namespace GR
 		SelectQueueFamilies(vk_state);
 
 		// ===================== Creating logical device =============================================
+		// ===================== Also sets up queues and command pools ================================
 		if (!CreateLogicalDevice(vk_state, &requiredDeviceExtensions, &requiredLayers))
 		{
 			requiredLayers.Deinitialize();
@@ -124,13 +125,21 @@ namespace GR
 		if (!CreateSwapchainFramebuffers(vk_state))
 			return false;
 
-		// ========================== Create command pool =======================================
-		if (!CreateCommandPool())
-			return false;
-
 		// ============================ Allocate a command buffer =======================================
-		if (!AllocateCommandBuffers())
+		vk_state->commandBuffers = CreateDarrayWithSize<VkCommandBuffer>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
+
+		VkCommandBufferAllocateInfo allocateInfo = {};
+		allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocateInfo.pNext = nullptr;
+		allocateInfo.commandPool = vk_state->graphicsQueue.commandPool;
+		allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocateInfo.commandBufferCount = vk_state->maxFramesInFlight;
+
+		if (VK_SUCCESS != vkAllocateCommandBuffers(vk_state->device, &allocateInfo, vk_state->commandBuffers.GetRawElements()))
+		{
+			GRFATAL("Failed to allocate command buffer(s)");
 			return false;
+		}
 
 		// ================================ Create sync objects ===========================================
 		if (!CreateSyncObjects(vk_state))
@@ -169,17 +178,18 @@ namespace GR
 
 		vkDeviceWaitIdle(vk_state->device);
 
+		///TODO: remove and put in application code
 		if (vk_state->indexBuffer)
 			DestroyIndexBuffer(vk_state->indexBuffer);
-
 		if (vk_state->vertexBuffer)
 			DestroyVertexBuffer(vk_state->vertexBuffer);
 
 		// ================================ Destroy sync objects if they were created ===========================================
 		DestroySyncObjects(vk_state);
 
-		// ======================== Destroying command pool if it was created ====================================
-		DestroyCommandPool();
+		// ================================== Destroy command buffers =============================================
+		if (vk_state->commandBuffers.GetRawElements())
+			vk_state->commandBuffers.Deinitialize();
 
 		// ====================== Destroying swapchain framebuffers if they were created ================================
 		DestroySwapchainFramebuffers(vk_state);
@@ -194,6 +204,7 @@ namespace GR
 		DestroySwapchain(vk_state);
 
 		// ===================== Destroying logical device if it was created =================================
+		// ===================== Also destroys queues and command pools ================================
 		DestroyLogicalDevice(vk_state);
 
 		// ======================= Destroying the surface if it was created ==================================
@@ -281,7 +292,7 @@ namespace GR
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
-		if (VK_SUCCESS != vkQueueSubmit(vk_state->graphicsQueue, 1, &submitInfo, vk_state->inFlightFences[vk_state->currentFrame]))
+		if (VK_SUCCESS != vkQueueSubmit(vk_state->graphicsQueue.handle, 1, &submitInfo, vk_state->inFlightFences[vk_state->currentFrame]))
 		{
 			GRERROR("Failed to submit queue");
 			return false;

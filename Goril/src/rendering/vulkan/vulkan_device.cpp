@@ -182,15 +182,52 @@ namespace GR
 		}
 
 		// =================== Getting the device queues ======================================================
-		vkGetDeviceQueue(state->device, state->queueIndices.graphicsFamily, 0, &state->graphicsQueue);
+		// Present family queue
 		vkGetDeviceQueue(state->device, state->queueIndices.presentFamily, 0, &state->presentQueue);
-		vkGetDeviceQueue(state->device, state->queueIndices.transferFamily, 0, &state->transferQueue);
+
+		///TODO: get compute queue
+		// Graphics, transfer and (in the future) compute queue
+		vkGetDeviceQueue(state->device, state->queueIndices.graphicsFamily, 0, &state->graphicsQueue.handle);
+		state->graphicsQueue.index = state->queueIndices.graphicsFamily;
+
+		vkGetDeviceQueue(state->device, state->queueIndices.transferFamily, 0, &state->transferQueue.handle);
+		state->transferQueue.index = state->queueIndices.transferFamily;
+
+		// ==================== Creating command pools for each of the queue families =============================
+		VkCommandPoolCreateInfo commandPoolCreateInfo = {};
+		commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		commandPoolCreateInfo.pNext = nullptr;
+		commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		commandPoolCreateInfo.queueFamilyIndex = vk_state->queueIndices.graphicsFamily;
+
+		if (VK_SUCCESS != vkCreateCommandPool(vk_state->device, &commandPoolCreateInfo, vk_state->allocator, &vk_state->graphicsQueue.commandPool))
+		{
+			GRFATAL("Failed to create Vulkan graphics command pool");
+			return false;
+		}
+
+		commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+		commandPoolCreateInfo.queueFamilyIndex = vk_state->queueIndices.transferFamily;
+
+		if (VK_SUCCESS != vkCreateCommandPool(vk_state->device, &commandPoolCreateInfo, vk_state->allocator, &vk_state->transferQueue.commandPool))
+		{
+			GRFATAL("Failed to create Vulkan transfer command pool");
+			return false;
+		}
+
+		///TODO: create compute command pool
 
 		return true;
 	}
 
 	void DestroyLogicalDevice(RendererState* state)
 	{
+		if (vk_state->graphicsQueue.commandPool)
+			vkDestroyCommandPool(vk_state->device, vk_state->graphicsQueue.commandPool, vk_state->allocator);
+
+		if (vk_state->transferQueue.commandPool)
+			vkDestroyCommandPool(vk_state->device, vk_state->transferQueue.commandPool, vk_state->allocator);
+
 		if (state->device)
 			vkDestroyDevice(state->device, state->allocator);
 		if (state->swapchainSupport.formats.GetRawElements())

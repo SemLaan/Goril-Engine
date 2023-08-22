@@ -24,7 +24,31 @@ namespace GR
 		size_t indexCount;
 	};
 
-	struct SwapchainSupportDetails {
+	enum CommandBufferState
+	{
+		COMMAND_BUFFER_STATE_INITIAL,
+		COMMAND_BUFFER_STATE_RECORDING,
+		COMMAND_BUFFER_STATE_EXECUTABLE,
+		COMMAND_BUFFER_STATE_PENDING,
+		COMMAND_BUFFER_STATE_INVALID
+	};
+
+	struct QueueFamily
+	{
+		VkQueue handle;
+		VkCommandPool commandPool;
+		u32 index;
+	};
+
+	struct CommandBuffer
+	{
+		VkCommandBuffer handle;
+		QueueFamily* queueFamily;
+		CommandBufferState state;
+	};
+
+	struct SwapchainSupportDetails 
+	{
 		VkSurfaceCapabilitiesKHR capabilities;
 		Darray<VkSurfaceFormatKHR> formats;
 		Darray<VkPresentModeKHR> presentModes;
@@ -33,7 +57,6 @@ namespace GR
 	struct QueueFamilyIndices
 	{
 		u32 graphicsFamily;
-		//u32 computeFamily;
 		u32 presentFamily;
 		u32 transferFamily;
 	};
@@ -43,9 +66,9 @@ namespace GR
 		VkInstance instance;
 		VkPhysicalDevice physicalDevice;
 		VkDevice device;
-		VkQueue graphicsQueue;
+		QueueFamily graphicsQueue;
+		QueueFamily transferQueue;
 		VkQueue presentQueue;
-		VkQueue transferQueue;
 		QueueFamilyIndices queueIndices;
 		VkSurfaceKHR surface;
 		SwapchainSupportDetails swapchainSupport;
@@ -58,8 +81,6 @@ namespace GR
 		VkPipelineLayout pipelineLayout;
 		VkPipeline graphicsPipeline;
 		Darray<VkFramebuffer> swapchainFramebuffers;
-		VkCommandPool graphicsCommandPool;
-		VkCommandPool transferCommandPool;
 		Darray<VkCommandBuffer> commandBuffers;
 		Darray<VkSemaphore> imageAvailableSemaphores;
 		Darray<VkSemaphore> renderFinishedSemaphores;
