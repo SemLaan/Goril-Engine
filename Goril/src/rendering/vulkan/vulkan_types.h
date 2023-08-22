@@ -24,15 +24,6 @@ namespace GR
 		size_t indexCount;
 	};
 
-	enum CommandBufferState
-	{
-		COMMAND_BUFFER_STATE_INITIAL,
-		COMMAND_BUFFER_STATE_RECORDING,
-		COMMAND_BUFFER_STATE_EXECUTABLE,
-		COMMAND_BUFFER_STATE_PENDING,
-		COMMAND_BUFFER_STATE_INVALID
-	};
-
 	struct QueueFamily
 	{
 		VkQueue handle;
@@ -44,7 +35,6 @@ namespace GR
 	{
 		VkCommandBuffer handle;
 		QueueFamily* queueFamily;
-		CommandBufferState state;
 	};
 
 	struct SwapchainSupportDetails 

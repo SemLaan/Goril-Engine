@@ -18,7 +18,7 @@ namespace GR
 	/// </summary>
 	/// <param name="commandBuffer"></param>
 	void ResetCommandBuffer(CommandBuffer* commandBuffer);
-	b8 RecordCommandBuffer(CommandBuffer* commandBuffer);
-	b8 SubmitCommandBuffer(CommandBuffer* commandBuffer);
-	b8 WaitForCommandBufferExecutionFinish(CommandBuffer* commandBuffer);
+	b8 ResetAndBeginCommandBuffer(CommandBuffer* commandBuffer);
+	void EndCommandBuffer(CommandBuffer* commandBuffer);
+	b8 SubmitCommandBuffers(u32 count, CommandBuffer* commandBuffers);
 }
