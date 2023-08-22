@@ -71,7 +71,7 @@ namespace GR
 		VkPipelineLayout pipelineLayout;
 		VkPipeline graphicsPipeline;
 		Darray<VkFramebuffer> swapchainFramebuffers;
-		Darray<VkCommandBuffer> commandBuffers;
+		Darray<CommandBuffer*> commandBuffers;
 		Darray<VkSemaphore> imageAvailableSemaphores;
 		Darray<VkSemaphore> renderFinishedSemaphores;
 		Darray<VkFence> inFlightFences;

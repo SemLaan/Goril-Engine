@@ -126,19 +126,12 @@ namespace GR
 			return false;
 
 		// ============================ Allocate a command buffer =======================================
-		vk_state->commandBuffers = CreateDarrayWithSize<VkCommandBuffer>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
+		vk_state->commandBuffers = CreateDarrayWithSize<CommandBuffer*>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
 
-		VkCommandBufferAllocateInfo allocateInfo = {};
-		allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocateInfo.pNext = nullptr;
-		allocateInfo.commandPool = vk_state->graphicsQueue.commandPool;
-		allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocateInfo.commandBufferCount = vk_state->maxFramesInFlight;
-
-		if (VK_SUCCESS != vkAllocateCommandBuffers(vk_state->device, &allocateInfo, vk_state->commandBuffers.GetRawElements()))
+		for (i32 i = 0; i < vk_state->maxFramesInFlight; ++i)
 		{
-			GRFATAL("Failed to allocate command buffer(s)");
-			return false;
+			if (!AllocateCommandBuffer(&vk_state->graphicsQueue, &vk_state->commandBuffers[i]))
+				return false;
 		}
 
 		// ================================ Create sync objects ===========================================
@@ -189,7 +182,13 @@ namespace GR
 
 		// ================================== Destroy command buffers =============================================
 		if (vk_state->commandBuffers.GetRawElements())
+		{
+			for (u32 i = 0; i < vk_state->maxFramesInFlight; ++i)
+			{
+				FreeCommandBuffer(vk_state->commandBuffers[i]);
+			}
 			vk_state->commandBuffers.Deinitialize();
+		}
 
 		// ====================== Destroying swapchain framebuffers if they were created ================================
 		DestroySwapchainFramebuffers(vk_state);
@@ -264,39 +263,63 @@ namespace GR
 
 		vkResetFences(vk_state->device, 1, &vk_state->inFlightFences[vk_state->currentFrame]);
 
-		///TODO: make reset command buffer func in command buffer scripts
-		vkResetCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame], 0);
-
-		RecordCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame], imageIndex);
+		// ===================================== Begin command buffer recording =========================================
+		ResetAndBeginCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame]);
+		VkCommandBuffer currentCommandBuffer = vk_state->commandBuffers[vk_state->currentFrame]->handle;
 
 		/// TODO: begin renderpass function
+		VkClearValue clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+		VkRenderPassBeginInfo renderpassBeginInfo = {};
+		renderpassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderpassBeginInfo.pNext = nullptr;
+		renderpassBeginInfo.renderPass = vk_state->renderpass;
+		renderpassBeginInfo.framebuffer = vk_state->swapchainFramebuffers[imageIndex];
+		renderpassBeginInfo.renderArea.offset = { 0, 0 };
+		renderpassBeginInfo.renderArea.extent = vk_state->swapchainExtent;
+		renderpassBeginInfo.clearValueCount = 1;
+		renderpassBeginInfo.pClearValues = &clearColor;
+
+		vkCmdBeginRenderPass(currentCommandBuffer, &renderpassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		/// TODO: bind graphics pipeline function
+		vkCmdBindPipeline(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->graphicsPipeline);
 
+		// Viewport and scissor
+		VkViewport viewport = {};
+		viewport.x = 0;
+		viewport.y = 0;
+		viewport.width = (f32)vk_state->swapchainExtent.width;
+		viewport.height = (f32)vk_state->swapchainExtent.height;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		vkCmdSetViewport(currentCommandBuffer, 0, 1, &viewport);
+
+		VkRect2D scissor = {};
+		scissor.offset = { 0, 0 };
+		scissor.extent = vk_state->swapchainExtent;
+		vkCmdSetScissor(currentCommandBuffer, 0, 1, &scissor);
+
+		/// TODO: move to application code
+		VulkanVertexBuffer* vertexBuffer = (VulkanVertexBuffer*)vk_state->vertexBuffer->internalState;
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(currentCommandBuffer, 0, 1, &vertexBuffer->handle, offsets);
+
+		VulkanIndexBuffer* indexBuffer = (VulkanIndexBuffer*)vk_state->indexBuffer->internalState;
+		vkCmdBindIndexBuffer(currentCommandBuffer, indexBuffer->handle, 0, VK_INDEX_TYPE_UINT32);
+
+		vkCmdDrawIndexed(currentCommandBuffer, (u32)indexBuffer->indexCount, 1, 0, 0, 0);
 
 		/// TODO: end renderpass function
-		
-		///TODO: make submit command buffer function and put this in there
+		vkCmdEndRenderPass(currentCommandBuffer);
+
+		// ==================== End command buffer recording ==================================================
+		EndCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame]);
+
+		// Submitting command buffer
 		VkSemaphore waitSemaphores[] = { vk_state->imageAvailableSemaphores[vk_state->currentFrame] };
 		VkSemaphore signalSemaphores[] = { vk_state->renderFinishedSemaphores[vk_state->currentFrame] };
 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-
-		VkSubmitInfo submitInfo = {};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.pNext = nullptr;
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = waitSemaphores;
-		submitInfo.pWaitDstStageMask = waitStages;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &vk_state->commandBuffers[vk_state->currentFrame];
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = signalSemaphores;
-
-		if (VK_SUCCESS != vkQueueSubmit(vk_state->graphicsQueue.handle, 1, &submitInfo, vk_state->inFlightFences[vk_state->currentFrame]))
-		{
-			GRERROR("Failed to submit queue");
-			return false;
-		}
+		SubmitCommandBuffers(1, waitSemaphores, waitStages, 1, signalSemaphores, 1, vk_state->commandBuffers[vk_state->currentFrame], vk_state->inFlightFences[vk_state->currentFrame]);
 
 		VkSwapchainKHR swapchains[] = { vk_state->swapchain };
 

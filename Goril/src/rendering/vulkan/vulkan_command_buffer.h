@@ -6,11 +6,7 @@
 namespace GR
 {
 
-	///TODO: replace
-	b8 RecordCommandBuffer(VkCommandBuffer commandBuffer, u32 imageIndex);
-
-
-	b8 AllocateCommandBuffer(QueueFamily* queueFamily, CommandBuffer* out_commandBuffer);
+	b8 AllocateCommandBuffer(QueueFamily* queueFamily, CommandBuffer** out_commandBuffer);
 	void FreeCommandBuffer(CommandBuffer* commandBuffer);
 
 	/// <summary>
@@ -20,5 +16,5 @@ namespace GR
 	void ResetCommandBuffer(CommandBuffer* commandBuffer);
 	b8 ResetAndBeginCommandBuffer(CommandBuffer* commandBuffer);
 	void EndCommandBuffer(CommandBuffer* commandBuffer);
-	b8 SubmitCommandBuffers(u32 count, CommandBuffer* commandBuffers);
+	b8 SubmitCommandBuffers(u32 waitSemaphoreCount, VkSemaphore* pWaitSemaphores, VkPipelineStageFlags* pWaitDstStageMask, u32 signalSemaphoreCount, VkSemaphore* pSignalSemaphores, u32 commandBufferCount, CommandBuffer* commandBuffers, VkFence fence);
 }
