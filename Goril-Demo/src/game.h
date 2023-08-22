@@ -10,8 +10,8 @@ using namespace GR;
 class Game : public GR::GorilGame
 {
 private:
-	VertexBuffer* vertexBuffer;
-	IndexBuffer* indexBuffer;
+	VertexBuffer vertexBuffer;
+	IndexBuffer indexBuffer;
 
 public:
 	// Inherited via GorilGame

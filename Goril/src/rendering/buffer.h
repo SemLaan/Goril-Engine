@@ -22,8 +22,8 @@ namespace GR
 		void* internalState;
 	};
 	
-	GRAPI VertexBuffer* CreateVertexBuffer(void* vertices, size_t size);
-	GRAPI void DestroyVertexBuffer(VertexBuffer* clientBuffer);
+	GRAPI VertexBuffer CreateVertexBuffer(void* vertices, size_t size);
+	GRAPI void DestroyVertexBuffer(VertexBuffer clientBuffer);
 
 	/// <summary>
 	/// Creates an index buffer
@@ -31,6 +31,6 @@ namespace GR
 	/// <param name="indices">Array of indices, type needs to be u32</param>
 	/// <param name="indexCount"></param>
 	/// <returns></returns>
-	GRAPI IndexBuffer* CreateIndexBuffer(u32* indices, size_t indexCount);
-	GRAPI void DestroyIndexBuffer(IndexBuffer* clientBuffer);
+	GRAPI IndexBuffer CreateIndexBuffer(u32* indices, size_t indexCount);
+	GRAPI void DestroyIndexBuffer(IndexBuffer clientBuffer);
 }

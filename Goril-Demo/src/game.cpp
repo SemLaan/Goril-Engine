@@ -33,7 +33,7 @@ b8 Game::Update()
 
 b8 Game::Render()
 {
-	DrawIndexed(*vertexBuffer, *indexBuffer);
+	DrawIndexed(vertexBuffer, indexBuffer);
     return true;
 }
 

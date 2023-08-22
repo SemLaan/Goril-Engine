@@ -66,11 +66,11 @@ namespace GR
 		vkFreeCommandBuffers(vk_state->device, vk_state->transferQueue.commandPool, 1, &transferCommandBuffer);
 	}
 
-	VertexBuffer* CreateVertexBuffer(void* vertices, size_t size)
+	VertexBuffer CreateVertexBuffer(void* vertices, size_t size)
 	{
-		VertexBuffer* clientBuffer = (VertexBuffer*)GRAlloc(sizeof(VertexBuffer) + sizeof(VulkanVertexBuffer), MEM_TAG_VERTEX_BUFFER);
-		clientBuffer->internalState = clientBuffer + 1;
-		VulkanVertexBuffer* buffer = (VulkanVertexBuffer*)clientBuffer->internalState;
+		VertexBuffer clientBuffer;
+		clientBuffer.internalState = GRAlloc(sizeof(VulkanVertexBuffer), MEM_TAG_VERTEX_BUFFER);
+		VulkanVertexBuffer* buffer = (VulkanVertexBuffer*)clientBuffer.internalState;
 		buffer->size = size;
 
 		// ================ Staging buffer =========================
@@ -147,21 +147,21 @@ namespace GR
 		return clientBuffer;
 	}
 
-	void DestroyVertexBuffer(VertexBuffer* clientBuffer)
+	void DestroyVertexBuffer(VertexBuffer clientBuffer)
 	{
-		VulkanVertexBuffer* buffer = (VulkanVertexBuffer*)clientBuffer->internalState;
+		VulkanVertexBuffer* buffer = (VulkanVertexBuffer*)clientBuffer.internalState;
 
 		vkDestroyBuffer(vk_state->device, buffer->handle, vk_state->allocator);
 		vkFreeMemory(vk_state->device, buffer->memory, vk_state->allocator);
 
-		GRFree(clientBuffer);
+		GRFree(buffer);
 	}
 
-	IndexBuffer* CreateIndexBuffer(u32* indices, size_t indexCount)
+	IndexBuffer CreateIndexBuffer(u32* indices, size_t indexCount)
 	{
-		IndexBuffer* clientBuffer = (IndexBuffer*)GRAlloc(sizeof(IndexBuffer) + sizeof(VulkanIndexBuffer), MEM_TAG_INDEX_BUFFER);
-		clientBuffer->internalState = clientBuffer + 1;
-		VulkanIndexBuffer* buffer = (VulkanIndexBuffer*)clientBuffer->internalState;
+		IndexBuffer clientBuffer;
+		clientBuffer.internalState = GRAlloc(sizeof(VulkanIndexBuffer), MEM_TAG_INDEX_BUFFER);
+		VulkanIndexBuffer* buffer = (VulkanIndexBuffer*)clientBuffer.internalState;
 		buffer->size = indexCount * sizeof(u32);
 		buffer->indexCount = indexCount;
 
@@ -239,13 +239,13 @@ namespace GR
 		return clientBuffer;
 	}
 
-	void DestroyIndexBuffer(IndexBuffer* clientBuffer)
+	void DestroyIndexBuffer(IndexBuffer clientBuffer)
 	{
-		VulkanIndexBuffer* buffer = (VulkanIndexBuffer*)clientBuffer->internalState;
+		VulkanIndexBuffer* buffer = (VulkanIndexBuffer*)clientBuffer.internalState;
 
 		vkDestroyBuffer(vk_state->device, buffer->handle, vk_state->allocator);
 		vkFreeMemory(vk_state->device, buffer->memory, vk_state->allocator);
 
-		GRFree(clientBuffer);
+		GRFree(buffer);
 	}
 }
