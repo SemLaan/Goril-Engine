@@ -6,10 +6,10 @@ namespace GR
 {
 
 	b8 InitializeRenderer();
-
-	b8 UpdateRenderer();
-
 	void ShutdownRenderer();
+
+	b8 BeginFrame();
+	void EndFrame();
 
 	void RecreateSwapchain();
 }

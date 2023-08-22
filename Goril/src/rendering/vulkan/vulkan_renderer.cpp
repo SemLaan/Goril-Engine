@@ -153,78 +153,6 @@ namespace GR
 		return true;
 	}
 
-	b8 UpdateRenderer()
-	{
-		if (vk_state->shouldRecreateSwapchain)
-			RecreateSwapchain();
-
-		vkWaitForFences(vk_state->device, 1, &vk_state->inFlightFences[vk_state->currentFrame], VK_TRUE, UINT64_MAX);
-
-		u32 imageIndex;
-		VkResult result = vkAcquireNextImageKHR(vk_state->device, vk_state->swapchain, UINT64_MAX, vk_state->imageAvailableSemaphores[vk_state->currentFrame], VK_NULL_HANDLE, &imageIndex);
-
-		if (result == VK_ERROR_OUT_OF_DATE_KHR)
-		{
-			vk_state->shouldRecreateSwapchain = true;
-			return false;
-		}
-		else if (result == VK_SUBOPTIMAL_KHR)
-		{
-			// Sets recreate swapchain to true BUT DOES NOT RETURN because the image has been acquired so we can continue rendering for this frame
-			vk_state->shouldRecreateSwapchain = true;
-		}
-		else if (result != VK_SUCCESS)
-		{
-			GRWARN("Failed to acquire next swapchain image");
-			return false;
-		}
-
-		vkResetFences(vk_state->device, 1, &vk_state->inFlightFences[vk_state->currentFrame]);
-
-		vkResetCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame], 0);
-
-		RecordCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame], imageIndex);
-
-		VkSemaphore waitSemaphores[] = { vk_state->imageAvailableSemaphores[vk_state->currentFrame] };
-		VkSemaphore signalSemaphores[] = { vk_state->renderFinishedSemaphores[vk_state->currentFrame] };
-		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-
-		VkSubmitInfo submitInfo = {};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.pNext = nullptr;
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = waitSemaphores;
-		submitInfo.pWaitDstStageMask = waitStages;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &vk_state->commandBuffers[vk_state->currentFrame];
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = signalSemaphores;
-
-		if (VK_SUCCESS != vkQueueSubmit(vk_state->graphicsQueue, 1, &submitInfo, vk_state->inFlightFences[vk_state->currentFrame]))
-		{
-			GRERROR("Failed to submit queue");
-			return false;
-		}
-
-		VkSwapchainKHR swapchains[] = { vk_state->swapchain };
-
-		VkPresentInfoKHR presentInfo = {};
-		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		presentInfo.pNext = nullptr;
-		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = signalSemaphores;
-		presentInfo.swapchainCount = 1;
-		presentInfo.pSwapchains = swapchains;
-		presentInfo.pImageIndices = &imageIndex;
-		presentInfo.pResults = nullptr;
-
-		vkQueuePresentKHR(vk_state->presentQueue, &presentInfo);
-
-		vk_state->currentFrame = (vk_state->currentFrame + 1) % vk_state->maxFramesInFlight;
-
-		return true;
-	}
-
 	void ShutdownRenderer()
 	{
 		if (vk_state == nullptr)
@@ -276,7 +204,7 @@ namespace GR
 #ifndef GR_DIST
 		DestroyDebugMessenger();
 #endif // !GR_DIST
-		
+
 		// ======================= Destroying instance if it was created =======================================
 		DestroyVulkanInstance();
 		GRFree(vk_state);
@@ -295,6 +223,92 @@ namespace GR
 
 		vk_state->shouldRecreateSwapchain = false;
 		GRINFO("Vulkan Swapchain resized");
+	}
+
+	b8 BeginFrame()
+	{
+		if (vk_state->shouldRecreateSwapchain)
+			RecreateSwapchain();
+
+		vkWaitForFences(vk_state->device, 1, &vk_state->inFlightFences[vk_state->currentFrame], VK_TRUE, UINT64_MAX);
+
+		u32 imageIndex;
+		VkResult result = vkAcquireNextImageKHR(vk_state->device, vk_state->swapchain, UINT64_MAX, vk_state->imageAvailableSemaphores[vk_state->currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+		if (result == VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			vk_state->shouldRecreateSwapchain = true;
+			return false;
+		}
+		else if (result == VK_SUBOPTIMAL_KHR)
+		{
+			// Sets recreate swapchain to true BUT DOES NOT RETURN because the image has been acquired so we can continue rendering for this frame
+			vk_state->shouldRecreateSwapchain = true;
+		}
+		else if (result != VK_SUCCESS)
+		{
+			GRWARN("Failed to acquire next swapchain image");
+			return false;
+		}
+
+		vkResetFences(vk_state->device, 1, &vk_state->inFlightFences[vk_state->currentFrame]);
+
+		///TODO: make reset command buffer func in command buffer scripts
+		vkResetCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame], 0);
+
+		RecordCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame], imageIndex);
+
+		/// TODO: begin renderpass function
+
+		/// TODO: bind graphics pipeline function
+
+
+		/// TODO: end renderpass function
+		
+		///TODO: make submit command buffer function and put this in there
+		VkSemaphore waitSemaphores[] = { vk_state->imageAvailableSemaphores[vk_state->currentFrame] };
+		VkSemaphore signalSemaphores[] = { vk_state->renderFinishedSemaphores[vk_state->currentFrame] };
+		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
+		VkSubmitInfo submitInfo = {};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.pNext = nullptr;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = waitSemaphores;
+		submitInfo.pWaitDstStageMask = waitStages;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &vk_state->commandBuffers[vk_state->currentFrame];
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = signalSemaphores;
+
+		if (VK_SUCCESS != vkQueueSubmit(vk_state->graphicsQueue, 1, &submitInfo, vk_state->inFlightFences[vk_state->currentFrame]))
+		{
+			GRERROR("Failed to submit queue");
+			return false;
+		}
+
+		VkSwapchainKHR swapchains[] = { vk_state->swapchain };
+
+		VkPresentInfoKHR presentInfo = {};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.pNext = nullptr;
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = signalSemaphores;
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = swapchains;
+		presentInfo.pImageIndices = &imageIndex;
+		presentInfo.pResults = nullptr;
+
+		vkQueuePresentKHR(vk_state->presentQueue, &presentInfo);
+
+		vk_state->currentFrame = (vk_state->currentFrame + 1) % vk_state->maxFramesInFlight;
+
+		return true;
+	}
+
+	void EndFrame()
+	{
+
 	}
 
 	b8 OnWindowResize(EventCode type, EventData data)

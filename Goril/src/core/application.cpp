@@ -71,9 +71,12 @@ namespace GR
 			if (!appSuspended)
 			{
 				gameInstance->Update();
-				b8 succesfull = UpdateRenderer();
+				b8 succesfull = BeginFrame();
 				if (succesfull)
+				{
 					gameInstance->Render();
+					EndFrame();
+				}
 				if (GetKeyDown(KEY_ESCAPE))
 					appRunning = false;
 			}
