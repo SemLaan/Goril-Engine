@@ -5,7 +5,7 @@
 
 namespace GR
 {
-	enum GRAPI mem_tag
+	enum mem_tag
 	{
 		MEM_TAG_LOCAL_ALLOCATOR,
 		MEM_TAG_SUB_ARENA,

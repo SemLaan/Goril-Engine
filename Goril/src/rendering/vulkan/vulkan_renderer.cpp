@@ -138,20 +138,6 @@ namespace GR
 		if (!CreateSyncObjects(vk_state))
 			return false;
 
-		/// TODO: put this in application code
-		Darray<Vertex> vertices = Darray<Vertex>();
-		vertices.Initialize(MEM_TAG_RENDERER_SUBSYS);
-		vertices.Pushback({ {-0.5f, -0.5f}, {1.f, 0.f, 0.f} });
-		vertices.Pushback({ {0.5f, -0.5f}, {0.f, 1.f, 0.f} });
-		vertices.Pushback({ {0.5f, 0.5f}, {0.f, 0.f, 1.f} });
-		vertices.Pushback({ {-0.5f, 0.5f}, {1.f, 1.f, 1.f} });
-		vk_state->vertexBuffer = CreateVertexBuffer(vertices.GetRawElements(), sizeof(Vertex) * vertices.Size());
-		vertices.Deinitialize();
-
-		constexpr u32 indexCount = 6;
-		u32 indices[indexCount] = { 0, 1, 2, 2, 3, 0 };
-		vk_state->indexBuffer = CreateIndexBuffer(indices, indexCount);
-
 		return true;
 	}
 
@@ -170,12 +156,6 @@ namespace GR
 		UnregisterEventListener(EVCODE_WINDOW_RESIZED, OnWindowResize);
 
 		vkDeviceWaitIdle(vk_state->device);
-
-		///TODO: remove and put in application code
-		if (vk_state->indexBuffer)
-			DestroyIndexBuffer(vk_state->indexBuffer);
-		if (vk_state->vertexBuffer)
-			DestroyVertexBuffer(vk_state->vertexBuffer);
 
 		// ================================ Destroy sync objects if they were created ===========================================
 		DestroySyncObjects(vk_state);
@@ -298,17 +278,6 @@ namespace GR
 		scissor.extent = vk_state->swapchainExtent;
 		vkCmdSetScissor(currentCommandBuffer, 0, 1, &scissor);
 
-		/// TODO: move to application code
-		VulkanVertexBuffer* vertexBuffer = (VulkanVertexBuffer*)vk_state->vertexBuffer->internalState;
-		VkDeviceSize offsets[] = { 0 };
-		vkCmdBindVertexBuffers(currentCommandBuffer, 0, 1, &vertexBuffer->handle, offsets);
-
-		VulkanIndexBuffer* indexBuffer = (VulkanIndexBuffer*)vk_state->indexBuffer->internalState;
-		vkCmdBindIndexBuffer(currentCommandBuffer, indexBuffer->handle, 0, VK_INDEX_TYPE_UINT32);
-
-		vkCmdDrawIndexed(currentCommandBuffer, (u32)indexBuffer->indexCount, 1, 0, 0, 0);
-
-
 		return true;
 	}
 
@@ -343,9 +312,19 @@ namespace GR
 		vk_state->currentFrame = (vk_state->currentFrame + 1) % vk_state->maxFramesInFlight;
 	}
 
-	void DrawIndexed(VertexBuffer vertexBuffer, IndexBuffer indexBuffer)
+	void DrawIndexed(VertexBuffer _vertexBuffer, IndexBuffer _indexBuffer)
 	{
+		VkCommandBuffer currentCommandBuffer = vk_state->commandBuffers[vk_state->currentFrame]->handle;
 
+		VulkanVertexBuffer* vertexBuffer = (VulkanVertexBuffer*)_vertexBuffer.internalState;
+		VulkanIndexBuffer* indexBuffer = (VulkanIndexBuffer*)_indexBuffer.internalState;
+
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(currentCommandBuffer, 0, 1, &vertexBuffer->handle, offsets);
+
+		vkCmdBindIndexBuffer(currentCommandBuffer, indexBuffer->handle, 0, VK_INDEX_TYPE_UINT32);
+
+		vkCmdDrawIndexed(currentCommandBuffer, (u32)indexBuffer->indexCount, 1, 0, 0, 0);
 	}
 
 	static b8 OnWindowResize(EventCode type, EventData data)

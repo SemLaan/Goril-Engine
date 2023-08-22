@@ -79,8 +79,6 @@ namespace GR
 		u32 currentFrame;
 		u32 currentSwapchainImageIndex;
 		b8 shouldRecreateSwapchain;
-		VertexBuffer* vertexBuffer;
-		IndexBuffer* indexBuffer;
 		VkAllocationCallbacks* allocator;
 #ifndef GR_DIST
 		VkDebugUtilsMessengerEXT debugMessenger;

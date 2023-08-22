@@ -13,5 +13,5 @@ namespace GR
 	b8 BeginFrame();
 	void EndFrame();
 
-	void DrawIndexed(VertexBuffer vertexBuffer, IndexBuffer indexBuffer);
+	GRAPI void DrawIndexed(VertexBuffer vertexBuffer, IndexBuffer indexBuffer);
 }
