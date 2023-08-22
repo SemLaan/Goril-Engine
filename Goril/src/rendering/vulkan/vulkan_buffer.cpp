@@ -68,7 +68,7 @@ namespace GR
 
 	VertexBuffer* CreateVertexBuffer(void* vertices, size_t size)
 	{
-		VertexBuffer* clientBuffer = (VertexBuffer*)GRAlloc(sizeof(VertexBuffer) + sizeof(VulkanVertexBuffer), MEM_TAG_RENDERER_SUBSYS);
+		VertexBuffer* clientBuffer = (VertexBuffer*)GRAlloc(sizeof(VertexBuffer) + sizeof(VulkanVertexBuffer), MEM_TAG_VERTEX_BUFFER);
 		clientBuffer->internalState = clientBuffer + 1;
 		VulkanVertexBuffer* buffer = (VulkanVertexBuffer*)clientBuffer->internalState;
 		buffer->size = size;
@@ -159,7 +159,7 @@ namespace GR
 
 	IndexBuffer* CreateIndexBuffer(u32* indices, size_t indexCount)
 	{
-		IndexBuffer* clientBuffer = (IndexBuffer*)GRAlloc(sizeof(IndexBuffer) + sizeof(VulkanIndexBuffer), MEM_TAG_RENDERER_SUBSYS);
+		IndexBuffer* clientBuffer = (IndexBuffer*)GRAlloc(sizeof(IndexBuffer) + sizeof(VulkanIndexBuffer), MEM_TAG_INDEX_BUFFER);
 		clientBuffer->internalState = clientBuffer + 1;
 		VulkanIndexBuffer* buffer = (VulkanIndexBuffer*)clientBuffer->internalState;
 		buffer->size = indexCount * sizeof(u32);

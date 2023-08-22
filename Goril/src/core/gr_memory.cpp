@@ -19,6 +19,8 @@ namespace GR
 		"GAME               ",
 		"TEST               ",
 		"DARRAY             ",
+		"VERTEX BUFFER      ",
+		"INDEX BUFFER       ",
 	};
 #endif // !GR_DIST
 

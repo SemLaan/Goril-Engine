@@ -40,6 +40,6 @@ b8 Game::Render()
 b8 Game::Shutdown()
 {
 	DestroyIndexBuffer(indexBuffer);
-	//DestroyVertexBuffer(vertexBuffer);
+	DestroyVertexBuffer(vertexBuffer);
     return true;
 }
