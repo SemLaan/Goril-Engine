@@ -13,7 +13,7 @@
 #include "vulkan_swapchain.h"
 #include "vulkan_graphics_pipeline.h"
 #include "vulkan_renderpass.h"
-#include "vulkan_command_pool.h"
+#include "vulkan_command_buffer.h"
 #include "vulkan_sync_objects.h"
 #include "../buffer.h"
 
