@@ -1,6 +1,9 @@
 #include "logger.h"
 
 #include "platform.h"
+#include "asserts.h"
+#include "gr_memory.h"
+#include <fstream>
 
 namespace GR
 {
@@ -15,22 +18,21 @@ namespace GR
 		"[TRACE]: ",
 	};
 
-	b8 InitializeLogger()
-	{
-		GRINFO("Initializing logging subsystem...");
-		// TODO: create file to write logs to
 
-		return true;
-	}
+	static std::ofstream file("console.log");
 
-	void ShutdownLogger()
+
+	void WriteLogsToFile()
 	{
-		GRINFO("Shutting down logging subsystem...");
-		// TODO: write logs to file
+		GRINFO("Writing logs to file...");
+
+		file.close();
 	}
 
 	void Log(log_level level, std::string message)
 	{
-		PlatformLogString(level, (logLevels[level] + message + "\n").c_str());
+		std::string string = logLevels[level] + message + "\n";
+		file << string.c_str();
+		PlatformLogString(level, string.c_str());
 	}
 }

@@ -27,11 +27,6 @@ namespace GR
 			GRFATAL("Memory failed to initialize");
 			return false;
 		}
-		if (!InitializeLogger())
-		{
-			GRFATAL("Logger failed to initialize");
-			return false;
-		}
 		if (!InitializeEvent())
 		{
 			GRFATAL("Event system failed to initialize");
@@ -98,8 +93,8 @@ namespace GR
 		ShutdownPlatform();
 		ShutdownInput();
 		ShutdownEvent();
-		ShutdownLogger();
 		ShutdownMemory();
+		WriteLogsToFile();
 	}
 
 	static b8 OnQuit(EventCode type, EventData data)

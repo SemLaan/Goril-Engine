@@ -16,9 +16,7 @@ namespace GR
 		MAX_LOG_LEVELS
 	};
 
-	b8 InitializeLogger();
-
-	void ShutdownLogger();
+	void WriteLogsToFile();
 	
 	GRAPI void Log(log_level level, std::string message);
 }

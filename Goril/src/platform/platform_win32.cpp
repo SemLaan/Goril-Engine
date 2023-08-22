@@ -137,6 +137,7 @@ namespace GR
 		if (!hConsole)
 		{
 			hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+			GRINFO("Console initialized");
 		}
 		SetConsoleTextAttribute(hConsole, logLevelColors[level]);
 		OutputDebugStringA(message);
