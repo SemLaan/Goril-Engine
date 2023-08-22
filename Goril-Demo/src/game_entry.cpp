@@ -3,7 +3,7 @@
 
 GR::GameConfig GetGameConfig()
 {
-	GR::GameConfig config = {};
+	GR::GameConfig config{};
 	
 	config.game_instance_memory_requirement = KiB;
 	config.windowTitle = L"Test game";

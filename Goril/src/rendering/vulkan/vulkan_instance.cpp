@@ -7,7 +7,7 @@ namespace GR
 	b8 CreateVulkanInstance(const Darray<const void*>& requiredExtensions, const Darray<const void*>& requiredLayers)
 	{
 		// ================ App info =============================================
-		VkApplicationInfo appInfo = {};
+		VkApplicationInfo appInfo{};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 		appInfo.pNext = nullptr;
 		appInfo.pApplicationName = "Test app";
@@ -81,7 +81,7 @@ namespace GR
 
 		// ================== Creating instance =================================
 		{
-			VkInstanceCreateInfo createInfo = {};
+			VkInstanceCreateInfo createInfo{};
 			createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 #ifndef GR_DIST
 			VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo = GetDebugMessengerCreateInfo();

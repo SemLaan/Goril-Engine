@@ -29,7 +29,7 @@ int main()
 	// ------------------------------------------------------
 
 	// Init engine
-	GR::GameConfig config = {};
+	GR::GameConfig config{};
 	config.width = 0;
 	config.height = 0;
 	config.windowTitle = L"Testing window";

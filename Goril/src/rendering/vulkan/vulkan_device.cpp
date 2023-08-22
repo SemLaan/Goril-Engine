@@ -23,7 +23,7 @@ namespace GR
 		return details;
 	}
 
-	b8 DeviceHasExtensions(VkPhysicalDevice physicalDevice, const Darray<const void*>* requiredDeviceExtensions)
+	static b8 DeviceHasExtensions(VkPhysicalDevice physicalDevice, const Darray<const void*>* requiredDeviceExtensions)
 	{
 		u32 availableExtensionCount = 0;
 		vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &availableExtensionCount, nullptr);
@@ -137,7 +137,7 @@ namespace GR
 
 		for (u32 i = 0; i < uniqueQueueFamilies.Size(); ++i)
 		{
-			VkDeviceQueueCreateInfo queueCreateInfo = {};
+			VkDeviceQueueCreateInfo queueCreateInfo{};
 			queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 			queueCreateInfo.pNext = nullptr;
 			queueCreateInfo.flags = 0;
@@ -150,11 +150,11 @@ namespace GR
 		uniqueQueueFamilies.Deinitialize();
 
 		// ===================== Specifying features for logical device ==============================
-		VkPhysicalDeviceFeatures deviceFeatures = {};
+		VkPhysicalDeviceFeatures deviceFeatures{};
 		/// TODO: add required device features here, these should be retrieved from the application config
 
 		// ===================== Creating logical device =============================================
-		VkDeviceCreateInfo createInfo = {};
+		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		createInfo.pNext = nullptr;
 		createInfo.flags = 0;
@@ -194,7 +194,7 @@ namespace GR
 		state->transferQueue.index = state->queueIndices.transferFamily;
 
 		// ==================== Creating command pools for each of the queue families =============================
-		VkCommandPoolCreateInfo commandPoolCreateInfo = {};
+		VkCommandPoolCreateInfo commandPoolCreateInfo{};
 		commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		commandPoolCreateInfo.pNext = nullptr;
 		commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;

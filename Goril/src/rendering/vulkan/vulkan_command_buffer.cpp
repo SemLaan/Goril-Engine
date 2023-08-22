@@ -10,7 +10,7 @@ namespace GR
 		*out_pCommandBuffer = (CommandBuffer*)GRAlloc(sizeof(CommandBuffer), MEM_TAG_RENDERER_SUBSYS);
 		CommandBuffer* commandBuffer = *out_pCommandBuffer;
 
-		VkCommandBufferAllocateInfo allocateInfo = {};
+		VkCommandBufferAllocateInfo allocateInfo{};
 		allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocateInfo.pNext = nullptr;
 		allocateInfo.commandPool = queueFamily->commandPool;
@@ -87,7 +87,7 @@ namespace GR
 			commandBufferHandles[i] = commandBuffers[i].handle;
 		}
 
-		VkSubmitInfo submitInfo = {};
+		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.pNext = nullptr;
 		submitInfo.waitSemaphoreCount = waitSemaphoreCount;

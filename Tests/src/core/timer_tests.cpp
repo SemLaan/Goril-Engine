@@ -9,7 +9,7 @@
 #define MILLISECONDS_TO_SECONDS(x) (x / 1000)
 #define SECONDS_TO_MILLISECONDS(x) (x * 1000)
 
-b8 timer_test()
+static b8 timer_test()
 {
 	f64 ms_tolerance = 50;
 	f64 seconds_tolerance = MILLISECONDS_TO_SECONDS(ms_tolerance);

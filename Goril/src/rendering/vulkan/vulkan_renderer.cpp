@@ -22,7 +22,7 @@ namespace GR
 
 	RendererState* vk_state = nullptr;
 
-	b8 OnWindowResize(EventCode type, EventData data);
+	static b8 OnWindowResize(EventCode type, EventData data);
 
 	b8 InitializeRenderer()
 	{
@@ -183,7 +183,7 @@ namespace GR
 		// ================================== Destroy command buffers =============================================
 		if (vk_state->commandBuffers.GetRawElements())
 		{
-			for (u32 i = 0; i < vk_state->maxFramesInFlight; ++i)
+			for (i32 i = 0; i < vk_state->maxFramesInFlight; ++i)
 			{
 				FreeCommandBuffer(vk_state->commandBuffers[i]);
 			}
@@ -269,7 +269,7 @@ namespace GR
 
 		/// TODO: begin renderpass function
 		VkClearValue clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
-		VkRenderPassBeginInfo renderpassBeginInfo = {};
+		VkRenderPassBeginInfo renderpassBeginInfo{};
 		renderpassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderpassBeginInfo.pNext = nullptr;
 		renderpassBeginInfo.renderPass = vk_state->renderpass;
@@ -285,7 +285,7 @@ namespace GR
 		vkCmdBindPipeline(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->graphicsPipeline);
 
 		// Viewport and scissor
-		VkViewport viewport = {};
+		VkViewport viewport{};
 		viewport.x = 0;
 		viewport.y = 0;
 		viewport.width = (f32)vk_state->swapchainExtent.width;
@@ -294,7 +294,7 @@ namespace GR
 		viewport.maxDepth = 1.0f;
 		vkCmdSetViewport(currentCommandBuffer, 0, 1, &viewport);
 
-		VkRect2D scissor = {};
+		VkRect2D scissor{};
 		scissor.offset = { 0, 0 };
 		scissor.extent = vk_state->swapchainExtent;
 		vkCmdSetScissor(currentCommandBuffer, 0, 1, &scissor);
@@ -323,7 +323,7 @@ namespace GR
 
 		VkSwapchainKHR swapchains[] = { vk_state->swapchain };
 
-		VkPresentInfoKHR presentInfo = {};
+		VkPresentInfoKHR presentInfo{};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		presentInfo.pNext = nullptr;
 		presentInfo.waitSemaphoreCount = 1;
@@ -345,7 +345,7 @@ namespace GR
 
 	}
 
-	b8 OnWindowResize(EventCode type, EventData data)
+	static b8 OnWindowResize(EventCode type, EventData data)
 	{
 		vk_state->shouldRecreateSwapchain = true;
 		return false;

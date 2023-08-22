@@ -8,7 +8,7 @@
 
 using namespace GR;
 
-b8 bump_allocator_test()
+static b8 bump_allocator_test()
 {
 	size_t arena_size = 12 + BumpAllocator::GetAllocHeaderSize() * 2;
 
@@ -31,7 +31,7 @@ b8 bump_allocator_test()
 	return true;
 }
 
-b8 bump_allocator_realloc_test()
+static b8 bump_allocator_realloc_test()
 {
 	size_t arena_size = 1000 + BumpAllocator::GetAllocHeaderSize();
 
@@ -54,7 +54,7 @@ b8 bump_allocator_realloc_test()
 }
 
 
-b8 freelist_allocator_test()
+static b8 freelist_allocator_test()
 {
 	size_t arena_size = 1000;
 	size_t required_node_memory;
@@ -97,7 +97,7 @@ b8 freelist_allocator_test()
 	return true;
 }
 
-b8 freelist_allocator_realloc_test()
+static b8 freelist_allocator_realloc_test()
 {
 	size_t arena_size = 1000 + FreelistAllocator::GetAllocHeaderSize() + MIN_ALIGNMENT;
 	size_t required_node_memory;
@@ -143,7 +143,7 @@ b8 freelist_allocator_realloc_test()
 	return true;
 }
 
-b8 freelist_allocator_alignment_test()
+static b8 freelist_allocator_alignment_test()
 {
 	size_t arena_size = 1000 + FreelistAllocator::GetAllocHeaderSize() + MIN_ALIGNMENT;
 	size_t required_node_memory;

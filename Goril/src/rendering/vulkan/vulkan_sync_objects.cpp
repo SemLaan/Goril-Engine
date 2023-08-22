@@ -10,10 +10,10 @@ namespace GR
 		state->renderFinishedSemaphores = CreateDarrayWithSize<VkSemaphore>(MEM_TAG_RENDERER_SUBSYS, state->maxFramesInFlight);
 		state->inFlightFences = CreateDarrayWithSize<VkFence>(MEM_TAG_RENDERER_SUBSYS, state->maxFramesInFlight);
 
-		VkSemaphoreCreateInfo semaphoreCreateInfo = {};
+		VkSemaphoreCreateInfo semaphoreCreateInfo{};
 		semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-		VkFenceCreateInfo fenceCreateInfo = {};
+		VkFenceCreateInfo fenceCreateInfo{};
 		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 

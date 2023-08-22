@@ -36,7 +36,7 @@ namespace GR
 	static PlatformState* state = nullptr;
 
 	// Forward declaring window callbacks
-	LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	b8 InitializePlatform(const wchar_t* windowName)
 	{
@@ -48,7 +48,7 @@ namespace GR
 		const wchar_t* menuName = L"gorilwinmenu";
 		const wchar_t* className = L"gorilwinclass";
 
-		WNDCLASSEX wc = {};
+		WNDCLASSEX wc{};
 
 		wc.cbSize = sizeof(WNDCLASSEX);
 		wc.style = NULL;
@@ -112,7 +112,7 @@ namespace GR
 
 	void PlatformProcessMessage()
 	{
-		MSG msg = {};
+		MSG msg{};
 
 		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
@@ -133,7 +133,7 @@ namespace GR
 	
 	void PlatformLogString(log_level level, const char* message)
 	{
-		static HANDLE hConsole = {};
+		static HANDLE hConsole{};
 		if (!hConsole)
 		{
 			hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -221,13 +221,13 @@ namespace GR
 		}
 	}
 
-	LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		switch (uMsg)
 		{
 		case WM_CLOSE:
 		{
-			EventData data = {};
+			EventData data{};
 			InvokeEvent(EVCODE_QUIT, data);
 			break;
 		}
@@ -304,7 +304,7 @@ namespace GR
 
 	b8 PlatformCreateSurface(VkInstance instance, VkAllocationCallbacks* allocator, VkSurfaceKHR* out_surface)
 	{
-		VkWin32SurfaceCreateInfoKHR createInfo = {};
+		VkWin32SurfaceCreateInfoKHR createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 		createInfo.pNext = nullptr;
 		createInfo.flags = 0;

@@ -6,7 +6,7 @@
 
 using namespace GR;
 
-b8 alloc_and_dealloc_test()
+static b8 alloc_and_dealloc_test()
 {
 	u64 initial_allocation_count = GetNetAllocations();
 	size_t test_allocation_size = 18;

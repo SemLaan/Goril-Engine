@@ -46,7 +46,7 @@ namespace GR
 		if (imageCount > state->swapchainSupport.capabilities.maxImageCount)
 			imageCount = state->swapchainSupport.capabilities.maxImageCount;
 
-		VkSwapchainCreateInfoKHR createInfo = {};
+		VkSwapchainCreateInfoKHR createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 		createInfo.pNext = nullptr;
 		createInfo.flags = 0;
@@ -96,7 +96,7 @@ namespace GR
 
 		for (u32 i = 0; i < swapchainImageCount; ++i)
 		{
-			VkImageViewCreateInfo viewCreateInfo = {};
+			VkImageViewCreateInfo viewCreateInfo{};
 			viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 			viewCreateInfo.pNext = nullptr;
 			viewCreateInfo.flags = 0;
@@ -150,7 +150,7 @@ namespace GR
 		{
 			VkImageView attachments[] = { state->swapchainImageViews[i] };
 
-			VkFramebufferCreateInfo createInfo = {};
+			VkFramebufferCreateInfo createInfo{};
 			createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 			createInfo.pNext = nullptr;
 			createInfo.flags = 0;

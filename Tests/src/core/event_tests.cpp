@@ -10,33 +10,33 @@ static EventData g_data;
 static EventData g_data1;
 static EventData g_data2;
 
-b8 TestListener(EventCode type, EventData data)
+static b8 TestListener(EventCode type, EventData data)
 {
 	g_data = data;
 	//GRDEBUG("Test, {}, {}, {}, {}", data.u32[0], data.u32[1], data.u32[2], data.u32[3]);
 	return false;
 }
 
-b8 TestListener1(EventCode type, EventData data)
+static b8 TestListener1(EventCode type, EventData data)
 {
 	g_data1 = data;
 	//GRDEBUG("Test, {}, {}, {}, {}", data.u32[0], data.u32[1], data.u32[2], data.u32[3]);
 	return true;
 }
 
-b8 TestListener2(EventCode type, EventData data)
+static b8 TestListener2(EventCode type, EventData data)
 {
 	g_data2 = data;
 	//GRDEBUG("Test, {}, {}, {}, {}", data.u32[0], data.u32[1], data.u32[2], data.u32[3]);
 	return true;
 }
 
-b8 event_test()
+static b8 event_test()
 {
 	g_data = {};
 	RegisterEventListener(EVCODE_TEST, TestListener);
 
-	EventData testData = {};
+	EventData testData{};
 	testData.u32[0] = 3;
 	testData.u32[1] = 4;
 	testData.u32[2] = 5;

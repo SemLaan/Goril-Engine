@@ -6,7 +6,7 @@ namespace GR
 {
 	b8 CreateRenderpass(RendererState* state)
 	{
-		VkAttachmentDescription colorAttachment = {};
+		VkAttachmentDescription colorAttachment{};
 		colorAttachment.flags = 0;
 		colorAttachment.format = state->swapchainFormat;
 		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -17,11 +17,11 @@ namespace GR
 		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-		VkAttachmentReference colorAttachmentReference = {};
+		VkAttachmentReference colorAttachmentReference{};
 		colorAttachmentReference.attachment = 0;
 		colorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-		VkSubpassDescription subpass = {};
+		VkSubpassDescription subpass{};
 		subpass.flags = 0;
 		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass.inputAttachmentCount = 0;
@@ -33,7 +33,7 @@ namespace GR
 		subpass.preserveAttachmentCount = 0;
 		subpass.pPreserveAttachments = nullptr;
 
-		VkSubpassDependency subpassDependency = {};
+		VkSubpassDependency subpassDependency{};
 		subpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		subpassDependency.dstSubpass = 0;
 		subpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -42,7 +42,7 @@ namespace GR
 		subpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 		subpassDependency.dependencyFlags = 0;
 
-		VkRenderPassCreateInfo renderpassCreateInfo = {};
+		VkRenderPassCreateInfo renderpassCreateInfo{};
 		renderpassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 		renderpassCreateInfo.pNext = nullptr;
 		renderpassCreateInfo.flags = 0;

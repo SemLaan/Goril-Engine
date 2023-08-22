@@ -46,7 +46,7 @@ namespace GR
 
 	VkDebugUtilsMessengerCreateInfoEXT GetDebugMessengerCreateInfo()
 	{
-		VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo = {};
+		VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
 		debugMessengerCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 		debugMessengerCreateInfo.pNext = nullptr;
 		debugMessengerCreateInfo.flags = 0;

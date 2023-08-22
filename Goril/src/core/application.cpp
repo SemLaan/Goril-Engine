@@ -12,9 +12,9 @@ namespace GR
 	static b8 appRunning = false;
 	static b8 appSuspended = false;
 
-	b8 OnQuit(EventCode type, EventData data);
-	b8 OnResize(EventCode type, EventData data);
-	b8 OnKeyDown(EventCode type, EventData data);
+	static b8 OnQuit(EventCode type, EventData data);
+	static b8 OnResize(EventCode type, EventData data);
+	static b8 OnKeyDown(EventCode type, EventData data);
 
 	b8 InitializeEngine(GameConfig config)
 	{
@@ -101,13 +101,13 @@ namespace GR
 		ShutdownMemory();
 	}
 
-	b8 OnQuit(EventCode type, EventData data)
+	static b8 OnQuit(EventCode type, EventData data)
 	{
 		appRunning = false;
 		return false;
 	}
 
-	b8 OnResize(EventCode type, EventData data)
+	static b8 OnResize(EventCode type, EventData data)
 	{
 		if (data.u32[0] == 0 || data.u32[1] == 0)
 		{
@@ -122,7 +122,7 @@ namespace GR
 		return false;
 	}
 
-	b8 OnKeyDown(EventCode type, EventData data)
+	static b8 OnKeyDown(EventCode type, EventData data)
 	{
 		if (data.u8[0] == KEY_F11)
 			ToggleFullscreen();

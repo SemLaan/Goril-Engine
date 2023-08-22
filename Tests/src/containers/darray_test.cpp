@@ -13,7 +13,7 @@ struct Beef
 };
 
 
-b8 darray_pushback_test()
+static b8 darray_pushback_test()
 {
 	Darray<Beef> darray = Darray<Beef>();
 	darray.Initialize();
@@ -36,7 +36,7 @@ b8 darray_pushback_test()
 	return true;
 }
 
-b8 darray_pop_test()
+static b8 darray_pop_test()
 {
 	Darray<Beef> darray = Darray<Beef>();
 	darray.Initialize();
@@ -64,7 +64,7 @@ b8 darray_pop_test()
 	return true;
 }
 
-b8 darray_contains_test()
+static b8 darray_contains_test()
 {
 	Darray<int> darray = Darray<int>();
 	darray.Initialize();

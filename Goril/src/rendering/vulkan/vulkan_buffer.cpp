@@ -4,7 +4,7 @@
 namespace GR
 {
 
-	u32 FindMemoryType(VkPhysicalDevice physicalDevice, u32 typeFilter, VkMemoryPropertyFlags requiredFlags)
+	static u32 FindMemoryType(VkPhysicalDevice physicalDevice, u32 typeFilter, VkMemoryPropertyFlags requiredFlags)
 	{
 		VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
 		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &deviceMemoryProperties);
@@ -21,9 +21,9 @@ namespace GR
 		return 0;
 	}
 
-	void CopyBuffer(VkBuffer dstBuffer, VkBuffer srcBuffer, VkDeviceSize size)
+	static void CopyBuffer(VkBuffer dstBuffer, VkBuffer srcBuffer, VkDeviceSize size)
 	{
-		VkCommandBufferAllocateInfo commandBufferAllocInfo = {};
+		VkCommandBufferAllocateInfo commandBufferAllocInfo{};
 		commandBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		commandBufferAllocInfo.pNext = nullptr;
 		commandBufferAllocInfo.commandPool = vk_state->transferQueue.commandPool;
@@ -38,7 +38,7 @@ namespace GR
 			GRASSERT(false);
 		}
 
-		VkCommandBufferBeginInfo beginInfo = {};
+		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		beginInfo.pNext = nullptr;
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -46,7 +46,7 @@ namespace GR
 
 		vkBeginCommandBuffer(transferCommandBuffer, &beginInfo);
 
-		VkBufferCopy copyRegion = {};
+		VkBufferCopy copyRegion{};
 		copyRegion.dstOffset = 0;
 		copyRegion.srcOffset = 0;
 		copyRegion.size = size;
@@ -55,7 +55,7 @@ namespace GR
 
 		vkEndCommandBuffer(transferCommandBuffer);
 
-		VkSubmitInfo submitInfo = {};
+		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &transferCommandBuffer;
@@ -77,7 +77,7 @@ namespace GR
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingMemory;
 
-		VkBufferCreateInfo stagingBufferCreateInfo = {};
+		VkBufferCreateInfo stagingBufferCreateInfo{};
 		stagingBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		stagingBufferCreateInfo.pNext = nullptr;
 		stagingBufferCreateInfo.flags = 0;
@@ -93,7 +93,7 @@ namespace GR
 		VkMemoryRequirements stagingMemoryRequirements;
 		vkGetBufferMemoryRequirements(vk_state->device, stagingBuffer, &stagingMemoryRequirements);
 		
-		VkMemoryAllocateInfo stagingAllocateInfo = {};
+		VkMemoryAllocateInfo stagingAllocateInfo{};
 		stagingAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		stagingAllocateInfo.pNext = nullptr;
 		stagingAllocateInfo.allocationSize = stagingMemoryRequirements.size;
@@ -111,7 +111,7 @@ namespace GR
 		vkUnmapMemory(vk_state->device, stagingMemory);
 
 		// ================= creating the actual buffer =========================
-		VkBufferCreateInfo bufferCreateInfo = {};
+		VkBufferCreateInfo bufferCreateInfo{};
 		bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		bufferCreateInfo.pNext = nullptr;
 		bufferCreateInfo.flags = 0;
@@ -128,7 +128,7 @@ namespace GR
 		VkMemoryRequirements memoryRequirements;
 		vkGetBufferMemoryRequirements(vk_state->device, buffer->handle, &memoryRequirements);
 
-		VkMemoryAllocateInfo allocateInfo = {};
+		VkMemoryAllocateInfo allocateInfo{};
 		allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocateInfo.pNext = nullptr;
 		allocateInfo.allocationSize = memoryRequirements.size;
@@ -169,7 +169,7 @@ namespace GR
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingMemory;
 
-		VkBufferCreateInfo stagingBufferCreateInfo = {};
+		VkBufferCreateInfo stagingBufferCreateInfo{};
 		stagingBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		stagingBufferCreateInfo.pNext = nullptr;
 		stagingBufferCreateInfo.flags = 0;
@@ -185,7 +185,7 @@ namespace GR
 		VkMemoryRequirements stagingMemoryRequirements;
 		vkGetBufferMemoryRequirements(vk_state->device, stagingBuffer, &stagingMemoryRequirements);
 
-		VkMemoryAllocateInfo stagingAllocateInfo = {};
+		VkMemoryAllocateInfo stagingAllocateInfo{};
 		stagingAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		stagingAllocateInfo.pNext = nullptr;
 		stagingAllocateInfo.allocationSize = stagingMemoryRequirements.size;
@@ -203,7 +203,7 @@ namespace GR
 		vkUnmapMemory(vk_state->device, stagingMemory);
 
 		// ================= creating the actual buffer =========================
-		VkBufferCreateInfo bufferCreateInfo = {};
+		VkBufferCreateInfo bufferCreateInfo{};
 		bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		bufferCreateInfo.pNext = nullptr;
 		bufferCreateInfo.flags = 0;
@@ -220,7 +220,7 @@ namespace GR
 		VkMemoryRequirements memoryRequirements;
 		vkGetBufferMemoryRequirements(vk_state->device, buffer->handle, &memoryRequirements);
 
-		VkMemoryAllocateInfo allocateInfo = {};
+		VkMemoryAllocateInfo allocateInfo{};
 		allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocateInfo.pNext = nullptr;
 		allocateInfo.allocationSize = memoryRequirements.size;
