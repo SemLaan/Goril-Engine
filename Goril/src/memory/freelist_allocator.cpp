@@ -87,7 +87,7 @@ namespace GR
 		// Checking if the alignment is greater than min alignment and is a power of two
 		GRASSERT_DEBUG((alignment >= MIN_ALIGNMENT) && ((alignment & (alignment - 1)) == 0));
 
-		u32 requiredSize = (u32)size + sizeof(AllocHeader) + alignment;
+		u32 requiredSize = (u32)size + sizeof(AllocHeader) + alignment - 1;
 
 #ifndef GR_DIST
 		AllocInfo(requiredSize, tag);
@@ -115,8 +115,8 @@ namespace GR
 		// Going slightly before the block and grabbing the alloc header that is stored there for debug info
 		AllocHeader* header = (AllocHeader*)block - 1;
 		GRASSERT(size != header->size);
-		size_t newTotalSize = size + header->alignment + sizeof(AllocHeader);
-		size_t oldTotalSize = header->size + header->alignment + sizeof(AllocHeader);
+		size_t newTotalSize = size + header->alignment - 1 + sizeof(AllocHeader);
+		size_t oldTotalSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
 
 #ifndef GR_DIST
 		ReAllocInfo((i64)newTotalSize - oldTotalSize);
@@ -157,7 +157,7 @@ namespace GR
 	{
 		// Going slightly before the block and grabbing the alloc header that is stored there for debug info
 		AllocHeader* header = (AllocHeader*)block - 1;
-		size_t totalFreeSize = header->size + header->alignment + sizeof(AllocHeader);
+		size_t totalFreeSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
 
 #ifndef GR_DIST
 		FreeInfo(totalFreeSize, header->tag);
