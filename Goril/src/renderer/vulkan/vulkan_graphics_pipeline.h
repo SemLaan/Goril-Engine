@@ -6,7 +6,7 @@
 namespace GR
 {
 
-	b8 CreateGraphicsPipeline(RendererState* state);
+	b8 CreateGraphicsPipeline();
 
-	void DestroyGraphicsPipeline(RendererState* state);
+	void DestroyGraphicsPipeline();
 }

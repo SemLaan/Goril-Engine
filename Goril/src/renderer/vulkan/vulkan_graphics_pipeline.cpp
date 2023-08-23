@@ -2,10 +2,11 @@
 
 #include "vulkan_shader_loader.h"
 #include "../buffer.h"
+#include "vulkan_buffer.h"
 
 namespace GR
 {
-	b8 CreateGraphicsPipeline(RendererState* state)
+	b8 CreateGraphicsPipeline()
 	{
 		// Creating shader modules
 		Darray<char> vert;
@@ -14,10 +15,112 @@ namespace GR
 		ReadFile("C:/Users/semla/Documents/Git_Repos/zelf_projecten/c++/Goril/Goril/src/renderer/shaders/frshader.spv", MEM_TAG_RENDERER_SUBSYS, &frag);
 		VkShaderModule vertShaderModule;
 		VkShaderModule fragShaderModule;
-		CreateShaderModule(state, vert, &vertShaderModule);
-		CreateShaderModule(state, frag, &fragShaderModule);
+		CreateShaderModule(vk_state, vert, &vertShaderModule);
+		CreateShaderModule(vk_state, frag, &fragShaderModule);
 		vert.Deinitialize();
 		frag.Deinitialize();
+
+		VkDescriptorSetLayoutBinding uboLayoutBinding{};
+		uboLayoutBinding.binding = 0;
+		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboLayoutBinding.descriptorCount = 1;
+		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		uboLayoutBinding.pImmutableSamplers = nullptr;
+
+		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{};
+		descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		descriptorSetLayoutCreateInfo.pNext = nullptr;
+		descriptorSetLayoutCreateInfo.flags = 0;
+		descriptorSetLayoutCreateInfo.bindingCount = 1;
+		descriptorSetLayoutCreateInfo.pBindings = &uboLayoutBinding;
+
+		if (VK_SUCCESS != vkCreateDescriptorSetLayout(vk_state->device, &descriptorSetLayoutCreateInfo, vk_state->allocator, &vk_state->descriptorSetLayout))
+		{
+			GRFATAL("Vulkan descriptor set layout creation failed");
+			vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->allocator);
+			vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->allocator);
+			return false;
+		}
+
+		VkDeviceSize uniformBufferSize = sizeof(GlobalUniformObject);
+		
+		vk_state->uniformBuffers = CreateDarrayWithSize<VkBuffer>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
+		vk_state->uniformBuffersMemory = CreateDarrayWithSize<VkDeviceMemory>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
+		vk_state->uniformBuffersMapped = CreateDarrayWithSize<void*>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
+
+		for (i32 i = 0; i < vk_state->maxFramesInFlight; ++i)
+		{
+			CreateBuffer(uniformBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vk_state->uniformBuffers[i], &vk_state->uniformBuffersMemory[i]);
+			vkMapMemory(vk_state->device, vk_state->uniformBuffersMemory[i], 0, uniformBufferSize, 0, &vk_state->uniformBuffersMapped[i]);
+		}
+
+		VkDescriptorPoolSize descriptorPoolSize{};
+		descriptorPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorPoolSize.descriptorCount = (u32)vk_state->maxFramesInFlight;
+
+		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
+		descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		descriptorPoolCreateInfo.pNext = nullptr;
+		descriptorPoolCreateInfo.flags = 0;
+		descriptorPoolCreateInfo.maxSets = (u32)vk_state->maxFramesInFlight;
+		descriptorPoolCreateInfo.poolSizeCount = 1;
+		descriptorPoolCreateInfo.pPoolSizes = &descriptorPoolSize;
+
+		if (VK_SUCCESS != vkCreateDescriptorPool(vk_state->device, &descriptorPoolCreateInfo, vk_state->allocator, &vk_state->uniformDescriptorPool))
+		{
+			GRFATAL("Vulkan descriptor pool creation failed");
+			vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->allocator);
+			vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->allocator);
+			return false;
+		}
+
+		Darray<VkDescriptorSetLayout> descriptorSetLayouts = CreateDarrayWithCapacity<VkDescriptorSetLayout>(MEM_TAG_RENDERER_SUBSYS, (u32)vk_state->maxFramesInFlight);
+		for (i32 i = 0; i < vk_state->maxFramesInFlight; ++i)
+		{
+			descriptorSetLayouts.Pushback(vk_state->descriptorSetLayout);
+		}
+
+		VkDescriptorSetAllocateInfo descriptorSetAllocInfo{};
+		descriptorSetAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		descriptorSetAllocInfo.pNext = nullptr;
+		descriptorSetAllocInfo.descriptorPool = vk_state->uniformDescriptorPool;
+		descriptorSetAllocInfo.descriptorSetCount = (u32)vk_state->maxFramesInFlight;
+		descriptorSetAllocInfo.pSetLayouts = descriptorSetLayouts.GetRawElements();
+
+		vk_state->uniformDescriptorSets = CreateDarrayWithSize<VkDescriptorSet>(MEM_TAG_RENDERER_SUBSYS, (u32)vk_state->maxFramesInFlight);
+
+		if (VK_SUCCESS != vkAllocateDescriptorSets(vk_state->device, &descriptorSetAllocInfo, vk_state->uniformDescriptorSets.GetRawElements()))
+		{
+			GRFATAL("Vulkan descriptor set allocation failed");
+			descriptorSetLayouts.Deinitialize();
+			vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->allocator);
+			vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->allocator);
+			return false;
+		}
+
+		descriptorSetLayouts.Deinitialize();
+
+		for (i32 i = 0; i < vk_state->maxFramesInFlight; ++i)
+		{
+			VkDescriptorBufferInfo descriptorBufferInfo{};
+			descriptorBufferInfo.buffer = vk_state->uniformBuffers[i];
+			descriptorBufferInfo.offset = 0;
+			descriptorBufferInfo.range = sizeof(GlobalUniformObject);
+
+			VkWriteDescriptorSet descriptorWrite{};
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.pNext = nullptr;
+			descriptorWrite.dstSet = vk_state->uniformDescriptorSets[i];
+			descriptorWrite.dstBinding = 0;
+			descriptorWrite.dstArrayElement = 0;
+			descriptorWrite.descriptorCount = 1;
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			descriptorWrite.pImageInfo = nullptr;
+			descriptorWrite.pBufferInfo = &descriptorBufferInfo;
+			descriptorWrite.pTexelBufferView = nullptr;
+
+			vkUpdateDescriptorSets(vk_state->device, 1, &descriptorWrite, 0, nullptr);
+		}
 
 		VkPipelineShaderStageCreateInfo vertStageCreateInfo{};
 		vertStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -102,7 +205,7 @@ namespace GR
 		rasterizerCreateInfo.rasterizerDiscardEnable = VK_FALSE;
 		rasterizerCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterizerCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
-		rasterizerCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+		rasterizerCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		rasterizerCreateInfo.depthBiasEnable = VK_FALSE;
 		rasterizerCreateInfo.depthBiasConstantFactor = 0.0f;
 		rasterizerCreateInfo.depthBiasClamp = 0.0f;
@@ -149,16 +252,16 @@ namespace GR
 		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutCreateInfo.pNext = nullptr;
 		pipelineLayoutCreateInfo.flags = 0;
-		pipelineLayoutCreateInfo.setLayoutCount = 0;
-		pipelineLayoutCreateInfo.pSetLayouts = nullptr;
+		pipelineLayoutCreateInfo.setLayoutCount = 1;
+		pipelineLayoutCreateInfo.pSetLayouts = &vk_state->descriptorSetLayout;
 		pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
 		pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 
-		if (VK_SUCCESS != vkCreatePipelineLayout(state->device, &pipelineLayoutCreateInfo, state->allocator, &state->pipelineLayout))
+		if (VK_SUCCESS != vkCreatePipelineLayout(vk_state->device, &pipelineLayoutCreateInfo, vk_state->allocator, &vk_state->pipelineLayout))
 		{
 			GRFATAL("Vulkan pipeline layout creation failed");
-			vkDestroyShaderModule(state->device, vertShaderModule, state->allocator);
-			vkDestroyShaderModule(state->device, fragShaderModule, state->allocator);
+			vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->allocator);
+			vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->allocator);
 			return false;
 		}
 
@@ -177,31 +280,49 @@ namespace GR
 		graphicsPipelineCreateInfo.pDepthStencilState = nullptr;
 		graphicsPipelineCreateInfo.pColorBlendState = &blendStateCreateInfo;
 		graphicsPipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
-		graphicsPipelineCreateInfo.layout = state->pipelineLayout;
-		graphicsPipelineCreateInfo.renderPass = state->renderpass;
+		graphicsPipelineCreateInfo.layout = vk_state->pipelineLayout;
+		graphicsPipelineCreateInfo.renderPass = vk_state->renderpass;
 		graphicsPipelineCreateInfo.subpass = 0;
 		graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 		graphicsPipelineCreateInfo.basePipelineIndex = -1;
 
-		if (VK_SUCCESS != vkCreateGraphicsPipelines(state->device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, state->allocator, &state->graphicsPipeline))
+		if (VK_SUCCESS != vkCreateGraphicsPipelines(vk_state->device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, vk_state->allocator, &vk_state->graphicsPipeline))
 		{
 			GRFATAL("Vulkan graphics pipeline creation failed");
-			vkDestroyShaderModule(state->device, vertShaderModule, state->allocator);
-			vkDestroyShaderModule(state->device, fragShaderModule, state->allocator);
+			vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->allocator);
+			vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->allocator);
 			return false;
 		}
 
-		vkDestroyShaderModule(state->device, vertShaderModule, state->allocator);
-		vkDestroyShaderModule(state->device, fragShaderModule, state->allocator);
+		vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->allocator);
+		vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->allocator);
 
 		return true;
 	}
 
-	void DestroyGraphicsPipeline(RendererState* state)
+	void DestroyGraphicsPipeline()
 	{
-		if (state->graphicsPipeline)
-			vkDestroyPipeline(state->device, state->graphicsPipeline, state->allocator);
-		if (state->pipelineLayout)
-			vkDestroyPipelineLayout(state->device, state->pipelineLayout, state->allocator);
+		if (vk_state->graphicsPipeline)
+			vkDestroyPipeline(vk_state->device, vk_state->graphicsPipeline, vk_state->allocator);
+		if (vk_state->pipelineLayout)
+			vkDestroyPipelineLayout(vk_state->device, vk_state->pipelineLayout, vk_state->allocator);
+
+		for (i32 i = 0; i < vk_state->maxFramesInFlight; ++i)
+		{
+			vkUnmapMemory(vk_state->device, vk_state->uniformBuffersMemory[i]);
+			vkDestroyBuffer(vk_state->device, vk_state->uniformBuffers[i], vk_state->allocator);
+			vkFreeMemory(vk_state->device, vk_state->uniformBuffersMemory[i], vk_state->allocator);
+		}
+
+		vk_state->uniformBuffers.Deinitialize();
+		vk_state->uniformBuffersMapped.Deinitialize();
+		vk_state->uniformBuffersMemory.Deinitialize();
+		vk_state->uniformDescriptorSets.Deinitialize();
+
+		if (vk_state->uniformDescriptorPool)
+			vkDestroyDescriptorPool(vk_state->device, vk_state->uniformDescriptorPool, vk_state->allocator);
+
+		if (vk_state->descriptorSetLayout)
+			vkDestroyDescriptorSetLayout(vk_state->device, vk_state->descriptorSetLayout, vk_state->allocator);
 	}
 }

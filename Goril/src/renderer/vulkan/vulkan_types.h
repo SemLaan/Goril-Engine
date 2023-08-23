@@ -68,6 +68,12 @@ namespace GR
 		VkFormat swapchainFormat;
 		VkExtent2D swapchainExtent;
 		VkRenderPass renderpass;
+		VkDescriptorSetLayout descriptorSetLayout;
+		Darray<VkBuffer> uniformBuffers;
+		Darray<VkDeviceMemory> uniformBuffersMemory;
+		Darray<void*> uniformBuffersMapped;
+		VkDescriptorPool uniformDescriptorPool;
+		Darray<VkDescriptorSet> uniformDescriptorSets;
 		VkPipelineLayout pipelineLayout;
 		VkPipeline graphicsPipeline;
 		Darray<VkFramebuffer> swapchainFramebuffers;

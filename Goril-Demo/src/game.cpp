@@ -4,6 +4,8 @@
 //#include <core/input.h>
 //#include <core/event.h>
 #include <renderer/renderer.h>
+#include <glm/gtc/matrix_transform.hpp>
+#include <core/platform.h>
 
 using namespace GR;
 
@@ -33,6 +35,17 @@ b8 Game::Update()
 
 b8 Game::Render()
 {
+	u32 width, height;
+	GetPlatformWindowSize(&width, &height);
+	glm::mat4 model = glm::rotate(glm::mat4(1.0f), 1.2f * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::mat4 view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::mat4 proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
+	proj[1][1] *= -1;
+
+	GlobalUniformObject ubo{};
+	ubo.projView = proj * view * model;
+
+	UpdateGlobalUniforms(&ubo);
 	DrawIndexed(vertexBuffer, indexBuffer);
     return true;
 }

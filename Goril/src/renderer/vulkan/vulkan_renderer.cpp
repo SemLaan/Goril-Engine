@@ -118,7 +118,7 @@ namespace GR
 			return false;
 
 		// ======================== Creating graphics pipeline ============================================
-		if (!CreateGraphicsPipeline(vk_state))
+		if (!CreateGraphicsPipeline())
 			return false;
 
 		// ======================= Create swapchain framebuffers ============================================
@@ -174,7 +174,7 @@ namespace GR
 		DestroySwapchainFramebuffers(vk_state);
 
 		// ====================== Destroying graphics pipeline if it was created ================================
-		DestroyGraphicsPipeline(vk_state);
+		DestroyGraphicsPipeline();
 
 		// ======================== Destroying renderpass if it was created =====================================
 		DestroyRenderpass(vk_state);
@@ -283,6 +283,8 @@ namespace GR
 		scissor.extent = vk_state->swapchainExtent;
 		vkCmdSetScissor(currentCommandBuffer, 0, 1, &scissor);
 
+		vkCmdBindDescriptorSets(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->pipelineLayout, 0, 1, &vk_state->uniformDescriptorSets[vk_state->currentFrame], 0, nullptr);
+
 		return true;
 	}
 
@@ -315,6 +317,11 @@ namespace GR
 		vkQueuePresentKHR(vk_state->presentQueue, &presentInfo);
 
 		vk_state->currentFrame = (vk_state->currentFrame + 1) % vk_state->maxFramesInFlight;
+	}
+
+	void UpdateGlobalUniforms(GlobalUniformObject* globalUniformObject)
+	{
+		MemCopy(vk_state->uniformBuffersMapped[vk_state->currentFrame], globalUniformObject, sizeof(GlobalUniformObject));
 	}
 
 	void DrawIndexed(VertexBuffer _vertexBuffer, IndexBuffer _indexBuffer)

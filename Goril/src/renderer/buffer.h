@@ -3,25 +3,10 @@
 #include "glm/glm.hpp"
 #include "containers/darray.h"
 #include "core/gr_memory.h"
+#include "renderer_types.h"
 
 namespace GR
 {
-	struct Vertex
-	{
-		glm::vec2 position;
-		glm::vec3 color;
-	};
-	
-	struct VertexBuffer
-	{
-		void* internalState;
-	};
-
-	struct IndexBuffer
-	{
-		void* internalState;
-	};
-	
 	GRAPI VertexBuffer CreateVertexBuffer(void* vertices, size_t size);
 	GRAPI void DestroyVertexBuffer(VertexBuffer clientBuffer);
 

@@ -1,4 +1,7 @@
+// This file implements both of these headers!
 #include "../buffer.h"
+#include "vulkan_buffer.h"
+
 #include "vulkan_types.h"
 
 namespace GR
@@ -64,6 +67,44 @@ namespace GR
 		vkQueueWaitIdle(vk_state->transferQueue.handle);
 
 		vkFreeCommandBuffers(vk_state->device, vk_state->transferQueue.commandPool, 1, &transferCommandBuffer);
+	}
+
+	b8 CreateBuffer(VkDeviceSize size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkBuffer* out_buffer, VkDeviceMemory* out_memory)
+	{
+		VkBufferCreateInfo bufferCreateInfo{};
+		bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferCreateInfo.pNext = nullptr;
+		bufferCreateInfo.flags = 0;
+		bufferCreateInfo.size = size;
+		bufferCreateInfo.usage = bufferUsageFlags;
+		bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		bufferCreateInfo.queueFamilyIndexCount = 0;
+		bufferCreateInfo.pQueueFamilyIndices = nullptr;
+
+		if (VK_SUCCESS != vkCreateBuffer(vk_state->device, &bufferCreateInfo, vk_state->allocator, out_buffer))
+		{
+			GRFATAL("Buffer creation failed");
+			return false;
+		}
+
+		VkMemoryRequirements stagingMemoryRequirements;
+		vkGetBufferMemoryRequirements(vk_state->device, *out_buffer, &stagingMemoryRequirements);
+
+		VkMemoryAllocateInfo allocateInfo{};
+		allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocateInfo.pNext = nullptr;
+		allocateInfo.allocationSize = stagingMemoryRequirements.size;
+		allocateInfo.memoryTypeIndex = FindMemoryType(vk_state->physicalDevice, stagingMemoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+		if (VK_SUCCESS != vkAllocateMemory(vk_state->device, &allocateInfo, vk_state->allocator, out_memory))
+		{
+			GRFATAL("Vulkan device memory allocation failed");
+			return false;
+		}
+
+		vkBindBufferMemory(vk_state->device, *out_buffer, *out_memory, 0);
+
+		return true;
 	}
 
 	VertexBuffer CreateVertexBuffer(void* vertices, size_t size)
