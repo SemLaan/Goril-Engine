@@ -240,7 +240,7 @@ namespace GR
 		// ================= copying data into staging buffer ===============================
 		void* data;
 		vkMapMemory(vk_state->device, stagingMemory, 0, stagingBufferCreateInfo.size, 0, &data);
-		MemCopy(data, indices, (size_t)stagingBufferCreateInfo.size);
+		MemCopy(data, indices, (size_t)buffer->size);
 		vkUnmapMemory(vk_state->device, stagingMemory);
 
 		// ================= creating the actual buffer =========================
@@ -272,7 +272,7 @@ namespace GR
 
 		vkBindBufferMemory(vk_state->device, buffer->handle, buffer->memory, 0);
 
-		CopyBuffer(buffer->handle, stagingBuffer, bufferCreateInfo.size);
+		CopyBuffer(buffer->handle, stagingBuffer, buffer->size);
 
 		vkDestroyBuffer(vk_state->device, stagingBuffer, vk_state->allocator);
 		vkFreeMemory(vk_state->device, stagingMemory, vk_state->allocator);

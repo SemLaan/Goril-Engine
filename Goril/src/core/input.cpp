@@ -55,7 +55,6 @@ namespace GR
 		MemCopy(&state->previousButtonStates, &state->buttonStates, sizeof(state->buttonStates));
 		state->previousMousePosX = state->mousePosX;
 		state->previousMousePosY = state->mousePosY;
-		GRDEBUG("Window size: {}, {}    Mouse pos: {}, {}", (GetPlatformWindowSize() / 2).x, (GetPlatformWindowSize() / 2).y, state->mousePosX, state->mousePosY);
 	}
 
 	void SetMouseCentered(b8 enabled)
@@ -108,7 +107,6 @@ namespace GR
 		if (state->keyStates[key] != down)
 		{
 			state->keyStates[key] = down;
-			//GRDEBUG("Key down: {}", (char)key);
 			EventData data{};
 			data.u8[0] = key;
 			if (down)

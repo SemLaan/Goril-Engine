@@ -118,6 +118,7 @@ namespace GR
 		KEY_F22 = 0x85, //F22
 		KEY_F23 = 0x86, //F23
 		KEY_F24 = 0x87, //F24
+		KEY_SPACE = 0x20, //Space bar
 #pragma region UnusedKeys
 		//0x07 : reserved
 		//0x0A - 0x0B : reserved
@@ -135,7 +136,6 @@ namespace GR
 		//KEY_NonConvert = 0x1D, //IME Non convert
 		//KEY_Accept = 0x1E, //IME accept
 		//KEY_ModeChange = 0x1F, //IME mode change
-		//KEY_Space = 0x20, //Space bar
 		//KEY_PageUp = 0x21, //Page up key
 		//KEY_PageDown = 0x22, //Page down key
 		//KEY_End = 0x23, //End key

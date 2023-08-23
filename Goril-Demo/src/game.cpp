@@ -15,21 +15,44 @@ b8 Game::Init()
 
 	Darray<Vertex> vertices = Darray<Vertex>();
 	vertices.Initialize(MEM_TAG_GAME);
-	vertices.Pushback({ {-0.5f, -0.5f}, {1.f, 0.f, 0.f} });
-	vertices.Pushback({ {0.5f, -0.5f}, {0.f, 1.f, 0.f} });
-	vertices.Pushback({ {0.5f, 0.5f}, {0.f, 0.f, 1.f} });
-	vertices.Pushback({ {-0.5f, 0.5f}, {1.f, 1.f, 1.f} });
+	vertices.Pushback({ {-1, -1, 1}, {1.f, 0.f, 0.f} });
+	vertices.Pushback({ {1, -1, 1}, {0.f, 1.f, 0.f} });
+	vertices.Pushback({ {-1, 1, 1}, {0.f, 0.f, 1.f} });
+	vertices.Pushback({ {1, 1, 1}, {1.f, 1.f, 1.f} });
+	vertices.Pushback({ {-1, -1, -1}, {1.f, 1.f, 1.f} });
+	vertices.Pushback({ {1, -1, -1}, {1.f, 1.f, 1.f} });
+	vertices.Pushback({ {-1, 1, -1}, {1.f, 1.f, 1.f} });
+	vertices.Pushback({ {1, 1, -1}, {1.f, 1.f, 1.f} });
 	vertexBuffer = CreateVertexBuffer(vertices.GetRawElements(), sizeof(Vertex) * vertices.Size());
 	vertices.Deinitialize();
 
-	constexpr u32 indexCount = 6;
-	u32 indices[indexCount] = { 0, 1, 2, 2, 3, 0 };
+	constexpr u32 indexCount = 6 * 6;
+	u32 indices[indexCount] = { 
+		//Top
+		7, 6, 2,
+		2, 3, 7,
+		//Bottom
+		0, 4, 5,
+		5, 1, 0,
+		//Left
+		0, 2, 6,
+		6, 4, 0,
+		//Right
+		7, 3, 1,
+		1, 5, 7,
+		//Front
+		3, 2, 0,
+		0, 1, 3,
+		//Back
+		4, 6, 7,
+		7, 5, 4
+	};
 	indexBuffer = CreateIndexBuffer(indices, indexCount);
 
 	glm::ivec2 windowSize = GetPlatformWindowSize();
-	proj = glm::perspective(glm::radians(45.0f), windowSize.x / (float)windowSize.y, 0.1f, 10.0f);
+	proj = glm::perspective(glm::radians(45.0f), windowSize.x / (float)windowSize.y, 0.1f, 1000.0f);
 	view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	camPosition = glm::vec3(-1);
+	camPosition = glm::vec3(0, -3, 0);
 	camRotation = glm::vec3(0);
 
     return true;
@@ -67,6 +90,10 @@ b8 Game::Update()
 		frameMovement += forwardVector;
 	if (GetKeyDown(KEY_W))
 		frameMovement -= forwardVector;
+	if (GetKeyDown(KEY_SHIFT))
+		frameMovement.y += 1;
+	if (GetKeyDown(KEY_SPACE))
+		frameMovement.y -= 1;
 	camPosition += frameMovement / 1000.f;
 
 	glm::mat4 translate = glm::translate(glm::mat4(1.0f), camPosition);
