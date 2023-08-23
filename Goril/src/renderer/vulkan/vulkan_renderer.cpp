@@ -271,9 +271,9 @@ namespace GR
 		// Viewport and scissor
 		VkViewport viewport{};
 		viewport.x = 0;
-		viewport.y = 0;
+		viewport.y = (f32)vk_state->swapchainExtent.height;
 		viewport.width = (f32)vk_state->swapchainExtent.width;
-		viewport.height = (f32)vk_state->swapchainExtent.height;
+		viewport.height = -(f32)vk_state->swapchainExtent.height;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 		vkCmdSetViewport(currentCommandBuffer, 0, 1, &viewport);
