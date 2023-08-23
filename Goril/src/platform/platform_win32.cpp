@@ -3,7 +3,7 @@
 #ifdef __win__
 // Both of these headers are implemented here
 #include "core/platform.h"
-#include "rendering/vulkan/vulkan_platform.h" 
+#include "renderer/vulkan/vulkan_platform.h" 
 
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN

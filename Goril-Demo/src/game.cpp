@@ -3,7 +3,7 @@
 #include <core/logger.h>
 //#include <core/input.h>
 //#include <core/event.h>
-#include <rendering/renderer.h>
+#include <renderer/renderer.h>
 
 using namespace GR;
 

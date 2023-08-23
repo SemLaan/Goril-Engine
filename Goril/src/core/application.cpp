@@ -5,7 +5,7 @@
 #include "gr_memory.h"
 #include "event.h"
 #include "input.h"
-#include "rendering/renderer.h"
+#include "renderer/renderer.h"
 
 namespace GR
 {

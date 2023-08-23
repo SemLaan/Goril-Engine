@@ -10,8 +10,8 @@ namespace GR
 		// Creating shader modules
 		Darray<char> vert;
 		Darray<char> frag;
-		ReadFile("C:/Users/semla/Documents/Git_Repos/zelf_projecten/c++/Goril/Goril/src/rendering/shaders/vershader.spv", MEM_TAG_RENDERER_SUBSYS, &vert);
-		ReadFile("C:/Users/semla/Documents/Git_Repos/zelf_projecten/c++/Goril/Goril/src/rendering/shaders/frshader.spv", MEM_TAG_RENDERER_SUBSYS, &frag);
+		ReadFile("C:/Users/semla/Documents/Git_Repos/zelf_projecten/c++/Goril/Goril/src/renderer/shaders/vershader.spv", MEM_TAG_RENDERER_SUBSYS, &vert);
+		ReadFile("C:/Users/semla/Documents/Git_Repos/zelf_projecten/c++/Goril/Goril/src/renderer/shaders/frshader.spv", MEM_TAG_RENDERER_SUBSYS, &frag);
 		VkShaderModule vertShaderModule;
 		VkShaderModule fragShaderModule;
 		CreateShaderModule(state, vert, &vertShaderModule);

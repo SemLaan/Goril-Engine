@@ -1,7 +1,7 @@
 #pragma once
 #include <core/goril_game.h>
 #include <glm/glm.hpp>
-#include <rendering/buffer.h>
+#include <renderer/buffer.h>
 
 
 using namespace GR;
