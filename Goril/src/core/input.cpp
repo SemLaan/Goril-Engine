@@ -3,6 +3,7 @@
 #include "core/asserts.h"
 #include "core/gr_memory.h"
 #include "core/event.h"
+#include "core/platform.h"
 
 namespace GR
 {
@@ -16,6 +17,7 @@ namespace GR
 		i32 mousePosY;
 		i32 previousMousePosX;
 		i32 previousMousePosY;
+		b8 mouseCentered;
 	};
 
 	static InputState* state = nullptr;
@@ -53,6 +55,17 @@ namespace GR
 		MemCopy(&state->previousButtonStates, &state->buttonStates, sizeof(state->buttonStates));
 		state->previousMousePosX = state->mousePosX;
 		state->previousMousePosY = state->mousePosY;
+		GRDEBUG("Window size: {}, {}    Mouse pos: {}, {}", (GetPlatformWindowSize() / 2).x, (GetPlatformWindowSize() / 2).y, state->mousePosX, state->mousePosY);
+	}
+
+	void SetMouseCentered(b8 enabled)
+	{
+		state->mouseCentered = enabled;
+	}
+
+	void ToggleMouseCentered()
+	{
+		state->mouseCentered = !state->mouseCentered;
 	}
 
 	b8 GetKeyDown(KeyCode key)
@@ -75,16 +88,19 @@ namespace GR
 		return state->previousButtonStates[button];
 	}
 
-	void GetMousePos(i32* x, i32* y)
+	glm::ivec2 GetMousePos()
 	{
-		*x = state->mousePosX;
-		*y = state->mousePosY;
+		return { state->mousePosX, state->mousePosY };
 	}
 
-	void GetMousePosPrevious(i32* x, i32* y)
+	glm::ivec2 GetMousePosPrevious()
 	{
-		*x = state->previousMousePosX;
-		*y = state->previousMousePosY;
+		return { state->previousMousePosX, state->previousMousePosY };
+	}
+
+	glm::ivec2 GetMouseDistanceFromCenter()
+	{
+		return glm::ivec2(state->mousePosX, state->mousePosY) - (GetPlatformWindowSize() / 2);
 	}
 
 	void ProcessKey(b8 down, KeyCode key)
@@ -128,6 +144,8 @@ namespace GR
 			data.i32[2] = state->previousMousePosX;
 			data.i32[3] = state->previousMousePosY;
 			InvokeEvent(EVCODE_MOUSE_MOVED, data);
+			if (state->mouseCentered)
+				SetMousePosition(GetPlatformWindowSize() / 2);
 		}
 	}
 }

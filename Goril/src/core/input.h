@@ -1,5 +1,6 @@
 #pragma once
 #include "defines.h"
+#include "glm/glm.hpp"
 
 namespace GR
 {
@@ -261,12 +262,16 @@ namespace GR
 
 	void UpdateInput();
 
+	GRAPI void SetMouseCentered(b8 enabled);
+	GRAPI void ToggleMouseCentered();
+
 	GRAPI b8 GetKeyDown(KeyCode key);
 	GRAPI b8 GetKeyDownPrevious(KeyCode key);
 	GRAPI b8 GetButtonDown(ButtonCode button);
 	GRAPI b8 GetButtonDownPrevious(ButtonCode button);
-	GRAPI void GetMousePos(i32* x, i32* y);
-	GRAPI void GetMousePosPrevious(i32* x, i32* y);
+	GRAPI glm::ivec2 GetMousePos();
+	GRAPI glm::ivec2 GetMousePosPrevious();
+	GRAPI glm::ivec2 GetMouseDistanceFromCenter();
 
 	void ProcessKey(b8 down, KeyCode key);
 	void ProcessButton(b8 down, ButtonCode button);

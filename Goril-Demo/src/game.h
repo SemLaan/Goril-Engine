@@ -12,6 +12,11 @@ class Game : public GR::GorilGame
 private:
 	VertexBuffer vertexBuffer;
 	IndexBuffer indexBuffer;
+	glm::vec3 camPosition;
+	glm::vec3 camRotation;
+	glm::mat4 view;
+	glm::mat4 proj;
+	b8 mouseEnabled;
 
 public:
 	// Inherited via GorilGame

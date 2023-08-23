@@ -26,9 +26,8 @@ namespace GR
 		}
 
 		// Setting swapchain resolution to window size
-		u32 windowWidth, windowHeight;
-		GetPlatformWindowSize(&windowWidth, &windowHeight);
-		VkExtent2D swapchainExtent = { windowWidth, windowHeight };
+		glm::ivec2 windowSize = GetPlatformWindowSize();
+		VkExtent2D swapchainExtent = { (u32)windowSize.x, (u32)windowSize.y };
 		// Making sure the swapchain isn't too big or too small
 		state->swapchainSupport.formats.Deinitialize();
 		state->swapchainSupport.presentModes.Deinitialize();

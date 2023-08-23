@@ -144,10 +144,28 @@ namespace GR
 		printf(message);
 	}
 
-	void GetPlatformWindowSize(u32* width, u32* height)
+	glm::ivec2 GetPlatformWindowSize()
 	{
-		*width = state->width;
-		*height = state->height;
+		return { (i32)state->width, (i32)state->height };
+	}
+
+	void SetMousePosition(glm::ivec2 position)
+	{
+		if (state->fullscreenActive)
+		{
+			SetCursorPos(position.x, position.y);
+		}
+		else
+		{
+			RECT windowRect, clientRect;
+			if (!GetWindowRect(state->hwnd, &windowRect) || !GetClientRect(state->hwnd, &clientRect))
+			{
+				GRASSERT(false);
+			}
+			i32 leftBorderSize = ((windowRect.right - windowRect.left) - clientRect.right) / 2;
+			i32 topBorderSize = ((windowRect.bottom - windowRect.top) - clientRect.bottom) / 2;
+			SetCursorPos(windowRect.left + leftBorderSize + position.x, windowRect.top + GetSystemMetrics(SM_CYCAPTION) + leftBorderSize + position.y);
+		}
 	}
 
 	void ToggleFullscreen()
