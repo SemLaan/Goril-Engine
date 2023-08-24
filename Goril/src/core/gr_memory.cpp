@@ -39,6 +39,8 @@ namespace GR
 	static MemoryState* state = nullptr;
 	static b8 initialized = false;
 
+	GlobalAllocators* g_Allocators = nullptr;
+
 	b8 InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 	{
 		GRASSERT_DEBUG(state == nullptr); // If this fails it means init was called twice
@@ -75,6 +77,9 @@ namespace GR
 		AllocInfo(0, MEM_TAG_ALLOCATOR_STATE);
 #endif // !GR_DIST
 
+		g_Allocators = (GlobalAllocators*)GRAlloc(sizeof(GlobalAllocators), MEM_TAG_MEMORY_SUBSYS);
+		g_Allocators->temporaryAllocator = CreateBumpAllocator(KiB * 5); /// TODO: make configurable
+
 		return true;
 	}
 
@@ -88,6 +93,12 @@ namespace GR
 		else
 		{
 			GRINFO("Shutting down memory subsystem...");
+		}
+
+		if (g_Allocators)
+		{
+			DestroyBumpAllocator(g_Allocators->temporaryAllocator);
+			GRFree(g_Allocators);
 		}
 
 #ifndef GR_DIST

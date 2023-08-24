@@ -23,6 +23,13 @@ namespace GR
 		MAX_MEMORY_TAGS
 	};
 
+	struct GlobalAllocators
+	{
+		Allocator temporaryAllocator;
+	};
+
+	extern GlobalAllocators* g_Allocators;
+
 	b8 InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement);
 
 	void ShutdownMemory();
