@@ -34,7 +34,8 @@ workspace "Goril"
 	postbuildcommands 
 	{
 		"{COPY} %{wks.location}/build/bin/%{cfg.buildcfg}/Goril/Goril.dll %{wks.location}/build/bin/%{cfg.buildcfg}/Goril-Demo",
-		"{COPY} %{wks.location}/build/bin/%{cfg.buildcfg}/Goril/Goril.dll %{wks.location}/build/bin/%{cfg.buildcfg}/Tests"
+		"{COPY} %{wks.location}/build/bin/%{cfg.buildcfg}/Goril/Goril.dll %{wks.location}/build/bin/%{cfg.buildcfg}/Tests",
+		"for /r %%i in (*.frag, *.vert) do %VULKAN_SDK%/Bin/glslc %%i -o src/renderer/shaders/%%~ni.spv"
 	}
 
 	-- Engine dll
