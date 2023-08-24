@@ -1,5 +1,4 @@
 #include "allocator_tests.h"
-#include <memory/bump_allocator.h>
 #include <memory/allocator_backends.h>
 
 #include "test_defines.h"
@@ -10,45 +9,37 @@ using namespace GR;
 
 static b8 bump_allocator_test()
 {
-	size_t arena_size = 12 + BumpAllocator::GetAllocHeaderSize() * 2;
+	size_t arena_size = 12 + Allocator::GetAllocHeaderSize() * 2 + MIN_ALIGNMENT * 2;
 
-	void* arena = malloc(arena_size);
-	BumpAllocator* allocator = new BumpAllocator();
-	allocator->Initialize(arena, arena_size);
+	Allocator allocator = CreateBumpAllocator(arena_size, false);
 
-	void* temp = allocator->Alloc(8, MEM_TAG_TEST);
-	void* temp2 = allocator->Alloc(4, MEM_TAG_TEST);
-	allocator->Free(temp2);
-	allocator->Free(temp);
+	void* temp = allocator.Alloc(8, MEM_TAG_TEST);
+	void* temp2 = allocator.Alloc(4, MEM_TAG_TEST);
+	allocator.Free(temp2);
+	allocator.Free(temp);
 
-	void* temp3 = allocator->Alloc(12, MEM_TAG_TEST);
-	allocator->Free(temp3);
+	void* temp3 = allocator.Alloc(12, MEM_TAG_TEST);
+	allocator.Free(temp3);
 
-	delete allocator;
-
-	free(arena);
+	DestroyBumpAllocator(allocator);
 
 	return true;
 }
 
 static b8 bump_allocator_realloc_test()
 {
-	size_t arena_size = 1000 + BumpAllocator::GetAllocHeaderSize();
+	size_t arena_size = 1000 + Allocator::GetAllocHeaderSize() + MIN_ALIGNMENT;
 
-	void* arena = malloc(arena_size);
-	BumpAllocator* allocator = new BumpAllocator();
-	allocator->Initialize(arena, arena_size);
+	Allocator allocator = CreateBumpAllocator(arena_size, false);
 
-	void* temp = allocator->Alloc(700, MEM_TAG_TEST);
-	temp = allocator->ReAlloc(temp, 800);
-	allocator->Free(temp);
+	void* temp = allocator.Alloc(700, MEM_TAG_TEST);
+	temp = allocator.ReAlloc(temp, 800);
+	allocator.Free(temp);
 
-	void* temp4 = allocator->Alloc(1000, MEM_TAG_TEST);
-	allocator->Free(temp4);
+	void* temp4 = allocator.Alloc(1000, MEM_TAG_TEST);
+	allocator.Free(temp4);
 
-	delete allocator;
-
-	free(arena);
+	DestroyBumpAllocator(allocator);
 
 	return true;
 }

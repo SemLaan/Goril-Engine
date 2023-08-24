@@ -285,6 +285,97 @@ namespace GR
 	// =====================================================================================================================================================================================================
 	// ================================== Bump allocator ===================================================================================================================================================
 	// =====================================================================================================================================================================================================
+	struct BumpAllocatorState
+	{
+		void* arenaStart;
+		size_t arenaSize;
+		void* bumpPointer;
+		u32 allocCount;
+	};
+
+	static void* BumpAlloc(void* backendState, size_t size);
+	static b8 BumpTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize);
+	static void BumpFree(void* backendState, void* block, size_t size);
+
+	Allocator CreateBumpAllocator(size_t arenaSize, b8 safetySpace /*default: true*/)
+	{
+		Allocator allocator = Allocator();
+
+		if (safetySpace)
+			arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
+
+		// Calculating required memory (client size + state size)
+		size_t stateSize = sizeof(BumpAllocatorState);
+		size_t requiredMemory = arenaSize + stateSize;
+
+		// Allocating memory for state and arena and zeroing state memory
+		void* arenaBlock = GRAlloc(requiredMemory, MEM_TAG_SUB_ARENA);
+		Zero(arenaBlock, stateSize);
+		AllocInfo(stateSize, MEM_TAG_ALLOCATOR_STATE);
+
+		// Getting pointers to the internal components of the allocator
+		BumpAllocatorState* state = (BumpAllocatorState*)arenaBlock;
+		void* arenaStart = (u8*)arenaBlock + stateSize;
+
+		// Configuring allocator state
+		state->arenaStart = arenaStart;
+		state->arenaSize = arenaSize;
+		state->bumpPointer = arenaStart;
+		state->allocCount = 0;
+
+		// Linking the allocator object to the freelist functions
+		allocator.Initialize(state, BumpAlloc, BumpTryReAlloc, BumpFree);
+
+		return allocator;
+	}
+
+	void DestroyBumpAllocator(Allocator allocator)
+	{
+		BumpAllocatorState* state = (BumpAllocatorState*)allocator.backendState;
+		FreeInfo(sizeof(BumpAllocatorState), MEM_TAG_ALLOCATOR_STATE);
+		// Frees the entire arena including state
+		GRFree(state);
+	}
+
+	static void* BumpAlloc(void* backendState, size_t size)
+	{
+		BumpAllocatorState* state = (BumpAllocatorState*)backendState;
+
+		// Allocating the actual block
+		void* block = state->bumpPointer;
+		state->bumpPointer = (u8*)state->bumpPointer + size;
+		state->allocCount++;
+		GRASSERT_MSG(state->bumpPointer <= ((u8*)state->arenaStart + state->arenaSize), "Bump allocator overallocated");
+		return block;
+	}
+
+	static b8 BumpTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize)
+	{
+		BumpAllocatorState* state = (BumpAllocatorState*)backendState;
+
+		if (oldSize > newSize)
+		{
+			return true;
+		}
+		else if (oldSize < newSize && ((u8*)block + oldSize) == state->bumpPointer)
+		{
+			state->bumpPointer = (u8*)state->bumpPointer + newSize - oldSize;
+			return true;
+		}
+		return false;
+	}
+
+	static void BumpFree(void* backendState, void* block, size_t size)
+	{
+		BumpAllocatorState* state = (BumpAllocatorState*)backendState;
+
+		state->allocCount--;
+
+		if (state->allocCount == 0)
+		{
+			state->bumpPointer = state->arenaStart;
+		}
+	}
 
 	// =====================================================================================================================================================================================================
 	// ================================== Global allocator creation =====================================================================
