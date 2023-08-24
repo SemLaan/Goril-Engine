@@ -3,6 +3,7 @@
 #include "vulkan_shader_loader.h"
 #include "../buffer.h"
 #include "vulkan_buffer.h"
+#include "../renderer_types.h"
 
 namespace GR
 {
@@ -247,6 +248,12 @@ namespace GR
 		blendStateCreateInfo.attachmentCount = 1;
 		blendStateCreateInfo.pAttachments = &colorBlendAttachment;
 
+		// Push constants
+		VkPushConstantRange pushConstantRange{};
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = sizeof(PushConstantObject);
+
 		// Pipeline layout
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
 		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -254,8 +261,8 @@ namespace GR
 		pipelineLayoutCreateInfo.flags = 0;
 		pipelineLayoutCreateInfo.setLayoutCount = 1;
 		pipelineLayoutCreateInfo.pSetLayouts = &vk_state->descriptorSetLayout;
-		pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-		pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+		pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+		pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
 		if (VK_SUCCESS != vkCreatePipelineLayout(vk_state->device, &pipelineLayoutCreateInfo, vk_state->allocator, &vk_state->pipelineLayout))
 		{

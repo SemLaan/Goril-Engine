@@ -60,7 +60,7 @@ b8 Game::Init()
 
 b8 Game::Update()
 {
-	f32 mouseMoveSpeed = 1600;
+	f32 mouseMoveSpeed = 2500;
 	//GRDEBUG("{}, {}", GetMouseDistanceFromCenter().x, GetMouseDistanceFromCenter().y);
 	camRotation.x += GetMouseDistanceFromCenter().x / mouseMoveSpeed;
 	camRotation.y += GetMouseDistanceFromCenter().y / mouseMoveSpeed;
@@ -108,13 +108,20 @@ b8 Game::Update()
 
 b8 Game::Render()
 {
-	glm::mat4 model = glm::mat4(1);
-
 	GlobalUniformObject ubo{};
-	ubo.projView = proj * view * model;
-
+	ubo.projView = proj * view;
 	UpdateGlobalUniforms(&ubo);
-	DrawIndexed(vertexBuffer, indexBuffer);
+
+	for (u32 i = 0; i < 3; ++i)
+	{
+		PushConstantObject pushValues{};
+		pushValues.model = glm::scale(glm::mat4(1), glm::vec3(2, 2, 2));
+		pushValues.model = glm::rotate(pushValues.model, (i+0.1f)/0.4f, glm::vec3(1, 0, 0));
+		pushValues.model = glm::translate(pushValues.model, glm::vec3(i * 3, 0, 0));
+
+		DrawIndexed(vertexBuffer, indexBuffer, &pushValues);
+	}
+	
     return true;
 }
 

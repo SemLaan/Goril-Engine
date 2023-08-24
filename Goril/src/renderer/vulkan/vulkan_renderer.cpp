@@ -324,7 +324,7 @@ namespace GR
 		MemCopy(vk_state->uniformBuffersMapped[vk_state->currentFrame], globalUniformObject, sizeof(GlobalUniformObject));
 	}
 
-	void DrawIndexed(VertexBuffer _vertexBuffer, IndexBuffer _indexBuffer)
+	void DrawIndexed(VertexBuffer _vertexBuffer, IndexBuffer _indexBuffer, PushConstantObject* pPushConstantValues)
 	{
 		VkCommandBuffer currentCommandBuffer = vk_state->commandBuffers[vk_state->currentFrame]->handle;
 
@@ -335,6 +335,8 @@ namespace GR
 		vkCmdBindVertexBuffers(currentCommandBuffer, 0, 1, &vertexBuffer->handle, offsets);
 
 		vkCmdBindIndexBuffer(currentCommandBuffer, indexBuffer->handle, 0, VK_INDEX_TYPE_UINT32);
+
+		vkCmdPushConstants(currentCommandBuffer, vk_state->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantObject), pPushConstantValues);
 
 		vkCmdDrawIndexed(currentCommandBuffer, (u32)indexBuffer->indexCount, 1, 0, 0, 0);
 	}

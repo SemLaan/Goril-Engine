@@ -26,4 +26,9 @@ namespace GR
 	{
 		glm::mat4 projView;
 	};
+
+	struct PushConstantObject
+	{
+		glm::mat4 model;
+	};
 }

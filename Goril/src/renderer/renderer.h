@@ -15,5 +15,5 @@ namespace GR
 	void EndFrame();
 
 	GRAPI void UpdateGlobalUniforms(GlobalUniformObject* globalUniformObject);
-	GRAPI void DrawIndexed(VertexBuffer vertexBuffer, IndexBuffer indexBuffer);
+	GRAPI void DrawIndexed(VertexBuffer vertexBuffer, IndexBuffer indexBuffer, PushConstantObject* pPushConstantValues);
 }
