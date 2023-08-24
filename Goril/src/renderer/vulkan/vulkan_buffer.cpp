@@ -58,12 +58,24 @@ namespace GR
 
 		vkEndCommandBuffer(transferCommandBuffer);
 
-		VkSubmitInfo submitInfo{};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &transferCommandBuffer;
+		VkCommandBufferSubmitInfo commandBufferInfo{};
+		commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
+		commandBufferInfo.pNext = nullptr;
+		commandBufferInfo.commandBuffer = transferCommandBuffer;
+		commandBufferInfo.deviceMask = 0;
 
-		vkQueueSubmit(vk_state->transferQueue.handle, 1, &submitInfo, VK_NULL_HANDLE);
+		VkSubmitInfo2 submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
+		submitInfo.pNext = nullptr;
+		submitInfo.flags = 0;
+		submitInfo.waitSemaphoreInfoCount = 0;
+		submitInfo.pWaitSemaphoreInfos = nullptr;
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &commandBufferInfo;
+		submitInfo.signalSemaphoreInfoCount = 0;
+		submitInfo.pSignalSemaphoreInfos = nullptr;
+
+		vkQueueSubmit2(vk_state->transferQueue.handle, 1, &submitInfo, VK_NULL_HANDLE);
 		vkQueueWaitIdle(vk_state->transferQueue.handle);
 
 		vkFreeCommandBuffers(vk_state->device, vk_state->transferQueue.commandPool, 1, &transferCommandBuffer);

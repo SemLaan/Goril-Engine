@@ -71,6 +71,7 @@ namespace GR
 			b8 hasExtensions = DeviceHasExtensions(availableDevices[i], requiredDeviceExtensions);
 			if (isDiscrete && hasExtensions)
 			{
+				GRINFO("Device with required extensions, features and properties found");
 				SwapchainSupportDetails swapchainSupport = QuerySwapchainSupport(availableDevices[i], state->surface);
 				if (swapchainSupport.formats.Size() != 0 && swapchainSupport.presentModes.Size() != 0)
 				{
@@ -151,12 +152,21 @@ namespace GR
 
 		// ===================== Specifying features for logical device ==============================
 		VkPhysicalDeviceFeatures deviceFeatures{};
+
+		VkPhysicalDeviceSynchronization2Features synchronization2Features{};
+		synchronization2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
+		synchronization2Features.synchronization2 = VK_TRUE;
+
+		VkPhysicalDeviceFeatures2 deviceFeatures2{};
+		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+		deviceFeatures2.pNext = &synchronization2Features;
+		deviceFeatures2.features = deviceFeatures;
 		/// TODO: add required device features here, these should be retrieved from the application config
 
 		// ===================== Creating logical device =============================================
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		createInfo.pNext = nullptr;
+		createInfo.pNext = &deviceFeatures2;
 		createInfo.flags = 0;
 		createInfo.queueCreateInfoCount = (u32)queueCreateInfos.Size();
 		createInfo.pQueueCreateInfos = queueCreateInfos.GetRawElements();
@@ -169,7 +179,7 @@ namespace GR
 #endif // !GR_DIST
 		createInfo.enabledExtensionCount = (u32)requiredDeviceExtensions->Size();
 		createInfo.ppEnabledExtensionNames = (const char* const*)requiredDeviceExtensions->GetRawElements();
-		createInfo.pEnabledFeatures = &deviceFeatures;
+		createInfo.pEnabledFeatures = nullptr;
 
 		u32 result = vkCreateDevice(state->physicalDevice, &createInfo, state->allocator, &state->device);
 

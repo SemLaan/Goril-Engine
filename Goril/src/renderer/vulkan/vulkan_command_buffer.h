@@ -16,5 +16,5 @@ namespace GR
 	void ResetCommandBuffer(CommandBuffer* commandBuffer);
 	b8 ResetAndBeginCommandBuffer(CommandBuffer* commandBuffer);
 	void EndCommandBuffer(CommandBuffer* commandBuffer);
-	b8 SubmitCommandBuffers(u32 waitSemaphoreCount, VkSemaphore* pWaitSemaphores, VkPipelineStageFlags* pWaitDstStageMask, u32 signalSemaphoreCount, VkSemaphore* pSignalSemaphores, u32 commandBufferCount, CommandBuffer* commandBuffers, VkFence fence);
+	b8 SubmitCommandBuffers(u32 waitSemaphoreCount, VkSemaphoreSubmitInfo* pWaitSemaphoreInfos, u32 signalSemaphoreCount, VkSemaphoreSubmitInfo* pSignalSemaphoreInfos, u32 commandBufferCount, CommandBuffer* commandBuffers, VkFence fence);
 }

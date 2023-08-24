@@ -67,7 +67,7 @@ namespace GR
 		}
 	}
 
-	b8 SubmitCommandBuffers(u32 waitSemaphoreCount, VkSemaphore* pWaitSemaphores, VkPipelineStageFlags* pWaitDstStageMask, u32 signalSemaphoreCount, VkSemaphore* pSignalSemaphores, u32 commandBufferCount, CommandBuffer* commandBuffers, VkFence fence)
+	b8 SubmitCommandBuffers(u32 waitSemaphoreCount, VkSemaphoreSubmitInfo* pWaitSemaphoreInfos, u32 signalSemaphoreCount, VkSemaphoreSubmitInfo* pSignalSemaphoreInfos, u32 commandBufferCount, CommandBuffer* commandBuffers, VkFence fence)
 	{
 #ifdef GR_DEBUG
 		if (commandBufferCount > MAX_SUBMITTED_COMMAND_BUFFERS)
@@ -81,28 +81,36 @@ namespace GR
 		}
 #endif // GR_DEBUG
 
-		VkCommandBuffer commandBufferHandles[MAX_SUBMITTED_COMMAND_BUFFERS];
+		Darray<VkCommandBufferSubmitInfo> commandBufferSubmitInfos = CreateDarrayWithCapacity<VkCommandBufferSubmitInfo>(MEM_TAG_RENDERER_SUBSYS, commandBufferCount, &g_Allocators->temporaryAllocator);
 		for (u32 i = 0; i < commandBufferCount; ++i)
 		{
-			commandBufferHandles[i] = commandBuffers[i].handle;
+			VkCommandBufferSubmitInfo commandBufferInfo{};
+			commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
+			commandBufferInfo.pNext = nullptr;
+			commandBufferInfo.commandBuffer = commandBuffers[i].handle;
+			commandBufferInfo.deviceMask = 0;
+			commandBufferSubmitInfos.Pushback(commandBufferInfo);
 		}
 
-		VkSubmitInfo submitInfo{};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		VkSubmitInfo2 submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
 		submitInfo.pNext = nullptr;
-		submitInfo.waitSemaphoreCount = waitSemaphoreCount;
-		submitInfo.pWaitSemaphores = pWaitSemaphores;
-		submitInfo.pWaitDstStageMask = pWaitDstStageMask;
-		submitInfo.commandBufferCount = commandBufferCount;
-		submitInfo.pCommandBuffers = commandBufferHandles;
-		submitInfo.signalSemaphoreCount = signalSemaphoreCount;
-		submitInfo.pSignalSemaphores = pSignalSemaphores;
+		submitInfo.flags = 0;
+		submitInfo.waitSemaphoreInfoCount = waitSemaphoreCount;
+		submitInfo.pWaitSemaphoreInfos = pWaitSemaphoreInfos;
+		submitInfo.commandBufferInfoCount = commandBufferCount;
+		submitInfo.pCommandBufferInfos = commandBufferSubmitInfos.GetRawElements();
+		submitInfo.signalSemaphoreInfoCount = signalSemaphoreCount;
+		submitInfo.pSignalSemaphoreInfos = pSignalSemaphoreInfos;
 
-		if (VK_SUCCESS != vkQueueSubmit(commandBuffers[0].queueFamily->handle, 1, &submitInfo, fence))
+		if (VK_SUCCESS != vkQueueSubmit2(commandBuffers[0].queueFamily->handle, 1, &submitInfo, fence))
 		{
+			commandBufferSubmitInfos.Deinitialize();
 			GRERROR("Failed to submit queue");
 			return false;
 		}
+
+		commandBufferSubmitInfos.Deinitialize();
 
 		return true;
 	}

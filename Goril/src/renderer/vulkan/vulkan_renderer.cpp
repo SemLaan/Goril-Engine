@@ -87,6 +87,7 @@ namespace GR
 		Darray<const void*> requiredDeviceExtensions = Darray<const void*>();
 		requiredDeviceExtensions.Initialize(MEM_TAG_RENDERER_SUBSYS);
 		requiredDeviceExtensions.Pushback(&VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+		requiredDeviceExtensions.Pushback(&VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
 		
 		if (!SelectPhysicalDevice(vk_state, &requiredDeviceExtensions))
 		{
@@ -297,10 +298,17 @@ namespace GR
 		EndCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame]);
 
 		// Submitting command buffer
-		VkSemaphore waitSemaphores[] = { vk_state->imageAvailableSemaphores[vk_state->currentFrame] };
-		VkSemaphore signalSemaphores[] = { vk_state->renderFinishedSemaphores[vk_state->currentFrame] };
-		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-		SubmitCommandBuffers(1, waitSemaphores, waitStages, 1, signalSemaphores, 1, vk_state->commandBuffers[vk_state->currentFrame], vk_state->inFlightFences[vk_state->currentFrame]);
+		VkSemaphoreSubmitInfo waitSemaphore{};
+		waitSemaphore.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		waitSemaphore.semaphore = vk_state->imageAvailableSemaphores[vk_state->currentFrame];
+		waitSemaphore.stageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		VkSemaphoreSubmitInfo signalSemaphore{};
+		signalSemaphore.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		signalSemaphore.semaphore = vk_state->renderFinishedSemaphores[vk_state->currentFrame];
+		signalSemaphore.stageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		SubmitCommandBuffers(1, &waitSemaphore, 1, &signalSemaphore, 1, vk_state->commandBuffers[vk_state->currentFrame], vk_state->inFlightFences[vk_state->currentFrame]);
 
 		VkSwapchainKHR swapchains[] = { vk_state->swapchain };
 
@@ -308,7 +316,7 @@ namespace GR
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		presentInfo.pNext = nullptr;
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = signalSemaphores;
+		presentInfo.pWaitSemaphores = &vk_state->renderFinishedSemaphores[vk_state->currentFrame];
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = swapchains;
 		presentInfo.pImageIndices = &vk_state->currentSwapchainImageIndex;
