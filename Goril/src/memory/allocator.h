@@ -2,6 +2,8 @@
 #include "defines.h"
 
 
+#define ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE KiB
+
 namespace GR
 {
 	// Forward declaring mem_tag enum

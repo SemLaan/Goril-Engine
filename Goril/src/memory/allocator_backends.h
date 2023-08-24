@@ -8,7 +8,7 @@ namespace GR
 	void DestroyGlobalAllocator(Allocator allocator);
 
 	// ================================== Freelist =========================================================================================================================================================
-	Allocator CreateFreelistAllocator(size_t arenaSize);
-	void DestroyFreelistAllocator(Allocator allocator);
-	size_t FreelistGetFreeNodes(void* backendState);
+	GRAPI Allocator CreateFreelistAllocator(size_t arenaSize, b8 safetySpace = true);
+	GRAPI void DestroyFreelistAllocator(Allocator allocator);
+	GRAPI size_t FreelistGetFreeNodes(void* backendState);
 }

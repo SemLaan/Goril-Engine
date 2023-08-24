@@ -32,9 +32,12 @@ namespace GR
 	static b8 FreelistTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize);
 	static void FreelistFree(void* backendState, void* block, size_t size);
 
-	Allocator CreateFreelistAllocator(size_t arenaSize)
+	Allocator CreateFreelistAllocator(size_t arenaSize, b8 safetySpace /*default: true*/)
 	{
 		Allocator allocator = Allocator();
+
+		if (safetySpace)
+			arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
 
 		// Calculating the required nodes for an arena of the given size
 		// Make one node for every "freelist node factor" nodes that fit in the arena
