@@ -17,21 +17,27 @@ namespace GR
 		size_t size = 0;
 		size_t capacity = 0;
 		f32 scalingFactor = 0;
+		Allocator* m_allocator = nullptr;
 	public:
-		void Initialize(mem_tag tag = MEM_TAG_DARRAY, u32 reserveCapacity = 1, f32 _scalingFactor = 1.6f)
+		void Initialize(mem_tag tag = MEM_TAG_DARRAY, u32 reserveCapacity = 1, Allocator* allocator = nullptr, f32 _scalingFactor = 1.6f)
 		{
 			GRASSERT(reserveCapacity != 0);
+
+			if (!allocator)
+				m_allocator = GetGlobalAllocator();
+			else
+				m_allocator = allocator;
 
 			size = 0;
 			capacity = reserveCapacity;
 			scalingFactor = _scalingFactor;
-			elements = (T*)GRAlignedAlloc(sizeof(T) * capacity, tag, DARRAY_MIN_ALIGNMENT);
+			elements = (T*)m_allocator->AlignedAlloc(sizeof(T) * capacity, tag, DARRAY_MIN_ALIGNMENT);
 			Zero(elements, sizeof(T) * capacity);
 		}
 
 		void Deinitialize()
 		{
-			GRFree(elements);
+			m_allocator->Free(elements);
 		}
 
 		T* GetRawElements()
@@ -71,7 +77,7 @@ namespace GR
 			GRASSERT_DEBUG(newSize > size);
 			if (capacity < newSize)
 			{
-				elements = (T*)GReAlloc(elements, newSize * sizeof(T));
+				elements = (T*)m_allocator->ReAlloc(elements, newSize * sizeof(T));
 				capacity = newSize;
 			}
 
@@ -83,7 +89,7 @@ namespace GR
 		{
 			if (size > newCapacity)
 				size = newCapacity;
-			elements = (T*)GReAlloc(elements, newCapacity * sizeof(T));
+			elements = (T*)m_allocator->ReAlloc(elements, newCapacity * sizeof(T));
 		}
 
 		void Pushback(T&& element)
@@ -91,7 +97,7 @@ namespace GR
 			if (size >= capacity)
 			{
 				capacity = (size_t)ceil(capacity * scalingFactor);
-				elements = (T*)GReAlloc(elements, capacity * sizeof(T));
+				elements = (T*)m_allocator->ReAlloc(elements, capacity * sizeof(T));
 			}
 			elements[size] = element;
 			size++;
@@ -102,7 +108,7 @@ namespace GR
 			if (size >= capacity)
 			{
 				capacity = (size_t)ceil(capacity * scalingFactor);
-				elements = (T*)GReAlloc(elements, capacity * sizeof(T));
+				elements = (T*)m_allocator->ReAlloc(elements, capacity * sizeof(T));
 			}
 			elements[size] = element;
 			size++;
@@ -137,29 +143,29 @@ namespace GR
 	};
 
 	template<typename T>
-	Darray<T> CreateDarrayWithSize(mem_tag tag = MEM_TAG_DARRAY, u32 size = 0, f32 _scalingFactor = 1.6f)
+	Darray<T> CreateDarrayWithSize(mem_tag tag = MEM_TAG_DARRAY, u32 size = 0, Allocator* allocator = nullptr, f32 _scalingFactor = 1.6f)
 	{
 		Darray<T> darray = Darray<T>();
 
 		if (size)
 		{
-			darray.Initialize(tag, size, _scalingFactor);
+			darray.Initialize(tag, size, allocator, _scalingFactor);
 			darray.SetSize(size);
 		}
 		else
 		{
-			darray.Initialize(tag, 1, _scalingFactor);
+			darray.Initialize(tag, 1, allocator, _scalingFactor);
 		}
 
 		return darray;
 	}
 
 	template<typename T>
-	Darray<T> CreateDarrayWithCapacity(mem_tag tag = MEM_TAG_DARRAY, u32 reserveCapacity = 1, f32 _scalingFactor = 1.6f)
+	Darray<T> CreateDarrayWithCapacity(mem_tag tag = MEM_TAG_DARRAY, u32 reserveCapacity = 1, Allocator* allocator = nullptr, f32 _scalingFactor = 1.6f)
 	{
 		Darray<T> darray = Darray<T>();
 
-		darray.Initialize(tag, reserveCapacity, _scalingFactor);
+		darray.Initialize(tag, reserveCapacity, allocator, _scalingFactor);
 
 		return darray;
 	}
