@@ -16,7 +16,7 @@ namespace GR
 	{
 		GRASSERT_DEBUG(state == nullptr); // If this triggers init got called twice
 		GRINFO("Initializing event subsystem...");
-		state = (EventState*)GetSubsysBumpAllocator()->Alloc(sizeof(EventState), MEM_TAG_EVENT_SUBSYS);
+		state = (EventState*)GetGlobalAllocator()->Alloc(sizeof(EventState), MEM_TAG_EVENT_SUBSYS);
 		Zero(state, sizeof(EventState));
 
 		return true;
@@ -41,7 +41,7 @@ namespace GR
 				callbackDarray.Deinitialize();
 			}
 		}
-		GetSubsysBumpAllocator()->Free(state);
+		GetGlobalAllocator()->Free(state);
 	}
 
 	void RegisterEventListener(EventCode type, PFN_OnEvent listener)

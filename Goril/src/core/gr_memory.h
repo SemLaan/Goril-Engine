@@ -1,13 +1,13 @@
 #pragma once
 #include "defines.h"
-#include "memory/freelist_allocator.h"
-#include "memory/bump_allocator.h"
+#include "memory/allocator.h"
+#include "memory/allocator_backends.h"
 
 namespace GR
 {
 	enum mem_tag
 	{
-		MEM_TAG_LOCAL_ALLOCATOR,
+		MEM_TAG_ALLOCATOR_STATE,
 		MEM_TAG_SUB_ARENA,
 		MEM_TAG_MEMORY_SUBSYS,
 		MEM_TAG_LOGGING_SUBSYS,
@@ -27,8 +27,7 @@ namespace GR
 
 	void ShutdownMemory();
 
-	GRAPI inline FreelistAllocator* GetGlobalAllocator();
-	BumpAllocator* GetSubsysBumpAllocator();
+	GRAPI inline Allocator* GetGlobalAllocator();
 
 	GRAPI inline void* GRAlloc(size_t size, mem_tag tag);
 	GRAPI inline void* GRAlignedAlloc(size_t size, mem_tag tag, u32 alignment);

@@ -42,7 +42,7 @@ namespace GR
 	{
 		GRASSERT_DEBUG(state == nullptr); // If this fails init platform was called twice
 		GRINFO("Initializing platform subsystem...");
-		state = (PlatformState*)GetSubsysBumpAllocator()->Alloc(sizeof(PlatformState), MEM_TAG_PLATFORM_SUBSYS);
+		state = (PlatformState*)GetGlobalAllocator()->Alloc(sizeof(PlatformState), MEM_TAG_PLATFORM_SUBSYS);
 		Zero(state, sizeof(PlatformState));
 
 		const wchar_t* menuName = L"gorilwinmenu";
@@ -78,7 +78,7 @@ namespace GR
 		if (state->hwnd == NULL)
 		{
 			GRFATAL("Creating window failed");
-			GetSubsysBumpAllocator()->Free(state);
+			GetGlobalAllocator()->Free(state);
 			state = nullptr;
 			return false;
 		}
@@ -107,7 +107,7 @@ namespace GR
 			GRINFO("Shutting down platform subsystem...");
 		}
 
-		GetSubsysBumpAllocator()->Free(state);
+		GetGlobalAllocator()->Free(state);
 	}
 
 	void PlatformProcessMessage()

@@ -28,7 +28,7 @@ namespace GR
 		GRASSERT_DEBUG(state == nullptr); // If this fails it means init was called twice
 		GRINFO("Initializing input subsystem...");
 
-		state = (InputState*)GetSubsysBumpAllocator()->Alloc(sizeof(InputState), MEM_TAG_INPUT_SUBSYS);
+		state = (InputState*)GetGlobalAllocator()->Alloc(sizeof(InputState), MEM_TAG_INPUT_SUBSYS);
 		Zero(state, sizeof(InputState));
 
 		return true;
@@ -46,7 +46,7 @@ namespace GR
 			GRINFO("Shutting down input subsystem...");
 		}
 
-		GetSubsysBumpAllocator()->Free(state);
+		GetGlobalAllocator()->Free(state);
 	}
 
 	void UpdateInput()

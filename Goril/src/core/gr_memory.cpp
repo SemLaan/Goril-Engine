@@ -2,13 +2,12 @@
 
 #include "logger.h"
 #include "asserts.h"
-#include "memory/freelist_allocator.h"
 
 namespace GR
 {
 #ifndef GR_DIST
 	static const char* memTagToText[mem_tag::MAX_MEMORY_TAGS] = {
-		"LOCAL ALLOC        ",
+		"ALLOCATOR STATE    ",
 		"SUB ARENA          ",
 		"MEMORY SUBSYS      ",
 		"LOGGING SUBSYS     ",
@@ -26,12 +25,10 @@ namespace GR
 
 	struct MemoryState
 	{
-		FreelistAllocator* globalAllocator;
-		BumpAllocator* subsysBumpAllocator;
-		void* arenaBlock;
+		Allocator globalAllocator;
 		size_t arenaSize;
 #ifndef GR_DIST
-		size_t memorySubsystemAllocSize;
+		size_t memorySubsystemStateSize;
 		size_t allocated;
 		size_t deferredMemory;
 		u64 netAllocationCount;
@@ -48,53 +45,35 @@ namespace GR
 		GRINFO("Initializing memory subsystem...");
 		initialized = false;
 
-		// Getting the required memory for the memory subsystem state and the global allocator
-		size_t totalArenaSize = requiredMemory + sizeof(MemoryState) + sizeof(FreelistAllocator);
-		size_t freelistNodeMemory;
-		u32 freelistNodeCount;
-		FreelistAllocator::GetRequiredNodesAndMemorySize(totalArenaSize, &freelistNodeMemory, &freelistNodeCount);
-		totalArenaSize += freelistNodeMemory;
-
-		// Allocating all application memory
-		void* arena = malloc(totalArenaSize);
-		if (arena == nullptr)
+		// Creating the global allocator and allocating all application memory
+		Allocator globalAllocator;
+		size_t globalAllocatorStateSize;
+		if (!CreateGlobalAllocator(requiredMemory, &globalAllocator, &globalAllocatorStateSize))
 		{
-			GRFATAL("Couldn't allocate arena memory, tried allocating {}B, initializing memory failed", totalArenaSize);
+			GRFATAL("Creating global allocator failed");
 			return false;
 		}
-
-		// Creating the global allocator
-		FreelistAllocator* allocator = (FreelistAllocator*)arena;
-		// The allocator can see the entire arena, except for the memory where itself sits
-		allocator = new(allocator) FreelistAllocator();
-		allocator->Initialize((u8*)arena + sizeof(FreelistAllocator), totalArenaSize - sizeof(FreelistAllocator), freelistNodeCount);
-
+		
 		// Creating the memory state
-		state = (MemoryState*)allocator->Alloc(sizeof(MemoryState), mem_tag::MEM_TAG_MEMORY_SUBSYS);
+		state = (MemoryState*)globalAllocator.Alloc(sizeof(MemoryState), mem_tag::MEM_TAG_MEMORY_SUBSYS);
 		Zero(state, sizeof(MemoryState));
-		state->globalAllocator = allocator;
-		state->arenaBlock = arena;
-		state->arenaSize = totalArenaSize;
+		initialized = true;
+
+		state->globalAllocator = globalAllocator;
+		state->arenaSize = requiredMemory + globalAllocatorStateSize;
 #ifndef GR_DIST
 		state->allocated = 0;
 		state->deferredMemory = 0;
-		state->memorySubsystemAllocSize = sizeof(MemoryState) + sizeof(FreelistAllocator) + freelistNodeMemory + FreelistAllocator::GetAllocHeaderSize();
+		state->memorySubsystemStateSize = sizeof(MemoryState) + globalAllocatorStateSize + globalAllocator.GetAllocHeaderSize();
 		state->netAllocationCount = 0;
 		for (u32 i = 0; i < mem_tag::MAX_MEMORY_TAGS; i++)
 		{
 			state->perTagAllocCount[i] = 0;
 		}
+
+		AllocInfo(state->memorySubsystemStateSize, MEM_TAG_MEMORY_SUBSYS);
+		AllocInfo(0, MEM_TAG_ALLOCATOR_STATE);
 #endif // !GR_DIST
-
-		initialized = true;
-
-#ifndef GR_DIST
-		AllocInfo(sizeof(MemoryState), MEM_TAG_MEMORY_SUBSYS);
-		AllocInfo(sizeof(FreelistAllocator) + freelistNodeMemory + FreelistAllocator::GetAllocHeaderSize(), MEM_TAG_MEMORY_SUBSYS);
-#endif // !GR_DIST
-
-		state->subsysBumpAllocator = (BumpAllocator*)allocator->Alloc(sizeof(BumpAllocator), MEM_TAG_LOCAL_ALLOCATOR);
-		state->subsysBumpAllocator->Initialize(allocator->Alloc(subsysMemoryRequirement, MEM_TAG_SUB_ARENA), subsysMemoryRequirement);
 
 		return true;
 	}
@@ -111,54 +90,46 @@ namespace GR
 			GRINFO("Shutting down memory subsystem...");
 		}
 
-		GRFree(state->subsysBumpAllocator->GetArenaPointer());
-		GRFree(state->subsysBumpAllocator);
-
 #ifndef GR_DIST
 		// Removing all the allocation info from the state to print memory stats one last time for debugging 
 		// This way the programmer can check if everything else in the application was freed by seeing if it prints 0 net allocations
-		FreeInfo(state->memorySubsystemAllocSize, MEM_TAG_MEMORY_SUBSYS);
-		FreeInfo(0, MEM_TAG_MEMORY_SUBSYS);
+		FreeInfo(state->memorySubsystemStateSize, MEM_TAG_MEMORY_SUBSYS);
+		FreeInfo(0, MEM_TAG_ALLOCATOR_STATE);
 		PrintMemoryStats();
 #endif // !GR_DIST
 
 		initialized = false;
 
+		Allocator globalAllocator = state->globalAllocator;
 		GRFree(state);
-		// We dont have to destroy the global allocator because that does nothing
 
 		// Return all the application memory back to the OS
-		free(state->arenaBlock);
+		DestroyGlobalAllocator(globalAllocator);
 	}
 
-	FreelistAllocator* GetGlobalAllocator()
+	Allocator* GetGlobalAllocator()
 	{
-		return state->globalAllocator;
-	}
-
-	BumpAllocator* GetSubsysBumpAllocator()
-	{
-		return state->subsysBumpAllocator;
+		return &state->globalAllocator;
 	}
 
 	void* GRAlloc(size_t size, mem_tag tag)
 	{
-		return state->globalAllocator->AlignedAlloc(size, tag, MIN_ALIGNMENT);
+		return state->globalAllocator.AlignedAlloc(size, tag, MIN_ALIGNMENT);
 	}
 
 	void* GRAlignedAlloc(size_t size, mem_tag tag, u32 alignment)
 	{
-		return state->globalAllocator->AlignedAlloc(size, tag, alignment);
+		return state->globalAllocator.AlignedAlloc(size, tag, alignment);
 	}
 
 	void* GReAlloc(void* block, size_t size)
 	{
-		return state->globalAllocator->ReAlloc(block, size);
+		return state->globalAllocator.ReAlloc(block, size);
 	}
 
 	void GRFree(void* block)
 	{
-		state->globalAllocator->Free(block);
+		state->globalAllocator.Free(block);
 	}
 
 #ifndef GR_DIST // These functions only get compiled if it's not a distribution build
@@ -278,7 +249,7 @@ namespace GR
 		GRINFO("Total allocated memory and total arena size ({}): {}/{}", scaleString, number1, number2);
 		GRINFO("Percent allocated: {:.2f}%%", 100 * (f32)state->allocated / (f32)state->arenaSize);
 		GRINFO("Total allocations: {}", state->netAllocationCount);
-		GRINFO("Fragmentation (amount of separate free blocks): {}", GetGlobalAllocator()->GetFreeNodes());
+		GRINFO("Fragmentation (amount of separate free blocks): {}", FreelistGetFreeNodes(GetGlobalAllocator()->backendState));
 		GRINFO("Allocations by tag:");
 		for (u32 i = 0; i < mem_tag::MAX_MEMORY_TAGS; ++i)
 		{
