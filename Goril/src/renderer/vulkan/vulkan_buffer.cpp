@@ -3,14 +3,15 @@
 #include "vulkan_buffer.h"
 
 #include "vulkan_types.h"
+#include "vulkan_command_buffer.h"
 
 namespace GR
 {
 
-	static u32 FindMemoryType(VkPhysicalDevice physicalDevice, u32 typeFilter, VkMemoryPropertyFlags requiredFlags)
+	u32 FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags requiredFlags)
 	{
 		VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &deviceMemoryProperties);
+		vkGetPhysicalDeviceMemoryProperties(vk_state->physicalDevice, &deviceMemoryProperties);
 
 		for (u32 i = 0; i < deviceMemoryProperties.memoryTypeCount; ++i)
 		{
@@ -26,59 +27,17 @@ namespace GR
 
 	static void CopyBuffer(VkBuffer dstBuffer, VkBuffer srcBuffer, VkDeviceSize size)
 	{
-		VkCommandBufferAllocateInfo commandBufferAllocInfo{};
-		commandBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		commandBufferAllocInfo.pNext = nullptr;
-		commandBufferAllocInfo.commandPool = vk_state->transferQueue.commandPool;
-		commandBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		commandBufferAllocInfo.commandBufferCount = 1;
-
-		VkCommandBuffer transferCommandBuffer;
-
-		if (VK_SUCCESS != vkAllocateCommandBuffers(vk_state->device, &commandBufferAllocInfo, &transferCommandBuffer))
-		{
-			GRFATAL("Failed to allocate command buffer(s)");
-			GRASSERT(false);
-		}
-
-		VkCommandBufferBeginInfo beginInfo{};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		beginInfo.pNext = nullptr;
-		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		beginInfo.pInheritanceInfo = nullptr;
-
-		vkBeginCommandBuffer(transferCommandBuffer, &beginInfo);
+		CommandBuffer* transferCommandBuffer;
+		AllocateAndBeginSingleUseCommandBuffer(&vk_state->transferQueue, &transferCommandBuffer);
 
 		VkBufferCopy copyRegion{};
 		copyRegion.dstOffset = 0;
 		copyRegion.srcOffset = 0;
 		copyRegion.size = size;
 
-		vkCmdCopyBuffer(transferCommandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+		vkCmdCopyBuffer(transferCommandBuffer->handle, srcBuffer, dstBuffer, 1, &copyRegion);
 
-		vkEndCommandBuffer(transferCommandBuffer);
-
-		VkCommandBufferSubmitInfo commandBufferInfo{};
-		commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
-		commandBufferInfo.pNext = nullptr;
-		commandBufferInfo.commandBuffer = transferCommandBuffer;
-		commandBufferInfo.deviceMask = 0;
-
-		VkSubmitInfo2 submitInfo{};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
-		submitInfo.pNext = nullptr;
-		submitInfo.flags = 0;
-		submitInfo.waitSemaphoreInfoCount = 0;
-		submitInfo.pWaitSemaphoreInfos = nullptr;
-		submitInfo.commandBufferInfoCount = 1;
-		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = 0;
-		submitInfo.pSignalSemaphoreInfos = nullptr;
-
-		vkQueueSubmit2(vk_state->transferQueue.handle, 1, &submitInfo, VK_NULL_HANDLE);
-		vkQueueWaitIdle(vk_state->transferQueue.handle);
-
-		vkFreeCommandBuffers(vk_state->device, vk_state->transferQueue.commandPool, 1, &transferCommandBuffer);
+		EndSubmitAndFreeSingleUseCommandBuffer(transferCommandBuffer, true);
 	}
 
 	b8 CreateBuffer(VkDeviceSize size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkBuffer* out_buffer, VkDeviceMemory* out_memory)
@@ -106,7 +65,7 @@ namespace GR
 		allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocateInfo.pNext = nullptr;
 		allocateInfo.allocationSize = stagingMemoryRequirements.size;
-		allocateInfo.memoryTypeIndex = FindMemoryType(vk_state->physicalDevice, stagingMemoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		allocateInfo.memoryTypeIndex = FindMemoryType(stagingMemoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 		if (VK_SUCCESS != vkAllocateMemory(vk_state->device, &allocateInfo, vk_state->allocator, out_memory))
 		{
@@ -150,7 +109,7 @@ namespace GR
 		stagingAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		stagingAllocateInfo.pNext = nullptr;
 		stagingAllocateInfo.allocationSize = stagingMemoryRequirements.size;
-		stagingAllocateInfo.memoryTypeIndex = FindMemoryType(vk_state->physicalDevice, stagingMemoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		stagingAllocateInfo.memoryTypeIndex = FindMemoryType(stagingMemoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 		if (VK_SUCCESS != vkAllocateMemory(vk_state->device, &stagingAllocateInfo, vk_state->allocator, &stagingMemory))
 			GRASSERT(false);
@@ -185,7 +144,7 @@ namespace GR
 		allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocateInfo.pNext = nullptr;
 		allocateInfo.allocationSize = memoryRequirements.size;
-		allocateInfo.memoryTypeIndex = FindMemoryType(vk_state->physicalDevice, memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+		allocateInfo.memoryTypeIndex = FindMemoryType(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 		if (VK_SUCCESS != vkAllocateMemory(vk_state->device, &allocateInfo, vk_state->allocator, &buffer->memory))
 			GRASSERT(false);
@@ -242,7 +201,7 @@ namespace GR
 		stagingAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		stagingAllocateInfo.pNext = nullptr;
 		stagingAllocateInfo.allocationSize = stagingMemoryRequirements.size;
-		stagingAllocateInfo.memoryTypeIndex = FindMemoryType(vk_state->physicalDevice, stagingMemoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		stagingAllocateInfo.memoryTypeIndex = FindMemoryType(stagingMemoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 		if (VK_SUCCESS != vkAllocateMemory(vk_state->device, &stagingAllocateInfo, vk_state->allocator, &stagingMemory))
 			GRASSERT(false);
@@ -277,7 +236,7 @@ namespace GR
 		allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocateInfo.pNext = nullptr;
 		allocateInfo.allocationSize = memoryRequirements.size;
-		allocateInfo.memoryTypeIndex = FindMemoryType(vk_state->physicalDevice, memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+		allocateInfo.memoryTypeIndex = FindMemoryType(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 		if (VK_SUCCESS != vkAllocateMemory(vk_state->device, &allocateInfo, vk_state->allocator, &buffer->memory))
 			GRASSERT(false);
