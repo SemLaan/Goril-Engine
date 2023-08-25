@@ -22,6 +22,11 @@ namespace GR
 		void* internalState;
 	};
 
+	struct Texture
+	{
+		void* internalState;
+	};
+
 	struct GlobalUniformObject
 	{
 		glm::mat4 projView;

@@ -24,6 +24,12 @@ namespace GR
 		size_t indexCount;
 	};
 
+	struct VulkanImage
+	{
+		VkImage handle;
+		VkDeviceMemory memory;
+	};
+
 	struct QueueFamily
 	{
 		VkQueue handle;
