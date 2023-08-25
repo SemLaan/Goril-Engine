@@ -35,6 +35,82 @@ namespace GR
 		GRFree(commandBuffer);
 	}
 
+	b8 AllocateAndBeginSingleUseCommandBuffer(QueueFamily* queueFamily, CommandBuffer** out_pCommandBuffer)
+	{
+		*out_pCommandBuffer = (CommandBuffer*)GRAlloc(sizeof(CommandBuffer), MEM_TAG_RENDERER_SUBSYS);
+		CommandBuffer* commandBuffer = *out_pCommandBuffer;
+
+		VkCommandBufferAllocateInfo allocateInfo{};
+		allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocateInfo.pNext = nullptr;
+		allocateInfo.commandPool = queueFamily->commandPool;
+		allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocateInfo.commandBufferCount = 1;
+
+		if (VK_SUCCESS != vkAllocateCommandBuffers(vk_state->device, &allocateInfo, &commandBuffer->handle))
+		{
+			GRFATAL("Failed to allocate command buffer");
+			GRFree(commandBuffer);
+			return false;
+		}
+
+		commandBuffer->queueFamily = queueFamily;
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.pNext = nullptr;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		beginInfo.pInheritanceInfo = nullptr;
+
+		if (VK_SUCCESS != vkBeginCommandBuffer(commandBuffer->handle, &beginInfo))
+		{
+			GRFATAL("Failed to start recording command buffer");
+			return false;
+		}
+
+		return true;
+	}
+
+	b8 EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, b8 queueWaitIdle)
+	{
+		if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer->handle))
+		{
+			GRFATAL("Failed to stop recording command buffer");
+			return false;
+		}
+
+		VkCommandBufferSubmitInfo commandBufferInfo{};
+		commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
+		commandBufferInfo.pNext = nullptr;
+		commandBufferInfo.commandBuffer = commandBuffer->handle;
+		commandBufferInfo.deviceMask = 0;
+
+		VkSubmitInfo2 submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
+		submitInfo.pNext = nullptr;
+		submitInfo.flags = 0;
+		submitInfo.waitSemaphoreInfoCount = 0;
+		submitInfo.pWaitSemaphoreInfos = nullptr;
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &commandBufferInfo;
+		submitInfo.signalSemaphoreInfoCount = 0;
+		submitInfo.pSignalSemaphoreInfos = nullptr;
+
+		if (VK_SUCCESS != vkQueueSubmit2(commandBuffer->queueFamily->handle, 1, &submitInfo, VK_NULL_HANDLE))
+		{
+			GRFATAL("Failed to submit queue");
+			return false;
+		}
+
+		if (queueWaitIdle)
+			vkQueueWaitIdle(commandBuffer->queueFamily->handle);
+
+		vkFreeCommandBuffers(vk_state->device, commandBuffer->queueFamily->commandPool, 1, &commandBuffer->handle);
+		GRFree(commandBuffer);
+
+		return true;
+	}
+
 	void ResetCommandBuffer(CommandBuffer* commandBuffer)
 	{
 		// No reset flags, because resources attached to the command buffer don't necessarily need to be freed and this allows Vulkan to decide whats best
