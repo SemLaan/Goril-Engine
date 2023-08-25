@@ -152,16 +152,17 @@ namespace GR
 
 		// ===================== Specifying features for logical device ==============================
 		VkPhysicalDeviceFeatures deviceFeatures{};
+		/// TODO: add required device features here, these should be retrieved from the application config
 
 		VkPhysicalDeviceSynchronization2Features synchronization2Features{};
 		synchronization2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
+		synchronization2Features.pNext = nullptr; /// Add more extension features here
 		synchronization2Features.synchronization2 = VK_TRUE;
 
 		VkPhysicalDeviceFeatures2 deviceFeatures2{};
 		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 		deviceFeatures2.pNext = &synchronization2Features;
 		deviceFeatures2.features = deviceFeatures;
-		/// TODO: add required device features here, these should be retrieved from the application config
 
 		// ===================== Creating logical device =============================================
 		VkDeviceCreateInfo createInfo{};

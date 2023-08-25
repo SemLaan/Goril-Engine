@@ -20,6 +20,7 @@ namespace GR
 		"DARRAY             ",
 		"VERTEX BUFFER      ",
 		"INDEX BUFFER       ",
+		"TEXTURE            ",
 	};
 #endif // !GR_DIST
 
