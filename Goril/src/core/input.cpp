@@ -55,6 +55,8 @@ namespace GR
 		MemCopy(&state->previousButtonStates, &state->buttonStates, sizeof(state->buttonStates));
 		state->previousMousePosX = state->mousePosX;
 		state->previousMousePosY = state->mousePosY;
+		if (state->mouseCentered)
+				SetMousePosition(GetPlatformWindowSize() / 2);
 	}
 
 	void SetMouseCentered(b8 enabled)
@@ -142,8 +144,6 @@ namespace GR
 			data.i32[2] = state->previousMousePosX;
 			data.i32[3] = state->previousMousePosY;
 			InvokeEvent(EVCODE_MOUSE_MOVED, data);
-			if (state->mouseCentered)
-				SetMousePosition(GetPlatformWindowSize() / 2);
 		}
 	}
 }

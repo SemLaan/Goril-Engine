@@ -60,8 +60,8 @@ b8 Game::Init()
 
 b8 Game::Update()
 {
-	f32 mouseMoveSpeed = 2500;
-	//GRDEBUG("{}, {}", GetMouseDistanceFromCenter().x, GetMouseDistanceFromCenter().y);
+	f32 mouseMoveSpeed = 3500;
+
 	camRotation.x += GetMouseDistanceFromCenter().x / mouseMoveSpeed;
 	camRotation.y += GetMouseDistanceFromCenter().y / mouseMoveSpeed;
 	if (camRotation.y > 1.5f)
