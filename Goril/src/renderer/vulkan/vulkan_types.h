@@ -30,6 +30,12 @@ namespace GR
 		VkDeviceMemory memory;
 	};
 
+	struct VulkanSemaphore
+	{
+		VkSemaphore handle;
+		u64 submitValue;
+	};
+
 	struct QueueFamily
 	{
 		VkQueue handle;
@@ -87,6 +93,9 @@ namespace GR
 		Darray<VkSemaphore> imageAvailableSemaphores;
 		Darray<VkSemaphore> renderFinishedSemaphores;
 		Darray<VkFence> inFlightFences;
+		VulkanSemaphore vertexUploadSemaphore;
+		VulkanSemaphore indexUploadSemaphore;
+		VulkanSemaphore imageUploadSemaphore;
 		i32 maxFramesInFlight;
 		u32 currentFrame;
 		u32 currentSwapchainImageIndex;

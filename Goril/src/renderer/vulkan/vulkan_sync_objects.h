@@ -4,7 +4,7 @@
 
 namespace GR
 {
-	b8 CreateSyncObjects(RendererState* state);
+	b8 CreateSyncObjects();
 
-	void DestroySyncObjects(RendererState* state);
+	void DestroySyncObjects();
 }

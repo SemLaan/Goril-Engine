@@ -137,7 +137,7 @@ namespace GR
 		}
 
 		// ================================ Create sync objects ===========================================
-		if (!CreateSyncObjects(vk_state))
+		if (!CreateSyncObjects())
 			return false;
 
 		return true;
@@ -160,7 +160,7 @@ namespace GR
 		vkDeviceWaitIdle(vk_state->device);
 
 		// ================================ Destroy sync objects if they were created ===========================================
-		DestroySyncObjects(vk_state);
+		DestroySyncObjects();
 
 		// ================================== Destroy command buffers =============================================
 		if (vk_state->commandBuffers.GetRawElements())
