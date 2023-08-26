@@ -194,8 +194,8 @@ namespace GR
 		memoryDestructionInfo.Destructor = OneTimeMemoryDestructor;
 		memoryDestructionInfo.signalValue = signaledValue;
 
-		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(bufferDestructionInfo);
-		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(memoryDestructionInfo);
+		vk_state->transferQueue.resourcesPendingDestruction.Pushback(bufferDestructionInfo);
+		vk_state->transferQueue.resourcesPendingDestruction.Pushback(memoryDestructionInfo);
 
 		return clientBuffer;
 	}
@@ -313,8 +313,8 @@ namespace GR
 		memoryDestructionInfo.Destructor = OneTimeMemoryDestructor;
 		memoryDestructionInfo.signalValue = signaledValue;
 
-		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(bufferDestructionInfo);
-		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(memoryDestructionInfo);
+		vk_state->transferQueue.resourcesPendingDestruction.Pushback(bufferDestructionInfo);
+		vk_state->transferQueue.resourcesPendingDestruction.Pushback(memoryDestructionInfo);
 
 		return clientBuffer;
 	}

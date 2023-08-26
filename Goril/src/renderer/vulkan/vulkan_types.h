@@ -36,10 +36,20 @@ namespace GR
 		u64 submitValue;
 	};
 
+	typedef void (*PFN_ResourceDestructor)(void* resource);
+
+	struct ResourceDestructionInfo
+	{
+		void* resource;
+		PFN_ResourceDestructor Destructor;
+		u64 signalValue;
+	};
+
 	struct QueueFamily
 	{
 		VkQueue handle;
 		VkCommandPool commandPool;
+		Darray<ResourceDestructionInfo> resourcesPendingDestruction;
 		u32 index;
 	};
 
@@ -61,15 +71,6 @@ namespace GR
 		u32 graphicsFamily;
 		u32 presentFamily;
 		u32 transferFamily;
-	};
-
-	typedef void (*PFN_ResourceDestructor)(void* resource);
-
-	struct ResourceDestructionInfo
-	{
-		void* resource;
-		PFN_ResourceDestructor Destructor;
-		u64 signalValue;
 	};
 
 	struct RendererState
@@ -106,8 +107,6 @@ namespace GR
 		VulkanSemaphore imageUploadSemaphore;
 		VulkanSemaphore singleUseCommandBufferSemaphore;
 		VulkanSemaphore frameSemaphore;
-		Darray<ResourceDestructionInfo> singleUseCommandBufferResourcesInFlight;
-		Darray<ResourceDestructionInfo> resourcesPendingDestruction;
 		Darray<VkDependencyInfo*> requestedQueueAcquisitionOperations;
 		i32 maxFramesInFlight;
 		u32 currentFrame;

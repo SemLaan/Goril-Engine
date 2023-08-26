@@ -206,9 +206,11 @@ namespace GR
 		// Graphics, transfer and (in the future) compute queue
 		vkGetDeviceQueue(state->device, state->queueIndices.graphicsFamily, 0, &state->graphicsQueue.handle);
 		state->graphicsQueue.index = state->queueIndices.graphicsFamily;
+		state->graphicsQueue.resourcesPendingDestruction = CreateDarrayWithCapacity<ResourceDestructionInfo>(MEM_TAG_RENDERER_SUBSYS, 20); /// TODO: change allocator to renderer local allocator (when it exists)
 
 		vkGetDeviceQueue(state->device, state->queueIndices.transferFamily, 0, &state->transferQueue.handle);
 		state->transferQueue.index = state->queueIndices.transferFamily;
+		state->transferQueue.resourcesPendingDestruction = CreateDarrayWithCapacity<ResourceDestructionInfo>(MEM_TAG_RENDERER_SUBSYS, 20); /// TODO: change allocator to renderer local allocator (when it exists)
 
 		// ==================== Creating command pools for each of the queue families =============================
 		VkCommandPoolCreateInfo commandPoolCreateInfo{};
@@ -244,6 +246,11 @@ namespace GR
 
 		if (vk_state->transferQueue.commandPool)
 			vkDestroyCommandPool(vk_state->device, vk_state->transferQueue.commandPool, vk_state->allocator);
+
+		if (vk_state->graphicsQueue.resourcesPendingDestruction.GetRawElements())
+			vk_state->graphicsQueue.resourcesPendingDestruction.Deinitialize();
+		if (vk_state->transferQueue.resourcesPendingDestruction.GetRawElements())
+			vk_state->transferQueue.resourcesPendingDestruction.Deinitialize();
 
 		if (state->device)
 			vkDestroyDevice(state->device, state->allocator);

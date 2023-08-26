@@ -135,7 +135,7 @@ namespace GR
 
 		*out_signaledValue = vk_state->singleUseCommandBufferSemaphore.submitValue;
 
-		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(commandBufferDestructionInfo);
+		commandBuffer->queueFamily->resourcesPendingDestruction.Pushback(commandBufferDestructionInfo);
 
 		return true;
 	}
