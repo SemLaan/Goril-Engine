@@ -106,6 +106,7 @@ namespace GR
 		VulkanSemaphore indexUploadSemaphore;
 		VulkanSemaphore imageUploadSemaphore;
 		VulkanSemaphore singleUseCommandBufferSemaphore;
+		VulkanSemaphore frameSemaphore;
 		Darray<InFlightTemporaryResource> singleUseCommandBufferResourcesInFlight;
 		Darray<VkDependencyInfo*> requestedQueueAcquisitionOperations;
 		i32 maxFramesInFlight;

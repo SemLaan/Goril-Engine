@@ -47,7 +47,8 @@ namespace GR
 		if (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->vertexUploadSemaphore.handle) ||
 			VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->indexUploadSemaphore.handle) ||
 			VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->imageUploadSemaphore.handle) ||
-			VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->singleUseCommandBufferSemaphore.handle))
+			VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->singleUseCommandBufferSemaphore.handle) ||
+			VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->frameSemaphore.handle))
 		{
 			GRFATAL("Failed to create sync objects");
 				return false;
@@ -76,6 +77,8 @@ namespace GR
 			vkDestroySemaphore(vk_state->device, vk_state->imageUploadSemaphore.handle, vk_state->allocator);
 		if (vk_state->singleUseCommandBufferSemaphore.handle)
 			vkDestroySemaphore(vk_state->device, vk_state->singleUseCommandBufferSemaphore.handle, vk_state->allocator);
+		if (vk_state->frameSemaphore.handle)
+			vkDestroySemaphore(vk_state->device, vk_state->frameSemaphore.handle, vk_state->allocator);
 
 		if (vk_state->imageAvailableSemaphores.GetRawElements())
 			vk_state->imageAvailableSemaphores.Deinitialize();

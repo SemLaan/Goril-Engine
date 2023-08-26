@@ -115,7 +115,7 @@ namespace GR
 		submitInfo.pWaitSemaphoreInfos = nullptr;
 		submitInfo.commandBufferInfoCount = 1;
 		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = semaphoreInfos.Size();
+		submitInfo.signalSemaphoreInfoCount = (u32)semaphoreInfos.Size();
 		submitInfo.pSignalSemaphoreInfos = semaphoreInfos.GetRawElements();
 
 		VkResult result = vkQueueSubmit2(commandBuffer->queueFamily->handle, 1, &submitInfo, VK_NULL_HANDLE);
