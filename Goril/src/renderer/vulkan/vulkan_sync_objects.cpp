@@ -8,7 +8,6 @@ namespace GR
 	{
 		vk_state->imageAvailableSemaphores = CreateDarrayWithSize<VkSemaphore>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
 		vk_state->renderFinishedSemaphores = CreateDarrayWithSize<VkSemaphore>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
-		vk_state->inFlightFences = CreateDarrayWithSize<VkFence>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
 
 		VkSemaphoreCreateInfo semaphoreCreateInfo{};
 		semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -20,8 +19,7 @@ namespace GR
 		for (i32 i = 0; i < vk_state->maxFramesInFlight; ++i)
 		{
 			if ((VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->allocator, &vk_state->imageAvailableSemaphores[i])) ||
-				(VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->allocator, &vk_state->renderFinishedSemaphores[i])) ||
-				(VK_SUCCESS != vkCreateFence(vk_state->device, &fenceCreateInfo, vk_state->allocator, &vk_state->inFlightFences[i])))
+				(VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->allocator, &vk_state->renderFinishedSemaphores[i])))
 			{
 				GRFATAL("Failed to create sync objects");
 				return false;
@@ -47,11 +45,22 @@ namespace GR
 		if (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->vertexUploadSemaphore.handle) ||
 			VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->indexUploadSemaphore.handle) ||
 			VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->imageUploadSemaphore.handle) ||
-			VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->singleUseCommandBufferSemaphore.handle) ||
-			VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->frameSemaphore.handle))
+			VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->singleUseCommandBufferSemaphore.handle))
 		{
 			GRFATAL("Failed to create sync objects");
-				return false;
+			return false;
+		}
+
+		// max max frames in flight just needs to be higher than any sensible maxFramesInFlight value, 
+		// look at the wait for semaphores function at the start of the renderloop to understand why
+		const u64 maxMaxFramesInFlight = 10;
+		vk_state->frameSemaphore.submitValue = maxMaxFramesInFlight;
+		semaphoreTypeInfo.initialValue = maxMaxFramesInFlight;
+
+		if (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->frameSemaphore.handle))
+		{
+			GRFATAL("Failed to create sync objects");
+			return false;
 		}
 
 		return true;
@@ -65,8 +74,6 @@ namespace GR
 				vkDestroySemaphore(vk_state->device, vk_state->imageAvailableSemaphores[i], vk_state->allocator);
 			if (vk_state->renderFinishedSemaphores.GetRawElements())
 				vkDestroySemaphore(vk_state->device, vk_state->renderFinishedSemaphores[i], vk_state->allocator);
-			if (vk_state->inFlightFences.GetRawElements())
-				vkDestroyFence(vk_state->device, vk_state->inFlightFences[i], vk_state->allocator);
 		}
 
 		if (vk_state->vertexUploadSemaphore.handle)
@@ -84,7 +91,5 @@ namespace GR
 			vk_state->imageAvailableSemaphores.Deinitialize();
 		if (vk_state->renderFinishedSemaphores.GetRawElements())
 			vk_state->renderFinishedSemaphores.Deinitialize();
-		if (vk_state->inFlightFences.GetRawElements())
-			vk_state->inFlightFences.Deinitialize();
 	}
 }

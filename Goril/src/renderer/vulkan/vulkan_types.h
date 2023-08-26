@@ -101,7 +101,6 @@ namespace GR
 		Darray<CommandBuffer*> commandBuffers;
 		Darray<VkSemaphore> imageAvailableSemaphores;
 		Darray<VkSemaphore> renderFinishedSemaphores;
-		Darray<VkFence> inFlightFences;
 		VulkanSemaphore vertexUploadSemaphore;
 		VulkanSemaphore indexUploadSemaphore;
 		VulkanSemaphore imageUploadSemaphore;

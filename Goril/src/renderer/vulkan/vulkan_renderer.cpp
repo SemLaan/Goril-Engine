@@ -253,7 +253,16 @@ namespace GR
 		if (vk_state->shouldRecreateSwapchain)
 			RecreateSwapchain();
 
-		vkWaitForFences(vk_state->device, 1, &vk_state->inFlightFences[vk_state->currentFrame], VK_TRUE, UINT64_MAX);
+		VkSemaphoreWaitInfo semaphoreWaitInfo{};
+		semaphoreWaitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
+		semaphoreWaitInfo.pNext = nullptr;
+		semaphoreWaitInfo.flags = 0;
+		semaphoreWaitInfo.semaphoreCount = 1;
+		semaphoreWaitInfo.pSemaphores = &vk_state->frameSemaphore.handle;
+		u64 waitForValue = vk_state->frameSemaphore.submitValue - (vk_state->maxFramesInFlight - 1);
+		semaphoreWaitInfo.pValues = &waitForValue;
+
+		vkWaitSemaphores(vk_state->device, &semaphoreWaitInfo, UINT64_MAX);
 
 		VkResult result = vkAcquireNextImageKHR(vk_state->device, vk_state->swapchain, UINT64_MAX, vk_state->imageAvailableSemaphores[vk_state->currentFrame], VK_NULL_HANDLE, &vk_state->currentSwapchainImageIndex);
 
@@ -272,8 +281,6 @@ namespace GR
 			GRWARN("Failed to acquire next swapchain image");
 			return false;
 		}
-
-		vkResetFences(vk_state->device, 1, &vk_state->inFlightFences[vk_state->currentFrame]);
 
 		// ===================================== Begin command buffer recording =========================================
 		ResetAndBeginCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame]);
@@ -385,7 +392,7 @@ namespace GR
 		signalSemaphores[1].deviceIndex = 0;
 
 
-		SubmitCommandBuffers(waitSemaphoreCount, waitSemaphores, signalSemaphoreCount, signalSemaphores, 1, vk_state->commandBuffers[vk_state->currentFrame], vk_state->inFlightFences[vk_state->currentFrame]);
+		SubmitCommandBuffers(waitSemaphoreCount, waitSemaphores, signalSemaphoreCount, signalSemaphores, 1, vk_state->commandBuffers[vk_state->currentFrame], nullptr);
 
 		VkSwapchainKHR swapchains[] = { vk_state->swapchain };
 
