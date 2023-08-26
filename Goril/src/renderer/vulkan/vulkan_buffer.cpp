@@ -102,67 +102,17 @@ namespace GR
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingMemory;
 
-		VkBufferCreateInfo stagingBufferCreateInfo{};
-		stagingBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		stagingBufferCreateInfo.pNext = nullptr;
-		stagingBufferCreateInfo.flags = 0;
-		stagingBufferCreateInfo.size = buffer->size;
-		stagingBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-		stagingBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		stagingBufferCreateInfo.queueFamilyIndexCount = 0;
-		stagingBufferCreateInfo.pQueueFamilyIndices = nullptr;
-
-		if (VK_SUCCESS != vkCreateBuffer(vk_state->device, &stagingBufferCreateInfo, vk_state->allocator, &stagingBuffer))
-			GRASSERT(false);
-
-		VkMemoryRequirements stagingMemoryRequirements;
-		vkGetBufferMemoryRequirements(vk_state->device, stagingBuffer, &stagingMemoryRequirements);
-		
-		VkMemoryAllocateInfo stagingAllocateInfo{};
-		stagingAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		stagingAllocateInfo.pNext = nullptr;
-		stagingAllocateInfo.allocationSize = stagingMemoryRequirements.size;
-		stagingAllocateInfo.memoryTypeIndex = FindMemoryType(stagingMemoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-		if (VK_SUCCESS != vkAllocateMemory(vk_state->device, &stagingAllocateInfo, vk_state->allocator, &stagingMemory))
-			GRASSERT(false);
-
-		vkBindBufferMemory(vk_state->device, stagingBuffer, stagingMemory, 0);
+		CreateBuffer(buffer->size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingMemory);
 
 		// ================= copying data into staging buffer ===============================
 		void* data;
-		vkMapMemory(vk_state->device, stagingMemory, 0, stagingBufferCreateInfo.size, 0, &data);
-		MemCopy(data, vertices, (size_t)stagingBufferCreateInfo.size);
+		vkMapMemory(vk_state->device, stagingMemory, 0, buffer->size, 0, &data);
+		MemCopy(data, vertices, (size_t)buffer->size);
 		vkUnmapMemory(vk_state->device, stagingMemory);
 
 		// ================= creating the actual buffer =========================
-		VkBufferCreateInfo bufferCreateInfo{};
-		bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferCreateInfo.pNext = nullptr;
-		bufferCreateInfo.flags = 0;
-		bufferCreateInfo.size = buffer->size;
-		bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-		bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		bufferCreateInfo.queueFamilyIndexCount = 2;
-		u32 queueFamilyIndices[2] = { vk_state->queueIndices.graphicsFamily, vk_state->queueIndices.transferFamily };
-		bufferCreateInfo.pQueueFamilyIndices = queueFamilyIndices;
+		CreateBuffer(buffer->size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &buffer->handle, &buffer->memory);
 
-		if (VK_SUCCESS != vkCreateBuffer(vk_state->device, &bufferCreateInfo, vk_state->allocator, &buffer->handle))
-			GRASSERT(false);
-
-		VkMemoryRequirements memoryRequirements;
-		vkGetBufferMemoryRequirements(vk_state->device, buffer->handle, &memoryRequirements);
-
-		VkMemoryAllocateInfo allocateInfo{};
-		allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		allocateInfo.pNext = nullptr;
-		allocateInfo.allocationSize = memoryRequirements.size;
-		allocateInfo.memoryTypeIndex = FindMemoryType(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-		if (VK_SUCCESS != vkAllocateMemory(vk_state->device, &allocateInfo, vk_state->allocator, &buffer->memory))
-			GRASSERT(false);
-
-		vkBindBufferMemory(vk_state->device, buffer->handle, buffer->memory, 0);
 
 		VkBufferMemoryBarrier2 releaseBufferInfo{};
 		releaseBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
@@ -198,7 +148,7 @@ namespace GR
 		semaphoreSubmitInfo.deviceIndex = 0;
 
 		u64 signaledValue;
-		CopyBufferAndTransitionQueue(buffer->handle, stagingBuffer, 1, &semaphoreSubmitInfo, &releaseDependencyInfo, bufferCreateInfo.size, &signaledValue);
+		CopyBufferAndTransitionQueue(buffer->handle, stagingBuffer, 1, &semaphoreSubmitInfo, &releaseDependencyInfo, buffer->size, &signaledValue);
 
 		VkDependencyInfo* acquireDependencyInfo = (VkDependencyInfo*)GRAlloc(sizeof(VkDependencyInfo) + sizeof(VkBufferMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
 		VkBufferMemoryBarrier2* acquireBufferInfo = (VkBufferMemoryBarrier2*)(acquireDependencyInfo + 1);
@@ -265,67 +215,17 @@ namespace GR
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingMemory;
 
-		VkBufferCreateInfo stagingBufferCreateInfo{};
-		stagingBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		stagingBufferCreateInfo.pNext = nullptr;
-		stagingBufferCreateInfo.flags = 0;
-		stagingBufferCreateInfo.size = buffer->size;
-		stagingBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-		stagingBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		stagingBufferCreateInfo.queueFamilyIndexCount = 0;
-		stagingBufferCreateInfo.pQueueFamilyIndices = nullptr;
-
-		if (VK_SUCCESS != vkCreateBuffer(vk_state->device, &stagingBufferCreateInfo, vk_state->allocator, &stagingBuffer))
-			GRASSERT(false);
-
-		VkMemoryRequirements stagingMemoryRequirements;
-		vkGetBufferMemoryRequirements(vk_state->device, stagingBuffer, &stagingMemoryRequirements);
-
-		VkMemoryAllocateInfo stagingAllocateInfo{};
-		stagingAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		stagingAllocateInfo.pNext = nullptr;
-		stagingAllocateInfo.allocationSize = stagingMemoryRequirements.size;
-		stagingAllocateInfo.memoryTypeIndex = FindMemoryType(stagingMemoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-		if (VK_SUCCESS != vkAllocateMemory(vk_state->device, &stagingAllocateInfo, vk_state->allocator, &stagingMemory))
-			GRASSERT(false);
-
-		vkBindBufferMemory(vk_state->device, stagingBuffer, stagingMemory, 0);
+		CreateBuffer(buffer->size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingMemory);
 
 		// ================= copying data into staging buffer ===============================
 		void* data;
-		vkMapMemory(vk_state->device, stagingMemory, 0, stagingBufferCreateInfo.size, 0, &data);
+		vkMapMemory(vk_state->device, stagingMemory, 0, buffer->size, 0, &data);
 		MemCopy(data, indices, (size_t)buffer->size);
 		vkUnmapMemory(vk_state->device, stagingMemory);
 
 		// ================= creating the actual buffer =========================
-		VkBufferCreateInfo bufferCreateInfo{};
-		bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferCreateInfo.pNext = nullptr;
-		bufferCreateInfo.flags = 0;
-		bufferCreateInfo.size = buffer->size;
-		bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-		bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		bufferCreateInfo.queueFamilyIndexCount = 2;
-		u32 queueFamilyIndices[2] = { vk_state->queueIndices.graphicsFamily, vk_state->queueIndices.transferFamily };
-		bufferCreateInfo.pQueueFamilyIndices = queueFamilyIndices;
+		CreateBuffer(buffer->size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &buffer->handle, &buffer->memory);
 
-		if (VK_SUCCESS != vkCreateBuffer(vk_state->device, &bufferCreateInfo, vk_state->allocator, &buffer->handle))
-			GRASSERT(false);
-
-		VkMemoryRequirements memoryRequirements;
-		vkGetBufferMemoryRequirements(vk_state->device, buffer->handle, &memoryRequirements);
-
-		VkMemoryAllocateInfo allocateInfo{};
-		allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		allocateInfo.pNext = nullptr;
-		allocateInfo.allocationSize = memoryRequirements.size;
-		allocateInfo.memoryTypeIndex = FindMemoryType(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-		if (VK_SUCCESS != vkAllocateMemory(vk_state->device, &allocateInfo, vk_state->allocator, &buffer->memory))
-			GRASSERT(false);
-
-		vkBindBufferMemory(vk_state->device, buffer->handle, buffer->memory, 0);
 
 		VkBufferMemoryBarrier2 releaseBufferInfo{};
 		releaseBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
