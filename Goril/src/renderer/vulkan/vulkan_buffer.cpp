@@ -184,18 +184,18 @@ namespace GR
 		vk_state->requestedQueueAcquisitionOperations.Pushback(acquireDependencyInfo);
 
 		// Making sure the staging buffer and memory get deleted when their corresponding command buffer is completed
-		InFlightTemporaryResource inFlightBuffer{};
-		inFlightBuffer.resource = stagingBuffer;
-		inFlightBuffer.Destructor = OneTimeBufferDestructor;
-		inFlightBuffer.signalValue = signaledValue;
+		ResourceDestructionInfo bufferDestructionInfo{};
+		bufferDestructionInfo.resource = stagingBuffer;
+		bufferDestructionInfo.Destructor = OneTimeBufferDestructor;
+		bufferDestructionInfo.signalValue = signaledValue;
 
-		InFlightTemporaryResource inFlightMemory{};
-		inFlightMemory.resource = stagingMemory;
-		inFlightMemory.Destructor = OneTimeMemoryDestructor;
-		inFlightMemory.signalValue = signaledValue;
+		ResourceDestructionInfo memoryDestructionInfo{};
+		memoryDestructionInfo.resource = stagingMemory;
+		memoryDestructionInfo.Destructor = OneTimeMemoryDestructor;
+		memoryDestructionInfo.signalValue = signaledValue;
 
-		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(inFlightBuffer);
-		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(inFlightMemory);
+		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(bufferDestructionInfo);
+		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(memoryDestructionInfo);
 
 		return clientBuffer;
 	}
@@ -303,18 +303,18 @@ namespace GR
 		vk_state->requestedQueueAcquisitionOperations.Pushback(acquireDependencyInfo);
 
 		// Making sure the staging buffer and memory get deleted when their corresponding command buffer is completed
-		InFlightTemporaryResource inFlightBuffer{};
-		inFlightBuffer.resource = stagingBuffer;
-		inFlightBuffer.Destructor = OneTimeBufferDestructor;
-		inFlightBuffer.signalValue = signaledValue;
+		ResourceDestructionInfo bufferDestructionInfo{};
+		bufferDestructionInfo.resource = stagingBuffer;
+		bufferDestructionInfo.Destructor = OneTimeBufferDestructor;
+		bufferDestructionInfo.signalValue = signaledValue;
 
-		InFlightTemporaryResource inFlightMemory{};
-		inFlightMemory.resource = stagingMemory;
-		inFlightMemory.Destructor = OneTimeMemoryDestructor;
-		inFlightMemory.signalValue = signaledValue;
+		ResourceDestructionInfo memoryDestructionInfo{};
+		memoryDestructionInfo.resource = stagingMemory;
+		memoryDestructionInfo.Destructor = OneTimeMemoryDestructor;
+		memoryDestructionInfo.signalValue = signaledValue;
 
-		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(inFlightBuffer);
-		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(inFlightMemory);
+		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(bufferDestructionInfo);
+		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(memoryDestructionInfo);
 
 		return clientBuffer;
 	}

@@ -140,7 +140,7 @@ namespace GR
 		if (!CreateSyncObjects())
 			return false;
 
-		vk_state->singleUseCommandBufferResourcesInFlight = CreateDarrayWithCapacity<InFlightTemporaryResource>(MEM_TAG_RENDERER_SUBSYS, 10); /// TODO: change allocator to renderer local allocator (when it exists)
+		vk_state->singleUseCommandBufferResourcesInFlight = CreateDarrayWithCapacity<ResourceDestructionInfo>(MEM_TAG_RENDERER_SUBSYS, 10); /// TODO: change allocator to renderer local allocator (when it exists)
 		vk_state->requestedQueueAcquisitionOperations = CreateDarrayWithCapacity<VkDependencyInfo*>(MEM_TAG_RENDERER_SUBSYS, 10); /// TODO: change allocator to renderer local allocator (when it exists)
 
 		return true;
@@ -388,7 +388,7 @@ namespace GR
 		signalSemaphores[1].pNext = nullptr;
 		signalSemaphores[1].semaphore = vk_state->frameSemaphore.handle;
 		signalSemaphores[1].value = vk_state->frameSemaphore.submitValue;
-		signalSemaphores[1].stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+		signalSemaphores[1].stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
 		signalSemaphores[1].deviceIndex = 0;
 
 

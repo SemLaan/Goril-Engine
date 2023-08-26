@@ -65,7 +65,7 @@ namespace GR
 
 	typedef void (*PFN_ResourceDestructor)(void* resource);
 
-	struct InFlightTemporaryResource
+	struct ResourceDestructionInfo
 	{
 		void* resource;
 		PFN_ResourceDestructor Destructor;
@@ -106,7 +106,8 @@ namespace GR
 		VulkanSemaphore imageUploadSemaphore;
 		VulkanSemaphore singleUseCommandBufferSemaphore;
 		VulkanSemaphore frameSemaphore;
-		Darray<InFlightTemporaryResource> singleUseCommandBufferResourcesInFlight;
+		Darray<ResourceDestructionInfo> singleUseCommandBufferResourcesInFlight;
+		Darray<ResourceDestructionInfo> resourcesPendingDestruction;
 		Darray<VkDependencyInfo*> requestedQueueAcquisitionOperations;
 		i32 maxFramesInFlight;
 		u32 currentFrame;

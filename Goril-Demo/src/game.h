@@ -1,4 +1,5 @@
 #pragma once
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <core/goril_game.h>
 #include <glm/glm.hpp>
 #include <renderer/buffer.h>

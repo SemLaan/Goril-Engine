@@ -128,14 +128,14 @@ namespace GR
 			return false;
 		}
 
-		InFlightTemporaryResource commandBufferResource{};
-		commandBufferResource.resource = commandBuffer;
-		commandBufferResource.Destructor = SingleUseCommandBufferDestructor;
-		commandBufferResource.signalValue = vk_state->singleUseCommandBufferSemaphore.submitValue;
+		ResourceDestructionInfo commandBufferDestructionInfo{};
+		commandBufferDestructionInfo.resource = commandBuffer;
+		commandBufferDestructionInfo.Destructor = SingleUseCommandBufferDestructor;
+		commandBufferDestructionInfo.signalValue = vk_state->singleUseCommandBufferSemaphore.submitValue;
 
 		*out_signaledValue = vk_state->singleUseCommandBufferSemaphore.submitValue;
 
-		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(commandBufferResource);
+		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(commandBufferDestructionInfo);
 
 		return true;
 	}
