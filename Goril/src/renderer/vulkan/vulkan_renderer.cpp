@@ -299,17 +299,45 @@ namespace GR
 		EndCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame]);
 
 		// Submitting command buffer
-		VkSemaphoreSubmitInfo waitSemaphore{};
-		waitSemaphore.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		waitSemaphore.semaphore = vk_state->imageAvailableSemaphores[vk_state->currentFrame];
-		waitSemaphore.stageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		const u32 waitSemaphoreCount = 4; // 1 swapchain image acquisition, 3 resourse upload waits
+		VkSemaphoreSubmitInfo waitSemaphores[waitSemaphoreCount]{};
+		
+		// Swapchain image acquisition semaphore
+		waitSemaphores[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		waitSemaphores[0].pNext = nullptr;
+		waitSemaphores[0].semaphore = vk_state->imageAvailableSemaphores[vk_state->currentFrame];
+		waitSemaphores[0].value = 0;
+		waitSemaphores[0].stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+		waitSemaphores[0].deviceIndex = 0;
+
+		// Resource upload semaphores
+		waitSemaphores[1].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		waitSemaphores[1].pNext = nullptr;
+		waitSemaphores[1].semaphore = vk_state->vertexUploadSemaphore.handle;
+		waitSemaphores[1].value = vk_state->vertexUploadSemaphore.submitValue;
+		waitSemaphores[1].stageMask = VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT;
+		waitSemaphores[1].deviceIndex = 0;
+
+		waitSemaphores[2].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		waitSemaphores[2].pNext = nullptr;
+		waitSemaphores[2].semaphore = vk_state->indexUploadSemaphore.handle;
+		waitSemaphores[2].value = vk_state->indexUploadSemaphore.submitValue;
+		waitSemaphores[2].stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT;
+		waitSemaphores[2].deviceIndex = 0;
+
+		waitSemaphores[3].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		waitSemaphores[3].pNext = nullptr;
+		waitSemaphores[3].semaphore = vk_state->imageUploadSemaphore.handle;
+		waitSemaphores[3].value = vk_state->imageUploadSemaphore.submitValue;
+		waitSemaphores[3].stageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
+		waitSemaphores[3].deviceIndex = 0;
 
 		VkSemaphoreSubmitInfo signalSemaphore{};
 		signalSemaphore.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 		signalSemaphore.semaphore = vk_state->renderFinishedSemaphores[vk_state->currentFrame];
 		signalSemaphore.stageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-		SubmitCommandBuffers(1, &waitSemaphore, 1, &signalSemaphore, 1, vk_state->commandBuffers[vk_state->currentFrame], vk_state->inFlightFences[vk_state->currentFrame]);
+		SubmitCommandBuffers(waitSemaphoreCount, waitSemaphores, 1, &signalSemaphore, 1, vk_state->commandBuffers[vk_state->currentFrame], vk_state->inFlightFences[vk_state->currentFrame]);
 
 		VkSwapchainKHR swapchains[] = { vk_state->swapchain };
 
