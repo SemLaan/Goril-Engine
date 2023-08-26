@@ -141,6 +141,7 @@ namespace GR
 			return false;
 
 		vk_state->singleUseCommandBufferResourcesInFlight = CreateDarrayWithCapacity<InFlightTemporaryResource>(MEM_TAG_RENDERER_SUBSYS, 10); /// TODO: change allocator to renderer local allocator (when it exists)
+		vk_state->requestedQueueAcquisitionOperations = CreateDarrayWithCapacity<VkDependencyInfo*>(MEM_TAG_RENDERER_SUBSYS, 10); /// TODO: change allocator to renderer local allocator (when it exists)
 
 		return true;
 	}
@@ -163,6 +164,9 @@ namespace GR
 
 		if (vk_state->singleUseCommandBufferResourcesInFlight.GetRawElements())
 			vk_state->singleUseCommandBufferResourcesInFlight.Deinitialize();
+
+		if (vk_state->requestedQueueAcquisitionOperations.GetRawElements())
+			vk_state->requestedQueueAcquisitionOperations.Deinitialize();
 
 		// ================================ Destroy sync objects if they were created ===========================================
 		DestroySyncObjects();
@@ -274,6 +278,15 @@ namespace GR
 		// ===================================== Begin command buffer recording =========================================
 		ResetAndBeginCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame]);
 		VkCommandBuffer currentCommandBuffer = vk_state->commandBuffers[vk_state->currentFrame]->handle;
+
+		// acquire ownership of all uploaded resources
+		for (u32 i = 0; i < vk_state->requestedQueueAcquisitionOperations.Size(); ++i)
+		{
+			vkCmdPipelineBarrier2(currentCommandBuffer, vk_state->requestedQueueAcquisitionOperations[i]);
+			GRFree(vk_state->requestedQueueAcquisitionOperations[i]);
+		}
+
+		vk_state->requestedQueueAcquisitionOperations.Clear();
 
 		/// TODO: begin renderpass function
 		VkClearValue clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };

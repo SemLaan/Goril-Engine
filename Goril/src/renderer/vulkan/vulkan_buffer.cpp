@@ -8,9 +8,6 @@
 namespace GR
 {
 
-	static void CopyBufferAndTransitionQueue(VkBuffer dstBuffer, VkBuffer srcBuffer, VkDependencyInfo* pDependencyInfo, VkDeviceSize size, u64* out_signaledValue);
-
-
 	u32 FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags requiredFlags)
 	{
 		VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
@@ -28,7 +25,7 @@ namespace GR
 		return 0;
 	}
 
-	static void CopyBufferAndTransitionQueue(VkBuffer dstBuffer, VkBuffer srcBuffer, VkDependencyInfo* pDependencyInfo, VkDeviceSize size, u64* out_signaledValue)
+	static void CopyBufferAndTransitionQueue(VkBuffer dstBuffer, VkBuffer srcBuffer, u32 signalSemaphoreCount, VkSemaphoreSubmitInfo* pSemaphoreInfos, VkDependencyInfo* pDependencyInfo, VkDeviceSize size, u64* out_signaledValue)
 	{
 		CommandBuffer* transferCommandBuffer;
 		AllocateAndBeginSingleUseCommandBuffer(&vk_state->transferQueue, &transferCommandBuffer);
@@ -43,7 +40,7 @@ namespace GR
 		if (pDependencyInfo)
 			vkCmdPipelineBarrier2(transferCommandBuffer->handle, pDependencyInfo);
 
-		EndSubmitAndFreeSingleUseCommandBuffer(transferCommandBuffer, out_signaledValue);
+		EndSubmitAndFreeSingleUseCommandBuffer(transferCommandBuffer, signalSemaphoreCount, pSemaphoreInfos, out_signaledValue);
 	}
 
 	b8 CreateBuffer(VkDeviceSize size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkBuffer* out_buffer, VkDeviceMemory* out_memory)
@@ -145,7 +142,7 @@ namespace GR
 		bufferCreateInfo.flags = 0;
 		bufferCreateInfo.size = buffer->size;
 		bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-		bufferCreateInfo.sharingMode = VK_SHARING_MODE_CONCURRENT; /// TODO: use memory barriers instead of concurrent
+		bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		bufferCreateInfo.queueFamilyIndexCount = 2;
 		u32 queueFamilyIndices[2] = { vk_state->queueIndices.graphicsFamily, vk_state->queueIndices.transferFamily };
 		bufferCreateInfo.pQueueFamilyIndices = queueFamilyIndices;
@@ -167,20 +164,68 @@ namespace GR
 
 		vkBindBufferMemory(vk_state->device, buffer->handle, buffer->memory, 0);
 
-		VkDependencyInfo dependencyInfo{};
-		dependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
-		dependencyInfo.pNext = nullptr;
-		dependencyInfo.dependencyFlags;
-		dependencyInfo.memoryBarrierCount;
-		dependencyInfo.pMemoryBarriers;
-		dependencyInfo.bufferMemoryBarrierCount;
-		dependencyInfo.pBufferMemoryBarriers;
-		dependencyInfo.imageMemoryBarrierCount;
-		dependencyInfo.pImageMemoryBarriers;
-		/// TODO: make this use dependency info
+		VkBufferMemoryBarrier2 releaseBufferInfo{};
+		releaseBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
+		releaseBufferInfo.pNext = nullptr;
+		releaseBufferInfo.srcStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
+		releaseBufferInfo.srcAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT;
+		releaseBufferInfo.dstStageMask = 0;  // IGNORED because it is a queue family release operation
+		releaseBufferInfo.dstAccessMask = 0; // IGNORED because it is a queue family release operation
+		releaseBufferInfo.srcQueueFamilyIndex = vk_state->transferQueue.index;
+		releaseBufferInfo.dstQueueFamilyIndex = vk_state->graphicsQueue.index;
+		releaseBufferInfo.buffer = buffer->handle;
+		releaseBufferInfo.offset = 0;
+		releaseBufferInfo.size = buffer->size;
+
+		VkDependencyInfo releaseDependencyInfo{};
+		releaseDependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+		releaseDependencyInfo.pNext = nullptr;
+		releaseDependencyInfo.dependencyFlags = 0;
+		releaseDependencyInfo.memoryBarrierCount = 0;
+		releaseDependencyInfo.pMemoryBarriers = nullptr;
+		releaseDependencyInfo.bufferMemoryBarrierCount = 1;
+		releaseDependencyInfo.pBufferMemoryBarriers = &releaseBufferInfo;
+		releaseDependencyInfo.imageMemoryBarrierCount = 0;
+		releaseDependencyInfo.pImageMemoryBarriers = nullptr;
+
+		vk_state->vertexUploadSemaphore.submitValue++;
+		VkSemaphoreSubmitInfo semaphoreSubmitInfo{};
+		semaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		semaphoreSubmitInfo.pNext = nullptr;
+		semaphoreSubmitInfo.semaphore = vk_state->vertexUploadSemaphore.handle;
+		semaphoreSubmitInfo.value = vk_state->vertexUploadSemaphore.submitValue;
+		semaphoreSubmitInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_TRANSFER_BIT;
+		semaphoreSubmitInfo.deviceIndex = 0;
 
 		u64 signaledValue;
-		CopyBufferAndTransitionQueue(buffer->handle, stagingBuffer, nullptr, bufferCreateInfo.size, &signaledValue);
+		CopyBufferAndTransitionQueue(buffer->handle, stagingBuffer, 1, &semaphoreSubmitInfo, &releaseDependencyInfo, bufferCreateInfo.size, &signaledValue);
+
+		VkDependencyInfo* acquireDependencyInfo = (VkDependencyInfo*)GRAlloc(sizeof(VkDependencyInfo) + sizeof(VkBufferMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
+		VkBufferMemoryBarrier2* acquireBufferInfo = (VkBufferMemoryBarrier2*)(acquireDependencyInfo + 1);
+		
+		acquireBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
+		acquireBufferInfo->pNext = nullptr;
+		acquireBufferInfo->srcStageMask = 0;  // IGNORED because it is a queue family release operation
+		acquireBufferInfo->srcAccessMask = 0; // IGNORED because it is a queue family release operation
+		acquireBufferInfo->dstStageMask = VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT;
+		acquireBufferInfo->dstAccessMask = VK_ACCESS_2_MEMORY_READ_BIT;
+		acquireBufferInfo->srcQueueFamilyIndex = vk_state->transferQueue.index;
+		acquireBufferInfo->dstQueueFamilyIndex = vk_state->graphicsQueue.index;
+		acquireBufferInfo->buffer = buffer->handle;
+		acquireBufferInfo->offset = 0;
+		acquireBufferInfo->size = buffer->size;
+
+		acquireDependencyInfo->sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+		acquireDependencyInfo->pNext = nullptr;
+		acquireDependencyInfo->dependencyFlags = 0;
+		acquireDependencyInfo->memoryBarrierCount = 0;
+		acquireDependencyInfo->pMemoryBarriers = nullptr;
+		acquireDependencyInfo->bufferMemoryBarrierCount = 1;
+		acquireDependencyInfo->pBufferMemoryBarriers = acquireBufferInfo;
+		acquireDependencyInfo->imageMemoryBarrierCount = 0;
+		acquireDependencyInfo->pImageMemoryBarriers = nullptr;
+
+		vk_state->requestedQueueAcquisitionOperations.Pushback(acquireDependencyInfo);
 
 		InFlightTemporaryResource inFlightBuffer{};
 		inFlightBuffer.resource = stagingBuffer;
@@ -260,7 +305,7 @@ namespace GR
 		bufferCreateInfo.flags = 0;
 		bufferCreateInfo.size = buffer->size;
 		bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-		bufferCreateInfo.sharingMode = VK_SHARING_MODE_CONCURRENT; /// TODO: use memory barriers instead of concurrent
+		bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		bufferCreateInfo.queueFamilyIndexCount = 2;
 		u32 queueFamilyIndices[2] = { vk_state->queueIndices.graphicsFamily, vk_state->queueIndices.transferFamily };
 		bufferCreateInfo.pQueueFamilyIndices = queueFamilyIndices;
@@ -282,20 +327,68 @@ namespace GR
 
 		vkBindBufferMemory(vk_state->device, buffer->handle, buffer->memory, 0);
 
-		VkDependencyInfo dependencyInfo{};
-		dependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
-		dependencyInfo.pNext = nullptr;
-		dependencyInfo.dependencyFlags;
-		dependencyInfo.memoryBarrierCount;
-		dependencyInfo.pMemoryBarriers;
-		dependencyInfo.bufferMemoryBarrierCount;
-		dependencyInfo.pBufferMemoryBarriers;
-		dependencyInfo.imageMemoryBarrierCount;
-		dependencyInfo.pImageMemoryBarriers;
-		/// TODO: make this use dependency info
+		VkBufferMemoryBarrier2 releaseBufferInfo{};
+		releaseBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
+		releaseBufferInfo.pNext = nullptr;
+		releaseBufferInfo.srcStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
+		releaseBufferInfo.srcAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT;
+		releaseBufferInfo.dstStageMask = 0;  // IGNORED because it is a queue family release operation
+		releaseBufferInfo.dstAccessMask = 0; // IGNORED because it is a queue family release operation
+		releaseBufferInfo.srcQueueFamilyIndex = vk_state->transferQueue.index;
+		releaseBufferInfo.dstQueueFamilyIndex = vk_state->graphicsQueue.index;
+		releaseBufferInfo.buffer = buffer->handle;
+		releaseBufferInfo.offset = 0;
+		releaseBufferInfo.size = buffer->size;
+
+		VkDependencyInfo releaseDependencyInfo{};
+		releaseDependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+		releaseDependencyInfo.pNext = nullptr;
+		releaseDependencyInfo.dependencyFlags = 0;
+		releaseDependencyInfo.memoryBarrierCount = 0;
+		releaseDependencyInfo.pMemoryBarriers = nullptr;
+		releaseDependencyInfo.bufferMemoryBarrierCount = 1;
+		releaseDependencyInfo.pBufferMemoryBarriers = &releaseBufferInfo;
+		releaseDependencyInfo.imageMemoryBarrierCount = 0;
+		releaseDependencyInfo.pImageMemoryBarriers = nullptr;
+
+		vk_state->indexUploadSemaphore.submitValue++;
+		VkSemaphoreSubmitInfo semaphoreSubmitInfo{};
+		semaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		semaphoreSubmitInfo.pNext = nullptr;
+		semaphoreSubmitInfo.semaphore = vk_state->indexUploadSemaphore.handle;
+		semaphoreSubmitInfo.value = vk_state->indexUploadSemaphore.submitValue;
+		semaphoreSubmitInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_TRANSFER_BIT;
+		semaphoreSubmitInfo.deviceIndex = 0;
 
 		u64 signaledValue;
-		CopyBufferAndTransitionQueue(buffer->handle, stagingBuffer, nullptr, buffer->size, &signaledValue);
+		CopyBufferAndTransitionQueue(buffer->handle, stagingBuffer, 1, &semaphoreSubmitInfo, &releaseDependencyInfo, buffer->size, &signaledValue);
+
+		VkDependencyInfo* acquireDependencyInfo = (VkDependencyInfo*)GRAlloc(sizeof(VkDependencyInfo) + sizeof(VkBufferMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
+		VkBufferMemoryBarrier2* acquireBufferInfo = (VkBufferMemoryBarrier2*)(acquireDependencyInfo + 1);
+
+		acquireBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
+		acquireBufferInfo->pNext = nullptr;
+		acquireBufferInfo->srcStageMask = 0;  // IGNORED because it is a queue family release operation
+		acquireBufferInfo->srcAccessMask = 0; // IGNORED because it is a queue family release operation
+		acquireBufferInfo->dstStageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT;
+		acquireBufferInfo->dstAccessMask = VK_ACCESS_2_MEMORY_READ_BIT;
+		acquireBufferInfo->srcQueueFamilyIndex = vk_state->transferQueue.index;
+		acquireBufferInfo->dstQueueFamilyIndex = vk_state->graphicsQueue.index;
+		acquireBufferInfo->buffer = buffer->handle;
+		acquireBufferInfo->offset = 0;
+		acquireBufferInfo->size = buffer->size;
+
+		acquireDependencyInfo->sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+		acquireDependencyInfo->pNext = nullptr;
+		acquireDependencyInfo->dependencyFlags = 0;
+		acquireDependencyInfo->memoryBarrierCount = 0;
+		acquireDependencyInfo->pMemoryBarriers = nullptr;
+		acquireDependencyInfo->bufferMemoryBarrierCount = 1;
+		acquireDependencyInfo->pBufferMemoryBarriers = acquireBufferInfo;
+		acquireDependencyInfo->imageMemoryBarrierCount = 0;
+		acquireDependencyInfo->pImageMemoryBarriers = nullptr;
+
+		vk_state->requestedQueueAcquisitionOperations.Pushback(acquireDependencyInfo);
 
 		InFlightTemporaryResource inFlightBuffer{};
 		inFlightBuffer.resource = stagingBuffer;

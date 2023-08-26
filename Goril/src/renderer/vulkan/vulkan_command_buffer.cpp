@@ -78,7 +78,7 @@ namespace GR
 		GRFree(commandBuffer);
 	}
 
-	b8 EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u64* out_signaledValue)
+	b8 EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 signalSemaphoreCount, VkSemaphoreSubmitInfo* pSemaphoreSubmitInfos, u64* out_signaledValue)
 	{
 		if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer->handle))
 		{
@@ -98,8 +98,14 @@ namespace GR
 		semaphoreInfo.pNext = nullptr;
 		semaphoreInfo.semaphore = vk_state->singleUseCommandBufferSemaphore.handle;
 		semaphoreInfo.value = vk_state->singleUseCommandBufferSemaphore.submitValue;
-		semaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT; ///TODO: try setting this to all commands
+		semaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
 		semaphoreInfo.deviceIndex = 0;
+
+		Darray<VkSemaphoreSubmitInfo> semaphoreInfos = CreateDarrayWithCapacity<VkSemaphoreSubmitInfo>(MEM_TAG_RENDERER_SUBSYS, signalSemaphoreCount + 1, &g_Allocators->temporaryAllocator);
+		semaphoreInfos.Pushback(semaphoreInfo);
+
+		for (u32 i = 0; i < signalSemaphoreCount; ++i)
+			semaphoreInfos.Pushback(pSemaphoreSubmitInfos[i]);
 
 		VkSubmitInfo2 submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
@@ -109,10 +115,12 @@ namespace GR
 		submitInfo.pWaitSemaphoreInfos = nullptr;
 		submitInfo.commandBufferInfoCount = 1;
 		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = 1;
-		submitInfo.pSignalSemaphoreInfos = &semaphoreInfo;
+		submitInfo.signalSemaphoreInfoCount = semaphoreInfos.Size();
+		submitInfo.pSignalSemaphoreInfos = semaphoreInfos.GetRawElements();
 
 		VkResult result = vkQueueSubmit2(commandBuffer->queueFamily->handle, 1, &submitInfo, VK_NULL_HANDLE);
+
+		semaphoreInfos.Deinitialize();
 
 		if (VK_SUCCESS != result)
 		{
