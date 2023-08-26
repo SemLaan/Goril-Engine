@@ -236,11 +236,38 @@ namespace GR
 
 		///TODO: create compute command pool
 
+		// Create semaphores
+		vk_state->graphicsQueue.semaphore.submitValue = 0;
+		vk_state->transferQueue.semaphore.submitValue = 0;
+
+		VkSemaphoreTypeCreateInfo semaphoreTypeInfo{};
+		semaphoreTypeInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
+		semaphoreTypeInfo.pNext = nullptr;
+		semaphoreTypeInfo.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE;
+		semaphoreTypeInfo.initialValue = 0;
+
+		VkSemaphoreCreateInfo timelineSemaphoreCreateInfo{};
+		timelineSemaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		timelineSemaphoreCreateInfo.pNext = &semaphoreTypeInfo;
+		timelineSemaphoreCreateInfo.flags = 0;
+
+		if (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->graphicsQueue.semaphore.handle) ||
+			VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->transferQueue.semaphore.handle))
+		{
+			GRFATAL("Failed to create sync objects");
+			return false;
+		}
+
 		return true;
 	}
 
 	void DestroyLogicalDevice(RendererState* state)
 	{
+		if (vk_state->graphicsQueue.semaphore.handle)
+			vkDestroySemaphore(vk_state->device, vk_state->graphicsQueue.semaphore.handle, vk_state->allocator);
+		if (vk_state->transferQueue.semaphore.handle)
+			vkDestroySemaphore(vk_state->device, vk_state->transferQueue.semaphore.handle, vk_state->allocator);
+
 		if (vk_state->graphicsQueue.commandPool)
 			vkDestroyCommandPool(vk_state->device, vk_state->graphicsQueue.commandPool, vk_state->allocator);
 

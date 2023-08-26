@@ -40,9 +40,9 @@ namespace GR
 
 	struct ResourceDestructionInfo
 	{
-		void* resource;
-		PFN_ResourceDestructor Destructor;
-		u64 signalValue;
+		void*					resource;
+		PFN_ResourceDestructor	Destructor;
+		u64						signalValue;
 	};
 
 	struct QueueFamily
@@ -50,6 +50,7 @@ namespace GR
 		VkQueue handle;
 		VkCommandPool commandPool;
 		Darray<ResourceDestructionInfo> resourcesPendingDestruction;
+		VulkanSemaphore semaphore;
 		u32 index;
 	};
 
@@ -105,9 +106,8 @@ namespace GR
 		VulkanSemaphore vertexUploadSemaphore;
 		VulkanSemaphore indexUploadSemaphore;
 		VulkanSemaphore imageUploadSemaphore;
-		VulkanSemaphore singleUseCommandBufferSemaphore;
 		VulkanSemaphore frameSemaphore;
-		Darray<VkDependencyInfo*> requestedQueueAcquisitionOperations;
+		Darray<VkDependencyInfo*> requestedQueueAcquisitionOperations; /// TODO: make this part of the queuefamily
 		i32 maxFramesInFlight;
 		u32 currentFrame;
 		u32 currentSwapchainImageIndex;

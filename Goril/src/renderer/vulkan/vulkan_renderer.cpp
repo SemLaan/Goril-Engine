@@ -152,7 +152,7 @@ namespace GR
 		if (queue->resourcesPendingDestruction.Size() != 0)
 		{
 			u64 semaphoreValue;
-			vkGetSemaphoreCounterValue(vk_state->device, vk_state->singleUseCommandBufferSemaphore.handle, &semaphoreValue);
+			vkGetSemaphoreCounterValue(vk_state->device, queue->semaphore.handle, &semaphoreValue);
 
 			// Looping from the end of the list to the beginning so we can remove elements without ruining the loop
 			for (i32 i = (i32)queue->resourcesPendingDestruction.Size() - 1; i >= 0; --i)
@@ -396,7 +396,6 @@ namespace GR
 		signalSemaphores[1].value = vk_state->frameSemaphore.submitValue;
 		signalSemaphores[1].stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
 		signalSemaphores[1].deviceIndex = 0;
-
 
 		SubmitCommandBuffers(waitSemaphoreCount, waitSemaphores, signalSemaphoreCount, signalSemaphores, 1, vk_state->commandBuffers[vk_state->currentFrame], nullptr);
 
