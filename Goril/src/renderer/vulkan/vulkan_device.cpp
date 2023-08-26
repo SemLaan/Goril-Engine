@@ -154,9 +154,15 @@ namespace GR
 		VkPhysicalDeviceFeatures deviceFeatures{};
 		/// TODO: add required device features here, these should be retrieved from the application config
 
+		/// Put new extension features above here and make the extension feature under this point to that new feature
+		VkPhysicalDeviceTimelineSemaphoreFeatures timelineSemaphoreFeatures{};
+		timelineSemaphoreFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES;
+		timelineSemaphoreFeatures.pNext = nullptr;
+		timelineSemaphoreFeatures.timelineSemaphore = VK_TRUE;
+
 		VkPhysicalDeviceSynchronization2Features synchronization2Features{};
 		synchronization2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
-		synchronization2Features.pNext = nullptr; /// Add more extension features here
+		synchronization2Features.pNext = &timelineSemaphoreFeatures;
 		synchronization2Features.synchronization2 = VK_TRUE;
 
 		VkPhysicalDeviceFeatures2 deviceFeatures2{};

@@ -88,6 +88,7 @@ namespace GR
 		requiredDeviceExtensions.Initialize(MEM_TAG_RENDERER_SUBSYS);
 		requiredDeviceExtensions.Pushback(&VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		requiredDeviceExtensions.Pushback(&VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
+		requiredDeviceExtensions.Pushback(&VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
 		
 		if (!SelectPhysicalDevice(vk_state, &requiredDeviceExtensions))
 		{
