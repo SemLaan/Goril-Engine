@@ -8,7 +8,6 @@ namespace GR
 	b8 InitializeRenderer();
 	void ShutdownRenderer();
 
-	void WaitForGPUIdle();
 	void RecreateSwapchain();
 
 	b8 BeginFrame();

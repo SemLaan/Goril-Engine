@@ -200,14 +200,24 @@ namespace GR
 		return clientBuffer;
 	}
 
-	void DestroyVertexBuffer(VertexBuffer clientBuffer)
+	void VertexBufferDestructor(void* resource)
 	{
-		VulkanVertexBuffer* buffer = (VulkanVertexBuffer*)clientBuffer.internalState;
+		VulkanVertexBuffer* buffer = (VulkanVertexBuffer*)resource;
 
 		vkDestroyBuffer(vk_state->device, buffer->handle, vk_state->allocator);
 		vkFreeMemory(vk_state->device, buffer->memory, vk_state->allocator);
 
 		GRFree(buffer);
+	}
+
+	void DestroyVertexBuffer(VertexBuffer clientBuffer)
+	{
+		ResourceDestructionInfo vertexBufferDestructionInfo{};
+		vertexBufferDestructionInfo.resource = clientBuffer.internalState;
+		vertexBufferDestructionInfo.Destructor = VertexBufferDestructor;
+		vertexBufferDestructionInfo.signalValue = vk_state->graphicsQueue.semaphore.submitValue;
+
+		vk_state->graphicsQueue.resourcesPendingDestruction.Pushback(vertexBufferDestructionInfo);
 	}
 
 	IndexBuffer CreateIndexBuffer(u32* indices, size_t indexCount)
@@ -319,13 +329,23 @@ namespace GR
 		return clientBuffer;
 	}
 
-	void DestroyIndexBuffer(IndexBuffer clientBuffer)
+	void IndexBufferDestructor(void* resource)
 	{
-		VulkanIndexBuffer* buffer = (VulkanIndexBuffer*)clientBuffer.internalState;
+		VulkanIndexBuffer* buffer = (VulkanIndexBuffer*)resource;
 
 		vkDestroyBuffer(vk_state->device, buffer->handle, vk_state->allocator);
 		vkFreeMemory(vk_state->device, buffer->memory, vk_state->allocator);
 
 		GRFree(buffer);
+	}
+
+	void DestroyIndexBuffer(IndexBuffer clientBuffer)
+	{
+		ResourceDestructionInfo indexBufferDestructionInfo{};
+		indexBufferDestructionInfo.resource = clientBuffer.internalState;
+		indexBufferDestructionInfo.Destructor = IndexBufferDestructor;
+		indexBufferDestructionInfo.signalValue = vk_state->graphicsQueue.semaphore.submitValue;
+
+		vk_state->graphicsQueue.resourcesPendingDestruction.Pushback(indexBufferDestructionInfo);
 	}
 }

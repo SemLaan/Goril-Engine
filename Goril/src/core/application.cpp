@@ -80,7 +80,6 @@ namespace GR
 		UnregisterEventListener(EVCODE_QUIT, OnQuit);
 		UnregisterEventListener(EVCODE_WINDOW_RESIZED, OnResize);
 		UnregisterEventListener(EVCODE_KEY_DOWN, OnKeyDown);
-		WaitForGPUIdle();
 		gameInstance->Shutdown();
 
 		return true;

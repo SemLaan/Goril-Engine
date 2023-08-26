@@ -232,11 +232,6 @@ namespace GR
 		vk_state = nullptr;
 	}
 
-	void WaitForGPUIdle()
-	{
-		vkDeviceWaitIdle(vk_state->device);
-	}
-
 	void RecreateSwapchain()
 	{
 		vkDeviceWaitIdle(vk_state->device);
