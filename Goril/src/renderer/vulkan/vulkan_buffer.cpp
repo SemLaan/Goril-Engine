@@ -93,6 +93,7 @@ namespace GR
 
 	VertexBuffer CreateVertexBuffer(void* vertices, size_t size)
 	{
+		// Allocating memory for the buffer
 		VertexBuffer clientBuffer;
 		clientBuffer.internalState = GRAlloc(sizeof(VulkanVertexBuffer), MEM_TAG_VERTEX_BUFFER);
 		VulkanVertexBuffer* buffer = (VulkanVertexBuffer*)clientBuffer.internalState;
@@ -113,7 +114,7 @@ namespace GR
 		// ================= creating the actual buffer =========================
 		CreateBuffer(buffer->size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &buffer->handle, &buffer->memory);
 
-
+		// Creating the buffer memory barrier for the queue family release operation
 		VkBufferMemoryBarrier2 releaseBufferInfo{};
 		releaseBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
 		releaseBufferInfo.pNext = nullptr;
@@ -138,6 +139,7 @@ namespace GR
 		releaseDependencyInfo.imageMemoryBarrierCount = 0;
 		releaseDependencyInfo.pImageMemoryBarriers = nullptr;
 
+		// Submitting the semaphore that can let other queues know when this vertex buffer has been uploaded
 		vk_state->vertexUploadSemaphore.submitValue++;
 		VkSemaphoreSubmitInfo semaphoreSubmitInfo{};
 		semaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
@@ -147,9 +149,13 @@ namespace GR
 		semaphoreSubmitInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_TRANSFER_BIT;
 		semaphoreSubmitInfo.deviceIndex = 0;
 
-		u64 signaledValue;
+		// Copying the buffer to the GPU - this function returns before the buffer is actually copied
+		u64 signaledValue; // This value indicates at what point in time the command buffer that executes the copy is finished, used for deleting staging buffer and memory
 		CopyBufferAndTransitionQueue(buffer->handle, stagingBuffer, 1, &semaphoreSubmitInfo, &releaseDependencyInfo, buffer->size, &signaledValue);
 
+		// Creating the buffer memory barrier for the queue family acquire operation
+		// This is put in the requestedQueueAcquisitionOperations list and will be submitted as a command in the draw loop, 
+		// also synced with vertex upload semaphore, so ownership isn't acquired before it is released
 		VkDependencyInfo* acquireDependencyInfo = (VkDependencyInfo*)GRAlloc(sizeof(VkDependencyInfo) + sizeof(VkBufferMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
 		VkBufferMemoryBarrier2* acquireBufferInfo = (VkBufferMemoryBarrier2*)(acquireDependencyInfo + 1);
 		
@@ -177,6 +183,7 @@ namespace GR
 
 		vk_state->requestedQueueAcquisitionOperations.Pushback(acquireDependencyInfo);
 
+		// Making sure the staging buffer and memory get deleted when their corresponding command buffer is completed
 		InFlightTemporaryResource inFlightBuffer{};
 		inFlightBuffer.resource = stagingBuffer;
 		inFlightBuffer.Destructor = OneTimeBufferDestructor;
@@ -226,7 +233,7 @@ namespace GR
 		// ================= creating the actual buffer =========================
 		CreateBuffer(buffer->size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &buffer->handle, &buffer->memory);
 
-
+		// Creating the buffer memory barrier for the queue family release operation
 		VkBufferMemoryBarrier2 releaseBufferInfo{};
 		releaseBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
 		releaseBufferInfo.pNext = nullptr;
@@ -251,6 +258,7 @@ namespace GR
 		releaseDependencyInfo.imageMemoryBarrierCount = 0;
 		releaseDependencyInfo.pImageMemoryBarriers = nullptr;
 
+		// Submitting the semaphore that can let other queues know when this index buffer has been uploaded
 		vk_state->indexUploadSemaphore.submitValue++;
 		VkSemaphoreSubmitInfo semaphoreSubmitInfo{};
 		semaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
@@ -260,9 +268,13 @@ namespace GR
 		semaphoreSubmitInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_TRANSFER_BIT;
 		semaphoreSubmitInfo.deviceIndex = 0;
 
-		u64 signaledValue;
+		// Copying the buffer to the GPU - this function returns before the buffer is actually copied
+		u64 signaledValue; // This value indicates at what point in time the command buffer that executes the copy is finished, used for deleting staging buffer and memory
 		CopyBufferAndTransitionQueue(buffer->handle, stagingBuffer, 1, &semaphoreSubmitInfo, &releaseDependencyInfo, buffer->size, &signaledValue);
 
+		// Creating the buffer memory barrier for the queue family acquire operation
+		// This is put in the requestedQueueAcquisitionOperations list and will be submitted as a command in the draw loop, 
+		// also synced with index upload semaphore, so ownership isn't acquired before it is released
 		VkDependencyInfo* acquireDependencyInfo = (VkDependencyInfo*)GRAlloc(sizeof(VkDependencyInfo) + sizeof(VkBufferMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
 		VkBufferMemoryBarrier2* acquireBufferInfo = (VkBufferMemoryBarrier2*)(acquireDependencyInfo + 1);
 
@@ -290,6 +302,7 @@ namespace GR
 
 		vk_state->requestedQueueAcquisitionOperations.Pushback(acquireDependencyInfo);
 
+		// Making sure the staging buffer and memory get deleted when their corresponding command buffer is completed
 		InFlightTemporaryResource inFlightBuffer{};
 		inFlightBuffer.resource = stagingBuffer;
 		inFlightBuffer.Destructor = OneTimeBufferDestructor;

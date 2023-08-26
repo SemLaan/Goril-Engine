@@ -5,6 +5,7 @@
 
 namespace GR
 {
+	// Creates VkBuffer and VkDeviceMemory objects for a buffer with the specified size and flags
 	b8 CreateBuffer(VkDeviceSize size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkBuffer* out_buffer, VkDeviceMemory* out_memory);
 
 	/// TODO: make custom vulkan allocator and move this there
