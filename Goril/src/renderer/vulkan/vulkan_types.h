@@ -63,6 +63,15 @@ namespace GR
 		u32 transferFamily;
 	};
 
+	typedef void (*PFN_ResourceDestructor)(void* resource);
+
+	struct InFlightTemporaryResource
+	{
+		void* resource;
+		PFN_ResourceDestructor Destructor;
+		u64 signalValue;
+	};
+
 	struct RendererState
 	{
 		VkInstance instance;
@@ -96,6 +105,8 @@ namespace GR
 		VulkanSemaphore vertexUploadSemaphore;
 		VulkanSemaphore indexUploadSemaphore;
 		VulkanSemaphore imageUploadSemaphore;
+		VulkanSemaphore singleUseCommandBufferSemaphore;
+		Darray<InFlightTemporaryResource> singleUseCommandBufferResourcesInFlight;
 		i32 maxFramesInFlight;
 		u32 currentFrame;
 		u32 currentSwapchainImageIndex;

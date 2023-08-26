@@ -8,6 +8,9 @@
 namespace GR
 {
 
+	static void CopyBufferAndTransitionQueue(VkBuffer dstBuffer, VkBuffer srcBuffer, VkDependencyInfo* pDependencyInfo, VkDeviceSize size, u64* out_signaledValue);
+
+
 	u32 FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags requiredFlags)
 	{
 		VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
@@ -25,7 +28,7 @@ namespace GR
 		return 0;
 	}
 
-	static void CopyBuffer(VkBuffer dstBuffer, VkBuffer srcBuffer, VkDeviceSize size)
+	static void CopyBufferAndTransitionQueue(VkBuffer dstBuffer, VkBuffer srcBuffer, VkDependencyInfo* pDependencyInfo, VkDeviceSize size, u64* out_signaledValue)
 	{
 		CommandBuffer* transferCommandBuffer;
 		AllocateAndBeginSingleUseCommandBuffer(&vk_state->transferQueue, &transferCommandBuffer);
@@ -37,7 +40,10 @@ namespace GR
 
 		vkCmdCopyBuffer(transferCommandBuffer->handle, srcBuffer, dstBuffer, 1, &copyRegion);
 
-		EndSubmitAndFreeSingleUseCommandBuffer(transferCommandBuffer, true);
+		if (pDependencyInfo)
+			vkCmdPipelineBarrier2(transferCommandBuffer->handle, pDependencyInfo);
+
+		EndSubmitAndFreeSingleUseCommandBuffer(transferCommandBuffer, out_signaledValue);
 	}
 
 	b8 CreateBuffer(VkDeviceSize size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkBuffer* out_buffer, VkDeviceMemory* out_memory)
@@ -76,6 +82,16 @@ namespace GR
 		vkBindBufferMemory(vk_state->device, *out_buffer, *out_memory, 0);
 
 		return true;
+	}
+
+	static void OneTimeBufferDestructor(void* resource)
+	{
+		vkDestroyBuffer(vk_state->device, (VkBuffer)resource, vk_state->allocator);
+	}
+
+	static void OneTimeMemoryDestructor(void* resource)
+	{
+		vkFreeMemory(vk_state->device, (VkDeviceMemory)resource, vk_state->allocator);
 	}
 
 	VertexBuffer CreateVertexBuffer(void* vertices, size_t size)
@@ -151,10 +167,33 @@ namespace GR
 
 		vkBindBufferMemory(vk_state->device, buffer->handle, buffer->memory, 0);
 
-		CopyBuffer(buffer->handle, stagingBuffer, bufferCreateInfo.size);
+		VkDependencyInfo dependencyInfo{};
+		dependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+		dependencyInfo.pNext = nullptr;
+		dependencyInfo.dependencyFlags;
+		dependencyInfo.memoryBarrierCount;
+		dependencyInfo.pMemoryBarriers;
+		dependencyInfo.bufferMemoryBarrierCount;
+		dependencyInfo.pBufferMemoryBarriers;
+		dependencyInfo.imageMemoryBarrierCount;
+		dependencyInfo.pImageMemoryBarriers;
+		/// TODO: make this use dependency info
 
-		vkDestroyBuffer(vk_state->device, stagingBuffer, vk_state->allocator);
-		vkFreeMemory(vk_state->device, stagingMemory, vk_state->allocator);
+		u64 signaledValue;
+		CopyBufferAndTransitionQueue(buffer->handle, stagingBuffer, nullptr, bufferCreateInfo.size, &signaledValue);
+
+		InFlightTemporaryResource inFlightBuffer{};
+		inFlightBuffer.resource = stagingBuffer;
+		inFlightBuffer.Destructor = OneTimeBufferDestructor;
+		inFlightBuffer.signalValue = signaledValue;
+
+		InFlightTemporaryResource inFlightMemory{};
+		inFlightMemory.resource = stagingMemory;
+		inFlightMemory.Destructor = OneTimeMemoryDestructor;
+		inFlightMemory.signalValue = signaledValue;
+
+		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(inFlightBuffer);
+		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(inFlightMemory);
 
 		return clientBuffer;
 	}
@@ -243,10 +282,33 @@ namespace GR
 
 		vkBindBufferMemory(vk_state->device, buffer->handle, buffer->memory, 0);
 
-		CopyBuffer(buffer->handle, stagingBuffer, buffer->size);
+		VkDependencyInfo dependencyInfo{};
+		dependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+		dependencyInfo.pNext = nullptr;
+		dependencyInfo.dependencyFlags;
+		dependencyInfo.memoryBarrierCount;
+		dependencyInfo.pMemoryBarriers;
+		dependencyInfo.bufferMemoryBarrierCount;
+		dependencyInfo.pBufferMemoryBarriers;
+		dependencyInfo.imageMemoryBarrierCount;
+		dependencyInfo.pImageMemoryBarriers;
+		/// TODO: make this use dependency info
 
-		vkDestroyBuffer(vk_state->device, stagingBuffer, vk_state->allocator);
-		vkFreeMemory(vk_state->device, stagingMemory, vk_state->allocator);
+		u64 signaledValue;
+		CopyBufferAndTransitionQueue(buffer->handle, stagingBuffer, nullptr, buffer->size, &signaledValue);
+
+		InFlightTemporaryResource inFlightBuffer{};
+		inFlightBuffer.resource = stagingBuffer;
+		inFlightBuffer.Destructor = OneTimeBufferDestructor;
+		inFlightBuffer.signalValue = signaledValue;
+
+		InFlightTemporaryResource inFlightMemory{};
+		inFlightMemory.resource = stagingMemory;
+		inFlightMemory.Destructor = OneTimeMemoryDestructor;
+		inFlightMemory.signalValue = signaledValue;
+
+		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(inFlightBuffer);
+		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(inFlightMemory);
 
 		return clientBuffer;
 	}

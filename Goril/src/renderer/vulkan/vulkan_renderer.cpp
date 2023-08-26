@@ -140,6 +140,8 @@ namespace GR
 		if (!CreateSyncObjects())
 			return false;
 
+		vk_state->singleUseCommandBufferResourcesInFlight = CreateDarrayWithCapacity<InFlightTemporaryResource>(MEM_TAG_RENDERER_SUBSYS, 10); /// TODO: change allocator to renderer local allocator (when it exists)
+
 		return true;
 	}
 
@@ -158,6 +160,9 @@ namespace GR
 		UnregisterEventListener(EVCODE_WINDOW_RESIZED, OnWindowResize);
 
 		vkDeviceWaitIdle(vk_state->device);
+
+		if (vk_state->singleUseCommandBufferResourcesInFlight.GetRawElements())
+			vk_state->singleUseCommandBufferResourcesInFlight.Deinitialize();
 
 		// ================================ Destroy sync objects if they were created ===========================================
 		DestroySyncObjects();
@@ -224,6 +229,23 @@ namespace GR
 
 	b8 BeginFrame()
 	{
+		// Cleans up any single use command buffer resources from command buffers that have finished executing
+		if (vk_state->singleUseCommandBufferResourcesInFlight.Size() != 0)
+		{
+			u64 semaphoreValue;
+			vkGetSemaphoreCounterValue(vk_state->device, vk_state->singleUseCommandBufferSemaphore.handle, &semaphoreValue);
+
+			// Looping from the end of the list to the beginning so we can remove elements without ruining the loop
+			for (i32 i = (i32)vk_state->singleUseCommandBufferResourcesInFlight.Size() - 1; i >= 0; --i)
+			{
+				if (vk_state->singleUseCommandBufferResourcesInFlight[i].signalValue <= semaphoreValue)
+				{
+					vk_state->singleUseCommandBufferResourcesInFlight[i].Destructor(vk_state->singleUseCommandBufferResourcesInFlight[i].resource);
+					vk_state->singleUseCommandBufferResourcesInFlight.PopAt(i);
+				}
+			}
+		}
+
 		if (vk_state->shouldRecreateSwapchain)
 			RecreateSwapchain();
 

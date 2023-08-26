@@ -71,7 +71,14 @@ namespace GR
 		return true;
 	}
 
-	b8 EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, b8 queueWaitIdle)
+	static void SingleUseCommandBufferDestructor(void* resource)
+	{
+		CommandBuffer* commandBuffer = (CommandBuffer*)resource;
+		vkFreeCommandBuffers(vk_state->device, commandBuffer->queueFamily->commandPool, 1, &commandBuffer->handle);
+		GRFree(commandBuffer);
+	}
+
+	b8 EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u64* out_signaledValue)
 	{
 		if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer->handle))
 		{
@@ -85,6 +92,15 @@ namespace GR
 		commandBufferInfo.commandBuffer = commandBuffer->handle;
 		commandBufferInfo.deviceMask = 0;
 
+		vk_state->singleUseCommandBufferSemaphore.submitValue++;
+		VkSemaphoreSubmitInfo semaphoreInfo{};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		semaphoreInfo.pNext = nullptr;
+		semaphoreInfo.semaphore = vk_state->singleUseCommandBufferSemaphore.handle;
+		semaphoreInfo.value = vk_state->singleUseCommandBufferSemaphore.submitValue;
+		semaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT; ///TODO: try setting this to all commands
+		semaphoreInfo.deviceIndex = 0;
+
 		VkSubmitInfo2 submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
 		submitInfo.pNext = nullptr;
@@ -93,20 +109,25 @@ namespace GR
 		submitInfo.pWaitSemaphoreInfos = nullptr;
 		submitInfo.commandBufferInfoCount = 1;
 		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = 0;
-		submitInfo.pSignalSemaphoreInfos = nullptr;
+		submitInfo.signalSemaphoreInfoCount = 1;
+		submitInfo.pSignalSemaphoreInfos = &semaphoreInfo;
 
-		if (VK_SUCCESS != vkQueueSubmit2(commandBuffer->queueFamily->handle, 1, &submitInfo, VK_NULL_HANDLE))
+		VkResult result = vkQueueSubmit2(commandBuffer->queueFamily->handle, 1, &submitInfo, VK_NULL_HANDLE);
+
+		if (VK_SUCCESS != result)
 		{
-			GRFATAL("Failed to submit queue");
+			GRFATAL("Failed to submit single use buffer to queue");
 			return false;
 		}
 
-		if (queueWaitIdle)
-			vkQueueWaitIdle(commandBuffer->queueFamily->handle);
+		InFlightTemporaryResource commandBufferResource{};
+		commandBufferResource.resource = commandBuffer;
+		commandBufferResource.Destructor = SingleUseCommandBufferDestructor;
+		commandBufferResource.signalValue = vk_state->singleUseCommandBufferSemaphore.submitValue;
 
-		vkFreeCommandBuffers(vk_state->device, commandBuffer->queueFamily->commandPool, 1, &commandBuffer->handle);
-		GRFree(commandBuffer);
+		*out_signaledValue = vk_state->singleUseCommandBufferSemaphore.submitValue;
+
+		vk_state->singleUseCommandBufferResourcesInFlight.Pushback(commandBufferResource);
 
 		return true;
 	}
