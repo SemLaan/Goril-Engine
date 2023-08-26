@@ -77,6 +77,18 @@ namespace GR
 			else
 				GRTRACE("Required Vulkan layers found");
 		}
+
+		// Enabling and disabling certain validation features
+		VkValidationFeatureEnableEXT enableSynchronizationValidationFeature = VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT;
+
+		VkValidationFeaturesEXT validationFeatures{};
+		validationFeatures.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
+		validationFeatures.pNext = nullptr;
+		validationFeatures.enabledValidationFeatureCount = 1;
+		validationFeatures.pEnabledValidationFeatures = &enableSynchronizationValidationFeature;
+		validationFeatures.disabledValidationFeatureCount = 0;
+		validationFeatures.pDisabledValidationFeatures = nullptr;
+
 #endif // !GR_DIST
 
 		// ================== Creating instance =================================
@@ -85,6 +97,7 @@ namespace GR
 			createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 #ifndef GR_DIST
 			VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo = GetDebugMessengerCreateInfo();
+			messengerCreateInfo.pNext = &validationFeatures;
 			createInfo.pNext = &messengerCreateInfo; // Allows debug msg on instace creation and destruction
 #else
 			createInfo.pNext = nullptr;
