@@ -13,10 +13,10 @@ namespace GR
 	extern Timer g_timer;
 	extern f64 g_deltaTime;
 
-	Timer CreateAndStartTimer();
+	Timer GRAPI CreateAndStartTimer();
 
-	void TimerReset(Timer* timer);
+	void GRAPI TimerReset(Timer* timer);
 
-	f64 TimerSecondsSinceStart(Timer timer);
-	f64 TimerMilisecondsSinceStart(Timer timer);
+	f64 GRAPI TimerSecondsSinceStart(Timer timer);
+	f64 GRAPI TimerMilisecondsSinceStart(Timer timer);
 }
