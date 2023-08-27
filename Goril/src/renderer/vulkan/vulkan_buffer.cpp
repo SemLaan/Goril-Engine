@@ -200,7 +200,7 @@ namespace GR
 		return clientBuffer;
 	}
 
-	void VertexBufferDestructor(void* resource)
+	static void VertexBufferDestructor(void* resource)
 	{
 		VulkanVertexBuffer* buffer = (VulkanVertexBuffer*)resource;
 
@@ -329,7 +329,7 @@ namespace GR
 		return clientBuffer;
 	}
 
-	void IndexBufferDestructor(void* resource)
+	static void IndexBufferDestructor(void* resource)
 	{
 		VulkanIndexBuffer* buffer = (VulkanIndexBuffer*)resource;
 

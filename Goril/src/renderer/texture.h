@@ -5,5 +5,6 @@
 
 namespace GR
 {
-	Texture CreateTexture();
+	Texture CreateTexture(u32 width, u32 height, void* pixels);
+	void DestroyTexture(Texture clientTexture);
 }

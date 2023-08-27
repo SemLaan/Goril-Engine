@@ -257,4 +257,24 @@ namespace GR
 
 		return out_texture;
 	}
+
+	static void ImageDestructor(void* resource)
+	{
+		VulkanImage* image = (VulkanImage*)resource;
+		
+		vkDestroyImage(vk_state->device, image->handle, vk_state->allocator);
+		vkFreeMemory(vk_state->device, image->memory, vk_state->allocator);
+
+		GRFree(image);
+	}
+
+	void DestroyTexture(Texture clientTexture)
+	{
+		ResourceDestructionInfo imageDestructionInfo{};
+		imageDestructionInfo.resource = clientTexture.internalState;
+		imageDestructionInfo.Destructor = ImageDestructor;
+		imageDestructionInfo.signalValue = vk_state->graphicsQueue.semaphore.submitValue;
+
+		vk_state->graphicsQueue.resourcesPendingDestruction.Pushback(imageDestructionInfo);
+	}
 }
