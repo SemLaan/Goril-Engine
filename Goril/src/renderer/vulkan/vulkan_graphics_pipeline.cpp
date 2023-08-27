@@ -21,19 +21,25 @@ namespace GR
 		vert.Deinitialize();
 		frag.Deinitialize();
 
-		VkDescriptorSetLayoutBinding uboLayoutBinding{};
-		uboLayoutBinding.binding = 0;
-		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		uboLayoutBinding.descriptorCount = 1;
-		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-		uboLayoutBinding.pImmutableSamplers = nullptr;
+		VkDescriptorSetLayoutBinding uboLayoutBindings[2]{};
+		uboLayoutBindings[0].binding = 0;
+		uboLayoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboLayoutBindings[0].descriptorCount = 1;
+		uboLayoutBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		uboLayoutBindings[0].pImmutableSamplers = nullptr;
+
+		uboLayoutBindings[1].binding = 1;
+		uboLayoutBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		uboLayoutBindings[1].descriptorCount = 1;
+		uboLayoutBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		uboLayoutBindings[1].pImmutableSamplers = nullptr;
 
 		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{};
 		descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 		descriptorSetLayoutCreateInfo.pNext = nullptr;
 		descriptorSetLayoutCreateInfo.flags = 0;
-		descriptorSetLayoutCreateInfo.bindingCount = 1;
-		descriptorSetLayoutCreateInfo.pBindings = &uboLayoutBinding;
+		descriptorSetLayoutCreateInfo.bindingCount = 2;
+		descriptorSetLayoutCreateInfo.pBindings = uboLayoutBindings;
 
 		if (VK_SUCCESS != vkCreateDescriptorSetLayout(vk_state->device, &descriptorSetLayoutCreateInfo, vk_state->allocator, &vk_state->descriptorSetLayout))
 		{
@@ -55,17 +61,19 @@ namespace GR
 			vkMapMemory(vk_state->device, vk_state->uniformBuffersMemory[i], 0, uniformBufferSize, 0, &vk_state->uniformBuffersMapped[i]);
 		}
 
-		VkDescriptorPoolSize descriptorPoolSize{};
-		descriptorPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorPoolSize.descriptorCount = (u32)vk_state->maxFramesInFlight;
+		VkDescriptorPoolSize descriptorPoolSizes[2]{};
+		descriptorPoolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorPoolSizes[0].descriptorCount = (u32)vk_state->maxFramesInFlight;
+		descriptorPoolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorPoolSizes[1].descriptorCount = (u32)vk_state->maxFramesInFlight;
 
 		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
 		descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		descriptorPoolCreateInfo.pNext = nullptr;
 		descriptorPoolCreateInfo.flags = 0;
 		descriptorPoolCreateInfo.maxSets = (u32)vk_state->maxFramesInFlight;
-		descriptorPoolCreateInfo.poolSizeCount = 1;
-		descriptorPoolCreateInfo.pPoolSizes = &descriptorPoolSize;
+		descriptorPoolCreateInfo.poolSizeCount = 2;
+		descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes;
 
 		if (VK_SUCCESS != vkCreateDescriptorPool(vk_state->device, &descriptorPoolCreateInfo, vk_state->allocator, &vk_state->uniformDescriptorPool))
 		{
@@ -100,28 +108,6 @@ namespace GR
 		}
 
 		descriptorSetLayouts.Deinitialize();
-
-		for (i32 i = 0; i < vk_state->maxFramesInFlight; ++i)
-		{
-			VkDescriptorBufferInfo descriptorBufferInfo{};
-			descriptorBufferInfo.buffer = vk_state->uniformBuffers[i];
-			descriptorBufferInfo.offset = 0;
-			descriptorBufferInfo.range = sizeof(GlobalUniformObject);
-
-			VkWriteDescriptorSet descriptorWrite{};
-			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.pNext = nullptr;
-			descriptorWrite.dstSet = vk_state->uniformDescriptorSets[i];
-			descriptorWrite.dstBinding = 0;
-			descriptorWrite.dstArrayElement = 0;
-			descriptorWrite.descriptorCount = 1;
-			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			descriptorWrite.pImageInfo = nullptr;
-			descriptorWrite.pBufferInfo = &descriptorBufferInfo;
-			descriptorWrite.pTexelBufferView = nullptr;
-
-			vkUpdateDescriptorSets(vk_state->device, 1, &descriptorWrite, 0, nullptr);
-		}
 
 		VkPipelineShaderStageCreateInfo vertStageCreateInfo{};
 		vertStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -160,7 +146,7 @@ namespace GR
 		bindingDescription.stride = sizeof(Vertex);
 		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-		VkVertexInputAttributeDescription attributeDescriptions[2]{};
+		VkVertexInputAttributeDescription attributeDescriptions[3]{};
 		attributeDescriptions[0].location = 0;
 		attributeDescriptions[0].binding = 0;
 		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -171,13 +157,18 @@ namespace GR
 		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
 		attributeDescriptions[1].offset = offsetof(Vertex, color);
 
+		attributeDescriptions[2].location = 2;
+		attributeDescriptions[2].binding = 0;
+		attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+		attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+
 		VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo{};
 		vertexInputCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		vertexInputCreateInfo.pNext = nullptr;
 		vertexInputCreateInfo.flags = 0;
 		vertexInputCreateInfo.vertexBindingDescriptionCount = 1;
 		vertexInputCreateInfo.pVertexBindingDescriptions = &bindingDescription;
-		vertexInputCreateInfo.vertexAttributeDescriptionCount = 2;
+		vertexInputCreateInfo.vertexAttributeDescriptionCount = 3;
 		vertexInputCreateInfo.pVertexAttributeDescriptions = attributeDescriptions;
 
 		// Input assembler
@@ -331,5 +322,43 @@ namespace GR
 
 		if (vk_state->descriptorSetLayout)
 			vkDestroyDescriptorSetLayout(vk_state->device, vk_state->descriptorSetLayout, vk_state->allocator);
+	}
+
+	void UpdateDescriptorSets(u32 index, VulkanImage* image)
+	{
+		VkDescriptorBufferInfo descriptorBufferInfo{};
+		descriptorBufferInfo.buffer = vk_state->uniformBuffers[index];
+		descriptorBufferInfo.offset = 0;
+		descriptorBufferInfo.range = sizeof(GlobalUniformObject);
+
+		VkDescriptorImageInfo descriptorImageInfo{};
+		descriptorImageInfo.sampler = image->sampler;
+		descriptorImageInfo.imageView = image->view;
+		descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+		VkWriteDescriptorSet descriptorWrites[2]{};
+		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrites[0].pNext = nullptr;
+		descriptorWrites[0].dstSet = vk_state->uniformDescriptorSets[index];
+		descriptorWrites[0].dstBinding = 0;
+		descriptorWrites[0].dstArrayElement = 0;
+		descriptorWrites[0].descriptorCount = 1;
+		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrites[0].pImageInfo = nullptr;
+		descriptorWrites[0].pBufferInfo = &descriptorBufferInfo;
+		descriptorWrites[0].pTexelBufferView = nullptr;
+
+		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrites[1].pNext = nullptr;
+		descriptorWrites[1].dstSet = vk_state->uniformDescriptorSets[index];
+		descriptorWrites[1].dstBinding = 1;
+		descriptorWrites[1].dstArrayElement = 0;
+		descriptorWrites[1].descriptorCount = 1;
+		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorWrites[1].pImageInfo = &descriptorImageInfo;
+		descriptorWrites[1].pBufferInfo = nullptr;
+		descriptorWrites[1].pTexelBufferView = nullptr;
+
+		vkUpdateDescriptorSets(vk_state->device, 2, descriptorWrites, 0, nullptr);
 	}
 }

@@ -7,6 +7,7 @@ namespace GR
 {
 
 	b8 CreateGraphicsPipeline();
-
 	void DestroyGraphicsPipeline();
+
+	void UpdateDescriptorSets(u32 index, VulkanImage* image);
 }

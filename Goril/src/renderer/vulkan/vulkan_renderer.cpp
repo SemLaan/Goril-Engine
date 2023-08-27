@@ -391,8 +391,9 @@ namespace GR
 		vk_state->currentFrame = (vk_state->currentFrame + 1) % vk_state->maxFramesInFlight;
 	}
 
-	void UpdateGlobalUniforms(GlobalUniformObject* globalUniformObject)
+	void UpdateGlobalUniforms(GlobalUniformObject* globalUniformObject, Texture texture)
 	{
+		UpdateDescriptorSets(vk_state->currentFrame, (VulkanImage*)texture.internalState); /// HACK: make gfx pipelines configurable
 		MemCopy(vk_state->uniformBuffersMapped[vk_state->currentFrame], globalUniformObject, sizeof(GlobalUniformObject));
 	}
 

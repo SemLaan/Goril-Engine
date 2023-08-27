@@ -13,6 +13,6 @@ namespace GR
 	b8 BeginFrame();
 	void EndFrame();
 
-	GRAPI void UpdateGlobalUniforms(GlobalUniformObject* globalUniformObject);
+	GRAPI void UpdateGlobalUniforms(GlobalUniformObject* globalUniformObject, Texture texture);
 	GRAPI void DrawIndexed(VertexBuffer vertexBuffer, IndexBuffer indexBuffer, PushConstantObject* pPushConstantValues);
 }

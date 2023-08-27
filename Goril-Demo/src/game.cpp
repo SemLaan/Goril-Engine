@@ -15,14 +15,14 @@ b8 Game::Init()
 
 	Darray<Vertex> vertices = Darray<Vertex>();
 	vertices.Initialize(MEM_TAG_GAME);
-	vertices.Pushback({ {-1, -1, 1}, {1.f, 0.f, 0.f} });
-	vertices.Pushback({ {1, -1, 1}, {0.f, 1.f, 0.f} });
-	vertices.Pushback({ {-1, 1, 1}, {0.f, 0.f, 1.f} });
-	vertices.Pushback({ {1, 1, 1}, {1.f, 1.f, 1.f} });
-	vertices.Pushback({ {-1, -1, -1}, {1.f, 1.f, 1.f} });
-	vertices.Pushback({ {1, -1, -1}, {1.f, 1.f, 1.f} });
-	vertices.Pushback({ {-1, 1, -1}, {1.f, 1.f, 1.f} });
-	vertices.Pushback({ {1, 1, -1}, {1.f, 1.f, 1.f} });
+	vertices.Pushback({ {-1, -1, 1}, {1.f, 0.f, 0.f}, {0.0f, 0.0f} });
+	vertices.Pushback({ {1, -1, 1}, {0.f, 1.f, 0.f}, {1.0f, 0.0f} });
+	vertices.Pushback({ {-1, 1, 1}, {0.f, 0.f, 1.f}, {0.0f, 1.0f} });
+	vertices.Pushback({ {1, 1, 1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f} });
+	vertices.Pushback({ {-1, -1, -1}, {1.f, 1.f, 1.f}, {0.0f, 0.0f} });
+	vertices.Pushback({ {1, -1, -1}, {1.f, 1.f, 1.f}, {1.0f, 0.0f} });
+	vertices.Pushback({ {-1, 1, -1}, {1.f, 1.f, 1.f}, {0.0f, 1.0f} });
+	vertices.Pushback({ {1, 1, -1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f} });
 	vertexBuffer = CreateVertexBuffer(vertices.GetRawElements(), sizeof(Vertex) * vertices.Size());
 	vertices.Deinitialize();
 
@@ -63,7 +63,7 @@ b8 Game::Init()
 	{
 		u32 pixelIndex = i * TEXTURE_CHANNELS;
 
-		texturePixels[pixelIndex + 0] = 4;
+		texturePixels[pixelIndex + 0] = i;
 		texturePixels[pixelIndex + 1] = 7;
 		texturePixels[pixelIndex + 2] = 49;
 		texturePixels[pixelIndex + 3] = 255;
@@ -112,7 +112,7 @@ b8 Game::Update()
 		frameMovement.y += 1;
 	if (GetKeyDown(KEY_SPACE))
 		frameMovement.y -= 1;
-	camPosition += frameMovement / 1000.f;
+	camPosition += frameMovement / 300.f;
 
 	glm::mat4 translate = glm::translate(glm::mat4(1.0f), camPosition);
 
@@ -128,7 +128,7 @@ b8 Game::Render()
 {
 	GlobalUniformObject ubo{};
 	ubo.projView = proj * view;
-	UpdateGlobalUniforms(&ubo);
+	UpdateGlobalUniforms(&ubo, texture);
 
 	for (u32 i = 0; i < 3; ++i)
 	{
