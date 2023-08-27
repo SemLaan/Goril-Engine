@@ -55,6 +55,24 @@ b8 Game::Init()
 	camPosition = glm::vec3(0, -3, 0);
 	camRotation = glm::vec3(0);
 
+	u32 textureWidth = 100;
+	u32 textureHeight = 100;
+	u8* texturePixels = (u8*)GRAlloc(textureWidth * textureHeight * TEXTURE_CHANNELS, MEM_TAG_GAME);
+
+	for (u32 i = 0; i < textureWidth * textureHeight; ++i)
+	{
+		u32 pixelIndex = i * TEXTURE_CHANNELS;
+
+		texturePixels[pixelIndex + 0] = 4;
+		texturePixels[pixelIndex + 1] = 7;
+		texturePixels[pixelIndex + 2] = 49;
+		texturePixels[pixelIndex + 3] = 255;
+	}
+
+	texture = CreateTexture(textureWidth, textureHeight, texturePixels);
+
+	GRFree(texturePixels);
+
     return true;
 }
 
@@ -129,5 +147,6 @@ b8 Game::Shutdown()
 {
 	DestroyIndexBuffer(indexBuffer);
 	DestroyVertexBuffer(vertexBuffer);
+	DestroyTexture(texture);
     return true;
 }

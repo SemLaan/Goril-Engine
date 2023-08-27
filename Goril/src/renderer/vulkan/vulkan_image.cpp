@@ -7,9 +7,6 @@
 #include "vulkan_command_buffer.h"
 
 
-#define IMAGE_CHANNELS 4
-
-
 namespace GR
 {
 
@@ -91,7 +88,7 @@ namespace GR
 		out_texture.internalState = GRAlloc(sizeof(VulkanImage), MEM_TAG_TEXTURE);
 		VulkanImage* image = (VulkanImage*)out_texture.internalState;
 
-		size_t size = width * height * IMAGE_CHANNELS;
+		size_t size = width * height * TEXTURE_CHANNELS;
 
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
