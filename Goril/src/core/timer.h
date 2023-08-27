@@ -5,14 +5,15 @@
 namespace GR
 {
 
-	class Timer
+	struct Timer
 	{
-	public:
-		GRAPI Timer();
-
-		GRAPI f64 SecondsSinceStart();
-		GRAPI f64 MilisecondsSinceStart();
-	private:
-		std::chrono::steady_clock::time_point m_startTime;
+		std::chrono::steady_clock::time_point startTime;
 	};
+
+	Timer CreateAndStartTimer();
+
+	void ResetTimer(Timer* timer);
+
+	f64 SecondsSinceStart(Timer timer);
+	f64 MilisecondsSinceStart(Timer timer);
 }

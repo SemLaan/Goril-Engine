@@ -3,18 +3,25 @@
 namespace GR
 {
 
-	Timer::Timer()
+	Timer CreateAndStartTimer()
 	{
-		m_startTime = std::chrono::high_resolution_clock::now();
+		Timer timer{};
+		timer.startTime = std::chrono::high_resolution_clock::now();
+		return timer;
 	}
 
-	f64 Timer::SecondsSinceStart()
+	void ResetTimer(Timer* timer)
 	{
-		return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_startTime).count() / (f64)1000000;
+		timer->startTime = std::chrono::high_resolution_clock::now();
 	}
 
-	f64 Timer::MilisecondsSinceStart()
+	f64 SecondsSinceStart(Timer timer)
 	{
-		return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_startTime).count() / (f64)1000;
+		return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - timer.startTime).count() / (f64)1000000;
+	}
+
+	f64 MilisecondsSinceStart(Timer timer)
+	{
+		return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - timer.startTime).count() / (f64)1000;
 	}
 }
