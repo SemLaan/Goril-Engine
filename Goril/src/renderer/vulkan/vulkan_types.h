@@ -27,6 +27,8 @@ namespace GR
 	struct VulkanImage
 	{
 		VkImage handle;
+		VkImageView view;
+		VkSampler sampler;
 		VkDeviceMemory memory;
 	};
 

@@ -252,6 +252,56 @@ namespace GR
 
 		vk_state->requestedQueueAcquisitionOperations.Pushback(acquireDependencyInfo);
 
+		// Creating the image view
+		VkImageViewCreateInfo viewCreateInfo{};
+		viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		viewCreateInfo.pNext = nullptr;
+		viewCreateInfo.flags = 0;
+		viewCreateInfo.image = image->handle;
+		viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		viewCreateInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+		viewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		viewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		viewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		viewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+		viewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		viewCreateInfo.subresourceRange.baseArrayLayer = 0;
+		viewCreateInfo.subresourceRange.layerCount = 1;
+		viewCreateInfo.subresourceRange.baseMipLevel = 0;
+		viewCreateInfo.subresourceRange.levelCount = 1;
+
+		if (VK_SUCCESS != vkCreateImageView(vk_state->device, &viewCreateInfo, vk_state->allocator, &image->view))
+		{
+			GRFATAL("Texture image view creation failed");
+			GRASSERT(false);
+		}
+
+		// Creating the sampler
+		VkSamplerCreateInfo samplerCreateInfo{};
+		samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerCreateInfo.pNext = nullptr;
+		samplerCreateInfo.flags = 0;
+		samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
+		samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
+		samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		samplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		samplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		samplerCreateInfo.anisotropyEnable = VK_FALSE; /// TODO: allow enabling anisotropy
+		samplerCreateInfo.maxAnisotropy = 1.0f;
+		samplerCreateInfo.compareEnable = VK_FALSE;
+		samplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+		samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		samplerCreateInfo.mipLodBias = 0.0f;
+		samplerCreateInfo.minLod = 0.0f;
+		samplerCreateInfo.maxLod = 0.0f;
+		samplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
+
+		if (VK_SUCCESS != vkCreateSampler(vk_state->device, &samplerCreateInfo, vk_state->allocator, &image->sampler))
+		{
+			GRASSERT_MSG(false, "failed to create image sampler");
+		}
+
 		return out_texture;
 	}
 
@@ -259,6 +309,8 @@ namespace GR
 	{
 		VulkanImage* image = (VulkanImage*)resource;
 		
+		vkDestroySampler(vk_state->device, image->sampler, vk_state->allocator);
+		vkDestroyImageView(vk_state->device, image->view, vk_state->allocator);
 		vkDestroyImage(vk_state->device, image->handle, vk_state->allocator);
 		vkFreeMemory(vk_state->device, image->memory, vk_state->allocator);
 
