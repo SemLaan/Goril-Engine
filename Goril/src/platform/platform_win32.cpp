@@ -168,6 +168,11 @@ namespace GR
 		}
 	}
 
+	void SetWindowTitle(const wchar_t* windowName)
+	{
+		SetWindowTextW(state->hwnd, windowName);
+	}
+
 	void ToggleFullscreen()
 	{
 		SetFullscreen(!state->fullscreenActive);

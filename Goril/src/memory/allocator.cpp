@@ -103,7 +103,9 @@ namespace GR
 		newHeader->start = newBlock;
 		newHeader->size = (u32)size;
 		newHeader->alignment = header->alignment;
+#ifndef GR_DIST
 		newHeader->tag = header->tag;
+#endif // !GR_DIST
 
 		// Free the old data
 		BackendFree(backendState, header->start, oldTotalSize);

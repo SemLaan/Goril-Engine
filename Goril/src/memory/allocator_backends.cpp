@@ -50,7 +50,9 @@ namespace GR
 		// Allocating memory for state and arena and zeroing state memory
 		void* arenaBlock = GRAlloc(requiredMemory, MEM_TAG_SUB_ARENA);
 		Zero(arenaBlock, stateSize);
+#ifndef GR_DIST
 		AllocInfo(stateSize, MEM_TAG_ALLOCATOR_STATE);
+#endif // !GR_DIST
 
 		// Getting pointers to the internal components of the allocator
 		FreelistState* state = (FreelistState*)arenaBlock;
@@ -78,7 +80,10 @@ namespace GR
 	void DestroyFreelistAllocator(Allocator allocator)
 	{
 		FreelistState* state = (FreelistState*)allocator.backendState;
+#ifndef GR_DIST
 		FreeInfo(sizeof(FreelistState) + state->nodeCount * sizeof(FreelistNode), MEM_TAG_ALLOCATOR_STATE);
+#endif // !GR_DIST
+
 		// Frees the entire arena including state
 		GRFree(state);
 	}
@@ -311,7 +316,9 @@ namespace GR
 		// Allocating memory for state and arena and zeroing state memory
 		void* arenaBlock = GRAlloc(requiredMemory, MEM_TAG_SUB_ARENA);
 		Zero(arenaBlock, stateSize);
+#ifndef GR_DIST
 		AllocInfo(stateSize, MEM_TAG_ALLOCATOR_STATE);
+#endif // !GR_DIST
 
 		// Getting pointers to the internal components of the allocator
 		BumpAllocatorState* state = (BumpAllocatorState*)arenaBlock;
@@ -332,7 +339,10 @@ namespace GR
 	void DestroyBumpAllocator(Allocator allocator)
 	{
 		BumpAllocatorState* state = (BumpAllocatorState*)allocator.backendState;
+#ifndef GR_DIST
 		FreeInfo(sizeof(BumpAllocatorState), MEM_TAG_ALLOCATOR_STATE);
+#endif // !GR_DIST
+
 		// Frees the entire arena including state
 		GRFree(state);
 	}

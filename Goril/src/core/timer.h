@@ -10,10 +10,13 @@ namespace GR
 		std::chrono::steady_clock::time_point startTime;
 	};
 
+	extern Timer g_timer;
+	extern f64 g_deltaTime;
+
 	Timer CreateAndStartTimer();
 
-	void ResetTimer(Timer* timer);
+	void TimerReset(Timer* timer);
 
-	f64 SecondsSinceStart(Timer timer);
-	f64 MilisecondsSinceStart(Timer timer);
+	f64 TimerSecondsSinceStart(Timer timer);
+	f64 TimerMilisecondsSinceStart(Timer timer);
 }

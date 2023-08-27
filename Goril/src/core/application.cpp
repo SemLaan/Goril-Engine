@@ -6,11 +6,19 @@
 #include "event.h"
 #include "input.h"
 #include "renderer/renderer.h"
+#include "timer.h"
+
+#include <string>
 
 namespace GR
 {
 	static b8 appRunning = false;
 	static b8 appSuspended = false;
+
+	static f64 previousFrameTime{};
+	/// NOTE: temporary
+	static f64 previousFrameTimes[1000]{};
+	static u32 frameIndex = 0;
 
 	static b8 OnQuit(EventCode type, EventData data);
 	static b8 OnResize(EventCode type, EventData data);
@@ -18,6 +26,8 @@ namespace GR
 
 	b8 InitializeEngine(GameConfig config)
 	{
+		g_timer = CreateAndStartTimer();
+
 		size_t engineMemoryRequirement = MiB;
 		size_t subsysAllocatorRequirement = KiB * 5;
 
@@ -61,6 +71,23 @@ namespace GR
 
 		while (appRunning)
 		{
+			f64 currentFrameTime = TimerSecondsSinceStart(g_timer);
+			g_deltaTime = currentFrameTime - previousFrameTime;
+			previousFrameTime = currentFrameTime;
+
+			/// NOTE: temporary
+			previousFrameTimes[frameIndex] = g_deltaTime;
+			frameIndex = (frameIndex + 1) % 1000;
+
+			f64 framerateCalculation = 0;
+			for (u32 i = 0; i < 1000; ++i)
+			{
+				framerateCalculation += previousFrameTimes[i];
+			}
+			framerateCalculation /= 1000.f;
+
+			SetWindowTitle(std::format(L"{:.0f}", 1.f / framerateCalculation).c_str());
+			
 			UpdateInput();
 			PlatformProcessMessage(); /// TODO: sleep platform every loop if app suspended to not waste pc resources
 			if (!appSuspended)
@@ -93,6 +120,8 @@ namespace GR
 		ShutdownInput();
 		ShutdownEvent();
 		ShutdownMemory();
+
+		GRINFO("Application ran for: {:.2f}s", TimerSecondsSinceStart(g_timer));
 		WriteLogsToFile();
 	}
 

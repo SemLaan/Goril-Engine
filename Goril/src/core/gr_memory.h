@@ -42,11 +42,13 @@ namespace GR
 	GRAPI inline void* GReAlloc(void* block, size_t size);
 	GRAPI inline void GRFree(void* block);
 
+#ifndef GR_DIST
 	GRAPI inline void AllocInfo(size_t size, mem_tag tag);
 
 	GRAPI inline void ReAllocInfo(i64 sizeChange);
 
 	GRAPI inline void FreeInfo(size_t size, mem_tag tag);
+#endif // !GR_DIST
 
 	GRAPI inline void Zero(void* block, size_t size);
 

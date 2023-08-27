@@ -18,6 +18,7 @@ namespace GR
 	GRAPI glm::ivec2 GetPlatformWindowSize();
 
 	void SetMousePosition(glm::ivec2 position);
+	void SetWindowTitle(const wchar_t* windowName);
 
 	GRAPI void ToggleFullscreen();
 	GRAPI void SetFullscreen(b8 enabled);
