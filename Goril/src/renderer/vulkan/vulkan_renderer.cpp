@@ -10,6 +10,7 @@
 #include "vulkan_debug_messenger.h"
 #include "vulkan_instance.h"
 #include "vulkan_device.h"
+#include "vulkan_queues.h"
 #include "vulkan_swapchain.h"
 #include "vulkan_graphics_pipeline.h"
 #include "vulkan_renderpass.h"
@@ -41,8 +42,7 @@ namespace GR
 
 		// ================== Getting required extensions and layers ================================
 		// Getting required extensions
-		Darray<const void*> requiredExtensions = Darray<const void*>();
-		requiredExtensions.Initialize(MEM_TAG_RENDERER_SUBSYS);
+		Darray<const void*> requiredExtensions = CreateDarrayWithCapacity<const void*>(MEM_TAG_RENDERER_SUBSYS, 5);
 		GetPlatformExtensions(&requiredExtensions);
 		requiredExtensions.Pushback(&VK_KHR_SURFACE_EXTENSION_NAME);
 #ifndef GR_DIST
@@ -50,8 +50,7 @@ namespace GR
 #endif // !GR_DIST
 
 		// Getting required layers
-		Darray<const void*> requiredLayers = Darray<const void*>();
-		requiredLayers.Initialize(MEM_TAG_RENDERER_SUBSYS);
+		Darray<const void*> requiredLayers = CreateDarrayWithCapacity<const void*>(MEM_TAG_RENDERER_SUBSYS, 1);
 #ifndef GR_DIST
 		requiredLayers.Pushback(&"VK_LAYER_KHRONOS_validation");
 #endif // !GR_DIST
@@ -84,8 +83,7 @@ namespace GR
 		}
 
 		// ================ Getting a physical device ==============================
-		Darray<const void*> requiredDeviceExtensions = Darray<const void*>();
-		requiredDeviceExtensions.Initialize(MEM_TAG_RENDERER_SUBSYS);
+		Darray<const void*> requiredDeviceExtensions = CreateDarrayWithCapacity<const void*>(MEM_TAG_RENDERER_SUBSYS, 3);
 		requiredDeviceExtensions.Pushback(&VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		requiredDeviceExtensions.Pushback(&VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
 		requiredDeviceExtensions.Pushback(&VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
@@ -101,7 +99,6 @@ namespace GR
 		SelectQueueFamilies(vk_state);
 
 		// ===================== Creating logical device =============================================
-		// ===================== Also sets up queues and command pools ================================
 		if (!CreateLogicalDevice(vk_state, &requiredDeviceExtensions, &requiredLayers))
 		{
 			requiredLayers.Deinitialize();
@@ -110,6 +107,10 @@ namespace GR
 		}
 		requiredLayers.Deinitialize();
 		requiredDeviceExtensions.Deinitialize();
+
+		// ===================== sets up queues and command pools ================================
+		if (!CreateQueues())
+			return false;
 
 		// ======================== Creating the swapchain ===============================================
 		if (!CreateSwapchain(vk_state))
@@ -145,27 +146,6 @@ namespace GR
 		return true;
 	}
 
-	/// TODO: move this function into a vulkan_queue file, also move queue creation etc there
-	// Cleans up any resources that need to be destroyed and aren't being used anymore
-	static void TryDestroyResourcesPendingDestruction(QueueFamily* queue)
-	{
-		if (queue->resourcesPendingDestruction.Size() != 0)
-		{
-			u64 semaphoreValue;
-			vkGetSemaphoreCounterValue(vk_state->device, queue->semaphore.handle, &semaphoreValue);
-
-			// Looping from the end of the list to the beginning so we can remove elements without ruining the loop
-			for (i32 i = (i32)queue->resourcesPendingDestruction.Size() - 1; i >= 0; --i)
-			{
-				if (queue->resourcesPendingDestruction[i].signalValue <= semaphoreValue)
-				{
-					queue->resourcesPendingDestruction[i].Destructor(queue->resourcesPendingDestruction[i].resource);
-					queue->resourcesPendingDestruction.PopAt(i);
-				}
-			}
-		}
-	}
-
 	void ShutdownRenderer()
 	{
 		if (vk_state == nullptr)
@@ -182,8 +162,7 @@ namespace GR
 
 		vkDeviceWaitIdle(vk_state->device);
 
-		TryDestroyResourcesPendingDestruction(&vk_state->graphicsQueue);
-		TryDestroyResourcesPendingDestruction(&vk_state->transferQueue);
+		TryDestroyResourcesPendingDestruction();
 
 		if (vk_state->requestedQueueAcquisitionOperations.GetRawElements())
 			vk_state->requestedQueueAcquisitionOperations.Deinitialize();
@@ -213,8 +192,10 @@ namespace GR
 		// ====================== Destroying swapchain if it was created ================================
 		DestroySwapchain(vk_state);
 
+		// ===================== destroys queues and command pools ================================
+		DestroyQueues();
+
 		// ===================== Destroying logical device if it was created =================================
-		// ===================== Also destroys queues and command pools ================================
 		DestroyLogicalDevice(vk_state);
 
 		// ======================= Destroying the surface if it was created ==================================
@@ -248,8 +229,7 @@ namespace GR
 
 	b8 BeginFrame()
 	{
-		TryDestroyResourcesPendingDestruction(&vk_state->graphicsQueue);
-		TryDestroyResourcesPendingDestruction(&vk_state->transferQueue);
+		TryDestroyResourcesPendingDestruction();
 
 		if (vk_state->shouldRecreateSwapchain)
 			RecreateSwapchain();
