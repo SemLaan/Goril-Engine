@@ -81,12 +81,12 @@ namespace GR
 		return true;
 	}
 
-	static void OneTimeBufferDestructor(void* resource)
+	void VulkanBufferDestructor(void* resource)
 	{
 		vkDestroyBuffer(vk_state->device, (VkBuffer)resource, vk_state->allocator);
 	}
 
-	static void OneTimeMemoryDestructor(void* resource)
+	void VulkanMemoryDestructor(void* resource)
 	{
 		vkFreeMemory(vk_state->device, (VkDeviceMemory)resource, vk_state->allocator);
 	}
@@ -186,12 +186,12 @@ namespace GR
 		// Making sure the staging buffer and memory get deleted when their corresponding command buffer is completed
 		ResourceDestructionInfo bufferDestructionInfo{};
 		bufferDestructionInfo.resource = stagingBuffer;
-		bufferDestructionInfo.Destructor = OneTimeBufferDestructor;
+		bufferDestructionInfo.Destructor = VulkanBufferDestructor;
 		bufferDestructionInfo.signalValue = signaledValue;
 
 		ResourceDestructionInfo memoryDestructionInfo{};
 		memoryDestructionInfo.resource = stagingMemory;
-		memoryDestructionInfo.Destructor = OneTimeMemoryDestructor;
+		memoryDestructionInfo.Destructor = VulkanMemoryDestructor;
 		memoryDestructionInfo.signalValue = signaledValue;
 
 		vk_state->transferQueue.resourcesPendingDestruction.Pushback(bufferDestructionInfo);
@@ -315,12 +315,12 @@ namespace GR
 		// Making sure the staging buffer and memory get deleted when their corresponding command buffer is completed
 		ResourceDestructionInfo bufferDestructionInfo{};
 		bufferDestructionInfo.resource = stagingBuffer;
-		bufferDestructionInfo.Destructor = OneTimeBufferDestructor;
+		bufferDestructionInfo.Destructor = VulkanBufferDestructor;
 		bufferDestructionInfo.signalValue = signaledValue;
 
 		ResourceDestructionInfo memoryDestructionInfo{};
 		memoryDestructionInfo.resource = stagingMemory;
-		memoryDestructionInfo.Destructor = OneTimeMemoryDestructor;
+		memoryDestructionInfo.Destructor = VulkanMemoryDestructor;
 		memoryDestructionInfo.signalValue = signaledValue;
 
 		vk_state->transferQueue.resourcesPendingDestruction.Pushback(bufferDestructionInfo);

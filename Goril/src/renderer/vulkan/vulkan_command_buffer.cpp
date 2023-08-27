@@ -78,7 +78,7 @@ namespace GR
 		GRFree(commandBuffer);
 	}
 
-	b8 EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 signalSemaphoreCount, VkSemaphoreSubmitInfo* pSemaphoreSubmitInfos, u64* out_signaledValue)
+	b8 EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 signalSemaphoreCount /*default: 0*/, VkSemaphoreSubmitInfo* pSemaphoreSubmitInfos /*default: null*/, u64* out_signaledValue /*default: null*/)
 	{
 		if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer->handle))
 		{
@@ -133,7 +133,8 @@ namespace GR
 		commandBufferDestructionInfo.Destructor = SingleUseCommandBufferDestructor;
 		commandBufferDestructionInfo.signalValue = commandBuffer->queueFamily->semaphore.submitValue;
 
-		*out_signaledValue = commandBuffer->queueFamily->semaphore.submitValue;
+		if (out_signaledValue)
+			*out_signaledValue = commandBuffer->queueFamily->semaphore.submitValue;
 
 		commandBuffer->queueFamily->resourcesPendingDestruction.Pushback(commandBufferDestructionInfo);
 

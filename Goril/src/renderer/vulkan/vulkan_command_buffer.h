@@ -11,7 +11,7 @@ namespace GR
 	void FreeCommandBuffer(CommandBuffer* commandBuffer);
 
 	b8 AllocateAndBeginSingleUseCommandBuffer(QueueFamily* queueFamily, CommandBuffer** out_pCommandBuffer);
-	b8 EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 signalSemaphoreCount, VkSemaphoreSubmitInfo* pSemaphoreSubmitInfos, u64* out_signaledValue);
+	b8 EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 signalSemaphoreCount = 0, VkSemaphoreSubmitInfo* pSemaphoreSubmitInfos = nullptr, u64* out_signaledValue = nullptr);
 
 	/// <summary>
 	/// Resets the command buffer, only supported if the command buffer was allocated from a command pool with the VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag.
