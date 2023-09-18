@@ -3,11 +3,8 @@
 #include "vulkan_types.h"
 #include "containers/darray.h"
 
-namespace GR
-{
 
-	b8 CreateGraphicsPipeline();
-	void DestroyGraphicsPipeline();
+b8 CreateGraphicsPipeline();
+void DestroyGraphicsPipeline();
 
-	void UpdateDescriptorSets(u32 index, VulkanImage* image);
-}
+void UpdateDescriptorSets(u32 index, VulkanImage* image);

@@ -9,7 +9,6 @@
 #define MILLISECONDS_TO_SECONDS(x) (x / 1000)
 #define SECONDS_TO_MILLISECONDS(x) (x * 1000)
 
-using namespace GR;
 
 static b8 timer_test()
 {

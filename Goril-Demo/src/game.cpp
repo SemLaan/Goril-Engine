@@ -7,8 +7,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <core/platform.h>
 
-using namespace GR;
-
 b8 Game::Init()
 {
     PrintMemoryStats();

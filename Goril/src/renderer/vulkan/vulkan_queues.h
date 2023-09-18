@@ -3,11 +3,9 @@
 #include "vulkan_types.h"
 
 
-namespace GR
-{
 
-	b8 CreateQueues();
-	void DestroyQueues();
 
-	void TryDestroyResourcesPendingDestruction();
-}
+b8 CreateQueues();
+void DestroyQueues();
+
+void TryDestroyResourcesPendingDestruction();

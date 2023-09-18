@@ -4,15 +4,13 @@
 #include "containers/darray.h"
 
 
-namespace GR
-{
-	SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
 
-	b8 SelectPhysicalDevice(RendererState* state, const Darray<const void*>* requiredDeviceExtensions);
+SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
 
-	void SelectQueueFamilies(RendererState* state);
+b8 SelectPhysicalDevice(RendererState* state, const Darray<const void*>* requiredDeviceExtensions);
 
-	b8 CreateLogicalDevice(RendererState* state, const Darray<const void*>* requiredDeviceExtensions, const Darray<const void*>* requiredDeviceLayers);
+void SelectQueueFamilies(RendererState* state);
 
-	void DestroyLogicalDevice(RendererState* state);
-}
+b8 CreateLogicalDevice(RendererState* state, const Darray<const void*>* requiredDeviceExtensions, const Darray<const void*>* requiredDeviceLayers);
+
+void DestroyLogicalDevice(RendererState* state);

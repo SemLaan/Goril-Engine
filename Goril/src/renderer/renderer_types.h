@@ -4,37 +4,34 @@
 #include "containers/darray.h"
 
 
-namespace GR
+struct Vertex
 {
-	struct Vertex
-	{
-		glm::vec3 position;
-		glm::vec3 color;
-		glm::vec2 texCoord;
-	};
+	glm::vec3 position;
+	glm::vec3 color;
+	glm::vec2 texCoord;
+};
 
-	struct VertexBuffer
-	{
-		void* internalState;
-	};
+struct VertexBuffer
+{
+	void* internalState;
+};
 
-	struct IndexBuffer
-	{
-		void* internalState;
-	};
+struct IndexBuffer
+{
+	void* internalState;
+};
 
-	struct Texture
-	{
-		void* internalState;
-	};
+struct Texture
+{
+	void* internalState;
+};
 
-	struct GlobalUniformObject
-	{
-		glm::mat4 projView;
-	};
+struct GlobalUniformObject
+{
+	glm::mat4 projView;
+};
 
-	struct PushConstantObject
-	{
-		glm::mat4 model;
-	};
-}
+struct PushConstantObject
+{
+	glm::mat4 model;
+};

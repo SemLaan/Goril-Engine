@@ -6,8 +6,6 @@
 // This makes sure arrays are cache line aligned on most consumer hardware
 #define DARRAY_MIN_ALIGNMENT 64
 
-namespace GR
-{
 
 	template<typename T>
 	class Darray
@@ -174,4 +172,3 @@ namespace GR
 
 		return darray;
 	}
-}

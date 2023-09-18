@@ -1,9 +1,9 @@
 #include "game.h"
 #include <entrypoint.h>
 
-GR::GameConfig GetGameConfig()
+GameConfig GetGameConfig()
 {
-	GR::GameConfig config{};
+	GameConfig config{};
 	
 	config.game_instance_memory_requirement = KiB;
 	config.windowTitle = L"Test game";
@@ -13,9 +13,9 @@ GR::GameConfig GetGameConfig()
 	return config;
 }
 
-b8 CreateGameInstance(GR::GorilGame*& out_game)
+b8 CreateGameInstance(GorilGame*& out_game)
 {
-	out_game = (GR::GorilGame*)GR::GRAlloc(sizeof(Game), GR::MEM_TAG_GAME);
+	out_game = (GorilGame*)GRAlloc(sizeof(Game), MEM_TAG_GAME);
 	out_game = new(out_game) Game();
 
 	return true;

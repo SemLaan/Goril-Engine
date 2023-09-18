@@ -4,7 +4,6 @@
 #include "../test_manager.h"
 #include <containers/darray.h>
 
-using namespace GR;
 
 struct Beef
 {

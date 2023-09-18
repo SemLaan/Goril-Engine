@@ -5,7 +5,6 @@
 #include "../test_manager.h"
 #include <core/gr_memory.h>
 
-using namespace GR;
 
 static b8 bump_allocator_test()
 {

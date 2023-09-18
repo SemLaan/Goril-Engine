@@ -5,48 +5,48 @@
 #include "core/asserts.h"
 #include "core/gr_memory.h"
 
-extern GR::GameConfig GetGameConfig();
-extern b8 CreateGameInstance(GR::GorilGame*& out_game);
+extern GameConfig GetGameConfig();
+extern b8 CreateGameInstance(GorilGame*& out_game);
 
 int main()
 {
 	// Engine initialization
 	{
-		GR::GameConfig config = GetGameConfig();
+		GameConfig config = GetGameConfig();
 
-		if (!GR::InitializeEngine(config))
+		if (!InitializeEngine(config))
 		{
 			GRFATAL("Failed to initialize engine, shutting down");
-			GR::ShutdownEngine();
+			ShutdownEngine();
 			GRASSERT_DEBUG(false);
 			return 1;
 		}
 	}
 	
 	// Getting the game instance object
-	GR::GorilGame* gameInstance = nullptr;
+	GorilGame* gameInstance = nullptr;
 	if (!CreateGameInstance(gameInstance))
 	{
 		GRFATAL("Failed to create game instance, shutting down");
-		GR::ShutdownEngine();
+		ShutdownEngine();
 		GRASSERT_DEBUG(false);
 		return 1;
 	}
 	GRASSERT_DEBUG(gameInstance);
 
 	// Running the engine and game
-	if (!GR::RunEngine(gameInstance))
+	if (!RunEngine(gameInstance))
 	{
 		GRFATAL("Engine failed while running, shutting down");
-		GR::GRFree(gameInstance);
-		GR::ShutdownEngine();
+		GRFree(gameInstance);
+		ShutdownEngine();
 		GRASSERT_DEBUG(false);
 		return 1;
 	}
 
-	GR::GRFree(gameInstance);
+	GRFree(gameInstance);
 
-	GR::ShutdownEngine();
+	ShutdownEngine();
 	
 	return 0;
 }

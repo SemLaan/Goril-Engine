@@ -3,23 +3,21 @@
 #include "logger.h"
 #include "glm/glm.hpp"
 
-namespace GR
-{
 
-	b8 InitializePlatform(const wchar_t* windowName);
 
-	void ShutdownPlatform();
+b8 InitializePlatform(const wchar_t* windowName);
 
-	// Exported for testing, shouldn't be used by applications
-	GRAPI void PlatformProcessMessage();
+void ShutdownPlatform();
 
-	void PlatformLogString(log_level level, const char* message);
+// Exported for testing, shouldn't be used by applications
+GRAPI void PlatformProcessMessage();
 
-	GRAPI glm::ivec2 GetPlatformWindowSize();
+void PlatformLogString(log_level level, const char* message);
 
-	void SetMousePosition(glm::ivec2 position);
-	void SetWindowTitle(const wchar_t* windowName);
+GRAPI glm::ivec2 GetPlatformWindowSize();
 
-	GRAPI void ToggleFullscreen();
-	GRAPI void SetFullscreen(b8 enabled);
-}
+void SetMousePosition(glm::ivec2 position);
+void SetWindowTitle(const wchar_t* windowName);
+
+GRAPI void ToggleFullscreen();
+GRAPI void SetFullscreen(b8 enabled);

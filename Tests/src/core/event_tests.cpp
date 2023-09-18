@@ -4,7 +4,6 @@
 #include "../test_manager.h"
 #include <core/event.h>
 
-using namespace GR;
 
 static EventData g_data;
 static EventData g_data1;

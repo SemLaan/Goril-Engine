@@ -6,10 +6,8 @@
 #include <renderer/texture.h>
 
 
-using namespace GR;
 
-
-class Game : public GR::GorilGame
+class Game : public GorilGame
 {
 private:
 	VertexBuffer vertexBuffer;

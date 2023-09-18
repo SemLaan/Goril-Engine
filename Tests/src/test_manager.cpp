@@ -3,7 +3,6 @@
 #include "test_defines.h"
 #include <core/timer.h>
 
-using namespace GR;
 
 static std::vector<PFN_test> tests;
 static std::vector<std::string> test_names;

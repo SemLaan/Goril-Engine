@@ -3,10 +3,6 @@
 #include "vulkan_types.h"
 #include "containers/darray.h"
 
-namespace GR
-{
+b8 CreateRenderpass(RendererState* state);
 
-	b8 CreateRenderpass(RendererState* state);
-
-	void DestroyRenderpass(RendererState* state);
-}
+void DestroyRenderpass(RendererState* state);

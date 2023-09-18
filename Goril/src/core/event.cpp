@@ -2,91 +2,89 @@
 #include "containers/darray.h"
 #include "core/gr_memory.h"
 
-namespace GR
+
+
+struct EventState
 {
+	Darray<PFN_OnEvent> eventCallbacks[MAX_EVENTS];
+};
 
-	struct EventState
+static EventState* state = nullptr;
+
+b8 InitializeEvent()
+{
+	GRASSERT_DEBUG(state == nullptr); // If this triggers init got called twice
+	GRINFO("Initializing event subsystem...");
+	state = (EventState*)GetGlobalAllocator()->Alloc(sizeof(EventState), MEM_TAG_EVENT_SUBSYS);
+	Zero(state, sizeof(EventState));
+
+	return true;
+}
+
+void ShutdownEvent()
+{
+	if (state == nullptr)
 	{
-		Darray<PFN_OnEvent> eventCallbacks[MAX_EVENTS];
-	};
-
-	static EventState* state = nullptr;
-
-	b8 InitializeEvent()
+		GRINFO("Events startup failed, skipping shutdown");
+		return;
+	}
+	else
 	{
-		GRASSERT_DEBUG(state == nullptr); // If this triggers init got called twice
-		GRINFO("Initializing event subsystem...");
-		state = (EventState*)GetGlobalAllocator()->Alloc(sizeof(EventState), MEM_TAG_EVENT_SUBSYS);
-		Zero(state, sizeof(EventState));
-
-		return true;
+		GRINFO("Shutting down events subsystem...");
 	}
 
-	void ShutdownEvent()
+	for (Darray<PFN_OnEvent>& callbackDarray : state->eventCallbacks)
 	{
-		if (state == nullptr)
+		if (callbackDarray.GetRawElements())
 		{
-			GRINFO("Events startup failed, skipping shutdown");
-			return;
+			callbackDarray.Deinitialize();
 		}
-		else
-		{
-			GRINFO("Shutting down events subsystem...");
-		}
-
-		for (Darray<PFN_OnEvent>& callbackDarray : state->eventCallbacks)
-		{
-			if (callbackDarray.GetRawElements())
-			{
-				callbackDarray.Deinitialize();
-			}
-		}
-		GetGlobalAllocator()->Free(state);
 	}
+	GetGlobalAllocator()->Free(state);
+}
 
-	void RegisterEventListener(EventCode type, PFN_OnEvent listener)
+void RegisterEventListener(EventCode type, PFN_OnEvent listener)
+{
+	if (!state->eventCallbacks[type].GetRawElements())
 	{
-		if (!state->eventCallbacks[type].GetRawElements())
-		{
-			state->eventCallbacks[type].Initialize(MEM_TAG_EVENT_SUBSYS, 5);
-		}
+		state->eventCallbacks[type].Initialize(MEM_TAG_EVENT_SUBSYS, 5);
+	}
 
 #ifndef GR_DIST
-		for (u32 i = 0; i < state->eventCallbacks[type].Size(); ++i)
-		{
-			GRASSERT_MSG(state->eventCallbacks[type][i] != listener, "Tried to insert duplicate listener");
-		}
+	for (u32 i = 0; i < state->eventCallbacks[type].Size(); ++i)
+	{
+		GRASSERT_MSG(state->eventCallbacks[type][i] != listener, "Tried to insert duplicate listener");
+	}
 #endif // !GR_DIST
 
-		state->eventCallbacks[type].Pushback(listener);
+	state->eventCallbacks[type].Pushback(listener);
+}
+
+void UnregisterEventListener(EventCode type, PFN_OnEvent listener)
+{
+	GRASSERT_DEBUG(state->eventCallbacks[type].GetRawElements());
+
+	for (u32 i = 0; i < state->eventCallbacks[type].Size(); ++i)
+	{
+		if (state->eventCallbacks[type][i] == listener)
+		{
+			state->eventCallbacks[type].PopAt(i);
+			return;
+		}
 	}
 
-	void UnregisterEventListener(EventCode type, PFN_OnEvent listener)
-	{
-		GRASSERT_DEBUG(state->eventCallbacks[type].GetRawElements());
+	GRASSERT_MSG(false, "Tried to remove listener that isn't listening");
+}
 
+void InvokeEvent(EventCode type, EventData data)
+{
+	if (state->eventCallbacks[type].GetRawElements())
+	{
 		for (u32 i = 0; i < state->eventCallbacks[type].Size(); ++i)
 		{
-			if (state->eventCallbacks[type][i] == listener)
-			{
-				state->eventCallbacks[type].PopAt(i);
+			// PFN_OnEvent callbacks return true if the event is handled so then we don't need to call anything else
+			if (state->eventCallbacks[type][i](type, data))
 				return;
-			}
-		}
-
-		GRASSERT_MSG(false, "Tried to remove listener that isn't listening");
-	}
-
-	void InvokeEvent(EventCode type, EventData data)
-	{
-		if (state->eventCallbacks[type].GetRawElements())
-		{
-			for (u32 i = 0; i < state->eventCallbacks[type].Size(); ++i)
-			{
-				// PFN_OnEvent callbacks return true if the event is handled so then we don't need to call anything else
-				if (state->eventCallbacks[type][i](type, data))
-					return;
-			}
 		}
 	}
 }
