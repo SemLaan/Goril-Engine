@@ -44,7 +44,7 @@ void* Allocator::AlignedAlloc(size_t size, mem_tag tag, u32 alignment)
 	GRASSERT_DEBUG((alignment >= MIN_ALIGNMENT) && ((alignment & (alignment - 1)) == 0));
 
 	u32 requiredSize = (u32)size + sizeof(AllocHeader) + alignment - 1;
-
+	GRDEBUG("{}", requiredSize);
 #ifndef GR_DIST
 	AllocInfo(requiredSize, tag);
 #endif

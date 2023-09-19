@@ -29,12 +29,12 @@ int main()
 	// ------------------------------------------------------
 
 	// Init engine
-	GR::GameConfig config{};
+	GameConfig config{};
 	config.width = 0;
 	config.height = 0;
 	config.windowTitle = L"Testing window";
 	config.game_instance_memory_requirement = RESERVED_GAME_MEMORY;
-	GR::InitializeEngine(config);
+	InitializeEngine(config);
 
 	// Testing logging functions
 	GRFATAL("Testing log functions: {}", "succesfull");
@@ -58,13 +58,13 @@ int main()
 
 	while (true)
 	{
-		GR::PlatformProcessMessage();
-		if (GR::GetKeyDown(GR::KEY_ESCAPE))
+		PlatformProcessMessage();
+		if (GetKeyDown(KEY_ESCAPE))
 			break;
 	}
 
 	// Shutdown
-	GR::ShutdownEngine();
+	ShutdownEngine();
 	shutdown_test_manager();
 
 	return 0;

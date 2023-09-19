@@ -11,20 +11,22 @@ b8 Game::Init()
 {
     PrintMemoryStats();
 
-	Darray<Vertex> vertices = Darray<Vertex>();
-	vertices.Initialize(MEM_TAG_GAME);
-	vertices.Pushback({ {-1, -1, 1}, {1.f, 0.f, 0.f}, {0.0f, 0.0f} });
-	vertices.Pushback({ {1, -1, 1}, {0.f, 1.f, 0.f}, {1.0f, 0.0f} });
-	vertices.Pushback({ {-1, 1, 1}, {0.f, 0.f, 1.f}, {0.0f, 1.0f} });
-	vertices.Pushback({ {1, 1, 1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f} });
-	vertices.Pushback({ {-1, -1, -1}, {1.f, 1.f, 1.f}, {0.0f, 0.0f} });
-	vertices.Pushback({ {1, -1, -1}, {1.f, 1.f, 1.f}, {1.0f, 0.0f} });
-	vertices.Pushback({ {-1, 1, -1}, {1.f, 1.f, 1.f}, {0.0f, 1.0f} });
-	vertices.Pushback({ {1, 1, -1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f} });
-	vertexBuffer = CreateVertexBuffer(vertices.GetRawElements(), sizeof(Vertex) * vertices.Size());
-	vertices.Deinitialize();
+	const u32 vertexCount = 8;
+	Vertex vertices[vertexCount] =
+	{
+		Vertex({-1, -1, 1}, {1.f, 0.f, 0.f}, {0.0f, 0.0f}),
+		Vertex({1, -1, 1}, {0.f, 1.f, 0.f}, {1.0f, 0.0f}),
+		Vertex({-1, 1, 1}, {0.f, 0.f, 1.f}, {0.0f, 1.0f}),
+		Vertex({ {1, 1, 1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f} }),
+		Vertex({ {-1, -1, -1}, {1.f, 1.f, 1.f}, {0.0f, 0.0f} }),
+		Vertex({ {1, -1, -1}, {1.f, 1.f, 1.f}, {1.0f, 0.0f} }),
+		Vertex({ {-1, 1, -1}, {1.f, 1.f, 1.f}, {0.0f, 1.0f} }),
+		Vertex({ {1, 1, -1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f} })
+	};
 
-	constexpr u32 indexCount = 6 * 6;
+	vertexBuffer = CreateVertexBuffer(vertices, sizeof(Vertex) * vertexCount);
+
+	const u32 indexCount = 6 * 6;
 	u32 indices[indexCount] = { 
 		//Top
 		7, 6, 2,

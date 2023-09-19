@@ -3,21 +3,22 @@
 #include "vulkan_shader_loader.h"
 #include "../buffer.h"
 #include "vulkan_buffer.h"
+#include "core/logger.h"
 #include "../renderer_types.h"
 
 b8 CreateGraphicsPipeline()
 {
 	// Creating shader modules
-	Darray<char> vert;
-	Darray<char> frag;
+	char* vert;
+	char* frag;
 	ReadFile("C:/Users/semla/Documents/Git_Repos/zelf_projecten/c++/Goril/Goril/src/renderer/shaders/vershader.spv", MEM_TAG_RENDERER_SUBSYS, &vert);
 	ReadFile("C:/Users/semla/Documents/Git_Repos/zelf_projecten/c++/Goril/Goril/src/renderer/shaders/frshader.spv", MEM_TAG_RENDERER_SUBSYS, &frag);
 	VkShaderModule vertShaderModule;
 	VkShaderModule fragShaderModule;
 	CreateShaderModule(vk_state, vert, &vertShaderModule);
 	CreateShaderModule(vk_state, frag, &fragShaderModule);
-	vert.Deinitialize();
-	frag.Deinitialize();
+	DarrayDestroy(vert);
+	DarrayDestroy(frag);
 
 	VkDescriptorSetLayoutBinding uboLayoutBindings[2]{};
 	uboLayoutBindings[0].binding = 0;
@@ -49,27 +50,27 @@ b8 CreateGraphicsPipeline()
 
 	VkDeviceSize uniformBufferSize = sizeof(GlobalUniformObject);
 
-	vk_state->uniformBuffers = CreateDarrayWithSize<VkBuffer>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
-	vk_state->uniformBuffersMemory = CreateDarrayWithSize<VkDeviceMemory>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
-	vk_state->uniformBuffersMapped = CreateDarrayWithSize<void*>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
+	vk_state->uniformBuffersDarray = (VkBuffer*)DarrayCreateWithSize(sizeof(VkBuffer), MAX_FRAMES_IN_FLIGHT, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+	vk_state->uniformBuffersMemoryDarray = (VkDeviceMemory*)DarrayCreateWithSize(sizeof(VkDeviceMemory), MAX_FRAMES_IN_FLIGHT, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+	vk_state->uniformBuffersMappedDarray = (void**)DarrayCreateWithSize(sizeof(void*), MAX_FRAMES_IN_FLIGHT, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
 
-	for (i32 i = 0; i < vk_state->maxFramesInFlight; ++i)
+	for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
-		CreateBuffer(uniformBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vk_state->uniformBuffers[i], &vk_state->uniformBuffersMemory[i]);
-		vkMapMemory(vk_state->device, vk_state->uniformBuffersMemory[i], 0, uniformBufferSize, 0, &vk_state->uniformBuffersMapped[i]);
+		CreateBuffer(uniformBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vk_state->uniformBuffersDarray[i], &vk_state->uniformBuffersMemoryDarray[i]);
+		vkMapMemory(vk_state->device, vk_state->uniformBuffersMemoryDarray[i], 0, uniformBufferSize, 0, &vk_state->uniformBuffersMappedDarray[i]);
 	}
 
 	VkDescriptorPoolSize descriptorPoolSizes[2]{};
 	descriptorPoolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	descriptorPoolSizes[0].descriptorCount = (u32)vk_state->maxFramesInFlight;
+	descriptorPoolSizes[0].descriptorCount = MAX_FRAMES_IN_FLIGHT;
 	descriptorPoolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	descriptorPoolSizes[1].descriptorCount = (u32)vk_state->maxFramesInFlight;
+	descriptorPoolSizes[1].descriptorCount = MAX_FRAMES_IN_FLIGHT;
 
 	VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
 	descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	descriptorPoolCreateInfo.pNext = nullptr;
 	descriptorPoolCreateInfo.flags = 0;
-	descriptorPoolCreateInfo.maxSets = (u32)vk_state->maxFramesInFlight;
+	descriptorPoolCreateInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
 	descriptorPoolCreateInfo.poolSizeCount = 2;
 	descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes;
 
@@ -81,31 +82,31 @@ b8 CreateGraphicsPipeline()
 		return false;
 	}
 
-	Darray<VkDescriptorSetLayout> descriptorSetLayouts = CreateDarrayWithCapacity<VkDescriptorSetLayout>(MEM_TAG_RENDERER_SUBSYS, (u32)vk_state->maxFramesInFlight);
-	for (i32 i = 0; i < vk_state->maxFramesInFlight; ++i)
+	VkDescriptorSetLayout* descriptorSetLayoutsDarray = (VkDescriptorSetLayout*)DarrayCreateWithSize(sizeof(VkDescriptorSetLayout), MAX_FRAMES_IN_FLIGHT, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+	for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
-		descriptorSetLayouts.Pushback(vk_state->descriptorSetLayout);
+		descriptorSetLayoutsDarray[i] = vk_state->descriptorSetLayout;
 	}
 
 	VkDescriptorSetAllocateInfo descriptorSetAllocInfo{};
 	descriptorSetAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	descriptorSetAllocInfo.pNext = nullptr;
 	descriptorSetAllocInfo.descriptorPool = vk_state->uniformDescriptorPool;
-	descriptorSetAllocInfo.descriptorSetCount = (u32)vk_state->maxFramesInFlight;
-	descriptorSetAllocInfo.pSetLayouts = descriptorSetLayouts.GetRawElements();
+	descriptorSetAllocInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+	descriptorSetAllocInfo.pSetLayouts = descriptorSetLayoutsDarray;
 
-	vk_state->uniformDescriptorSets = CreateDarrayWithSize<VkDescriptorSet>(MEM_TAG_RENDERER_SUBSYS, (u32)vk_state->maxFramesInFlight);
+	vk_state->uniformDescriptorSetsDarray = (VkDescriptorSet*)DarrayCreateWithSize(sizeof(VkDescriptorSet), MAX_FRAMES_IN_FLIGHT, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
 
-	if (VK_SUCCESS != vkAllocateDescriptorSets(vk_state->device, &descriptorSetAllocInfo, vk_state->uniformDescriptorSets.GetRawElements()))
+	if (VK_SUCCESS != vkAllocateDescriptorSets(vk_state->device, &descriptorSetAllocInfo, vk_state->uniformDescriptorSetsDarray))
 	{
 		GRFATAL("Vulkan descriptor set allocation failed");
-		descriptorSetLayouts.Deinitialize();
+		DarrayDestroy(descriptorSetLayoutsDarray);
 		vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->allocator);
 		vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->allocator);
 		return false;
 	}
 
-	descriptorSetLayouts.Deinitialize();
+	DarrayDestroy(descriptorSetLayoutsDarray);
 
 	VkPipelineShaderStageCreateInfo vertStageCreateInfo{};
 	vertStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -128,7 +129,7 @@ b8 CreateGraphicsPipeline()
 	VkPipelineShaderStageCreateInfo shaderStagesCreateInfo[2] = { vertStageCreateInfo, fragStageCreateInfo };
 
 	// Dynamic states
-	constexpr u32 dynamicStateCount = 2;
+	const u32 dynamicStateCount = 2;
 	VkDynamicState dynamicStates[dynamicStateCount] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 
 	VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo{};
@@ -303,17 +304,17 @@ void DestroyGraphicsPipeline()
 	if (vk_state->pipelineLayout)
 		vkDestroyPipelineLayout(vk_state->device, vk_state->pipelineLayout, vk_state->allocator);
 
-	for (i32 i = 0; i < vk_state->maxFramesInFlight; ++i)
+	for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
-		vkUnmapMemory(vk_state->device, vk_state->uniformBuffersMemory[i]);
-		vkDestroyBuffer(vk_state->device, vk_state->uniformBuffers[i], vk_state->allocator);
-		vkFreeMemory(vk_state->device, vk_state->uniformBuffersMemory[i], vk_state->allocator);
+		vkUnmapMemory(vk_state->device, vk_state->uniformBuffersMemoryDarray[i]);
+		vkDestroyBuffer(vk_state->device, vk_state->uniformBuffersDarray[i], vk_state->allocator);
+		vkFreeMemory(vk_state->device, vk_state->uniformBuffersMemoryDarray[i], vk_state->allocator);
 	}
 
-	vk_state->uniformBuffers.Deinitialize();
-	vk_state->uniformBuffersMapped.Deinitialize();
-	vk_state->uniformBuffersMemory.Deinitialize();
-	vk_state->uniformDescriptorSets.Deinitialize();
+	DarrayDestroy(vk_state->uniformBuffersDarray);
+	DarrayDestroy(vk_state->uniformBuffersMappedDarray);
+	DarrayDestroy(vk_state->uniformBuffersMemoryDarray);
+	DarrayDestroy(vk_state->uniformDescriptorSetsDarray);
 
 	if (vk_state->uniformDescriptorPool)
 		vkDestroyDescriptorPool(vk_state->device, vk_state->uniformDescriptorPool, vk_state->allocator);
@@ -325,7 +326,7 @@ void DestroyGraphicsPipeline()
 void UpdateDescriptorSets(u32 index, VulkanImage* image)
 {
 	VkDescriptorBufferInfo descriptorBufferInfo{};
-	descriptorBufferInfo.buffer = vk_state->uniformBuffers[index];
+	descriptorBufferInfo.buffer = vk_state->uniformBuffersDarray[index];
 	descriptorBufferInfo.offset = 0;
 	descriptorBufferInfo.range = sizeof(GlobalUniformObject);
 
@@ -337,7 +338,7 @@ void UpdateDescriptorSets(u32 index, VulkanImage* image)
 	VkWriteDescriptorSet descriptorWrites[2]{};
 	descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	descriptorWrites[0].pNext = nullptr;
-	descriptorWrites[0].dstSet = vk_state->uniformDescriptorSets[index];
+	descriptorWrites[0].dstSet = vk_state->uniformDescriptorSetsDarray[index];
 	descriptorWrites[0].dstBinding = 0;
 	descriptorWrites[0].dstArrayElement = 0;
 	descriptorWrites[0].descriptorCount = 1;
@@ -348,7 +349,7 @@ void UpdateDescriptorSets(u32 index, VulkanImage* image)
 
 	descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	descriptorWrites[1].pNext = nullptr;
-	descriptorWrites[1].dstSet = vk_state->uniformDescriptorSets[index];
+	descriptorWrites[1].dstSet = vk_state->uniformDescriptorSetsDarray[index];
 	descriptorWrites[1].dstBinding = 1;
 	descriptorWrites[1].dstArrayElement = 0;
 	descriptorWrites[1].descriptorCount = 1;

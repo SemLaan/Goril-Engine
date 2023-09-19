@@ -5,6 +5,6 @@
 #include "vulkan_types.h"
 
 
-b8 ReadFile(const char* filename, mem_tag tag, Darray<char>* out_data);
+b8 ReadFile(const char* filename, mem_tag tag, char** out_data);
 
-b8 CreateShaderModule(RendererState* state, Darray<char>& code, VkShaderModule* out_shaderModule);
+b8 CreateShaderModule(RendererState* state, char* codeDarray, VkShaderModule* out_shaderModule);

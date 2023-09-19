@@ -1,12 +1,12 @@
 #include "vulkan_sync_objects.h"
 
-
+#include "core/logger.h"
 
 
 b8 CreateSyncObjects()
 {
-	vk_state->imageAvailableSemaphores = CreateDarrayWithSize<VkSemaphore>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
-	vk_state->renderFinishedSemaphores = CreateDarrayWithSize<VkSemaphore>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
+	vk_state->imageAvailableSemaphoresDarray = (VkSemaphore*)DarrayCreateWithSize(sizeof(VkSemaphore), MAX_FRAMES_IN_FLIGHT, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+	vk_state->renderFinishedSemaphoresDarray = (VkSemaphore*)DarrayCreateWithSize(sizeof(VkSemaphore), MAX_FRAMES_IN_FLIGHT, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
 
 	VkSemaphoreCreateInfo semaphoreCreateInfo{};
 	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -15,10 +15,10 @@ b8 CreateSyncObjects()
 	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-	for (i32 i = 0; i < vk_state->maxFramesInFlight; ++i)
+	for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
-		if ((VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->allocator, &vk_state->imageAvailableSemaphores[i])) ||
-			(VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->allocator, &vk_state->renderFinishedSemaphores[i])))
+		if ((VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->allocator, &vk_state->imageAvailableSemaphoresDarray[i])) ||
+			(VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->allocator, &vk_state->renderFinishedSemaphoresDarray[i])))
 		{
 			GRFATAL("Failed to create sync objects");
 			return false;
@@ -65,12 +65,12 @@ b8 CreateSyncObjects()
 
 void DestroySyncObjects()
 {
-	for (i32 i = 0; i < vk_state->maxFramesInFlight; ++i)
+	for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
-		if (vk_state->imageAvailableSemaphores.GetRawElements())
-			vkDestroySemaphore(vk_state->device, vk_state->imageAvailableSemaphores[i], vk_state->allocator);
-		if (vk_state->renderFinishedSemaphores.GetRawElements())
-			vkDestroySemaphore(vk_state->device, vk_state->renderFinishedSemaphores[i], vk_state->allocator);
+		if (vk_state->imageAvailableSemaphoresDarray)
+			vkDestroySemaphore(vk_state->device, vk_state->imageAvailableSemaphoresDarray[i], vk_state->allocator);
+		if (vk_state->renderFinishedSemaphoresDarray)
+			vkDestroySemaphore(vk_state->device, vk_state->renderFinishedSemaphoresDarray[i], vk_state->allocator);
 	}
 
 	if (vk_state->vertexUploadSemaphore.handle)
@@ -82,8 +82,8 @@ void DestroySyncObjects()
 	if (vk_state->frameSemaphore.handle)
 		vkDestroySemaphore(vk_state->device, vk_state->frameSemaphore.handle, vk_state->allocator);
 
-	if (vk_state->imageAvailableSemaphores.GetRawElements())
-		vk_state->imageAvailableSemaphores.Deinitialize();
-	if (vk_state->renderFinishedSemaphores.GetRawElements())
-		vk_state->renderFinishedSemaphores.Deinitialize();
+	if (vk_state->imageAvailableSemaphoresDarray)
+		DarrayDestroy(vk_state->imageAvailableSemaphoresDarray);
+	if (vk_state->renderFinishedSemaphoresDarray)
+		DarrayDestroy(vk_state->renderFinishedSemaphoresDarray);
 }

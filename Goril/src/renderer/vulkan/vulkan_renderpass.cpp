@@ -1,6 +1,7 @@
 #include "vulkan_renderpass.h"
 
 
+#include "core/logger.h"
 
 b8 CreateRenderpass(RendererState* state)
 {

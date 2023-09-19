@@ -1,12 +1,13 @@
 #include "event.h"
 #include "containers/darray.h"
 #include "core/gr_memory.h"
+#include "core/asserts.h"
 
 
 
 struct EventState
 {
-	Darray<PFN_OnEvent> eventCallbacks[MAX_EVENTS];
+	PFN_OnEvent* eventCallbacksDarrays[MAX_EVENTS];
 };
 
 static EventState* state = nullptr;
@@ -33,11 +34,11 @@ void ShutdownEvent()
 		GRINFO("Shutting down events subsystem...");
 	}
 
-	for (Darray<PFN_OnEvent>& callbackDarray : state->eventCallbacks)
+	for (PFN_OnEvent* callbackDarray : state->eventCallbacksDarrays)
 	{
-		if (callbackDarray.GetRawElements())
+		if (callbackDarray)
 		{
-			callbackDarray.Deinitialize();
+			DarrayDestroy(callbackDarray);
 		}
 	}
 	GetGlobalAllocator()->Free(state);
@@ -45,30 +46,30 @@ void ShutdownEvent()
 
 void RegisterEventListener(EventCode type, PFN_OnEvent listener)
 {
-	if (!state->eventCallbacks[type].GetRawElements())
+	if (!state->eventCallbacksDarrays[type])
 	{
-		state->eventCallbacks[type].Initialize(MEM_TAG_EVENT_SUBSYS, 5);
+		state->eventCallbacksDarrays[type] = (PFN_OnEvent*)DarrayCreate(sizeof(PFN_OnEvent), 5, GetGlobalAllocator(), MEM_TAG_EVENT_SUBSYS);
 	}
 
 #ifndef GR_DIST
-	for (u32 i = 0; i < state->eventCallbacks[type].Size(); ++i)
+	for (u32 i = 0; i < DarrayGetSize(state->eventCallbacksDarrays[type]); ++i)
 	{
-		GRASSERT_MSG(state->eventCallbacks[type][i] != listener, "Tried to insert duplicate listener");
+		GRASSERT_MSG(state->eventCallbacksDarrays[type][i] != listener, "Tried to insert duplicate listener");
 	}
 #endif // !GR_DIST
 
-	state->eventCallbacks[type].Pushback(listener);
+	DarrayPushback(state->eventCallbacksDarrays[type], &listener);
 }
 
 void UnregisterEventListener(EventCode type, PFN_OnEvent listener)
 {
-	GRASSERT_DEBUG(state->eventCallbacks[type].GetRawElements());
+	GRASSERT_DEBUG(state->eventCallbacksDarrays[type]);
 
-	for (u32 i = 0; i < state->eventCallbacks[type].Size(); ++i)
+	for (u32 i = 0; i < DarrayGetSize(state->eventCallbacksDarrays[type]); ++i)
 	{
-		if (state->eventCallbacks[type][i] == listener)
+		if (state->eventCallbacksDarrays[type][i] == listener)
 		{
-			state->eventCallbacks[type].PopAt(i);
+			DarrayPopAt(state->eventCallbacksDarrays[type], i);
 			return;
 		}
 	}
@@ -78,12 +79,12 @@ void UnregisterEventListener(EventCode type, PFN_OnEvent listener)
 
 void InvokeEvent(EventCode type, EventData data)
 {
-	if (state->eventCallbacks[type].GetRawElements())
+	if (state->eventCallbacksDarrays[type])
 	{
-		for (u32 i = 0; i < state->eventCallbacks[type].Size(); ++i)
+		for (u32 i = 0; i < DarrayGetSize(state->eventCallbacksDarrays[type]); ++i)
 		{
 			// PFN_OnEvent callbacks return true if the event is handled so then we don't need to call anything else
-			if (state->eventCallbacks[type][i](type, data))
+			if (state->eventCallbacksDarrays[type][i](type, data))
 				return;
 		}
 	}

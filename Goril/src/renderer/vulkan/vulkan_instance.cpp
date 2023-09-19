@@ -1,9 +1,10 @@
 #include "vulkan_instance.h"
 
 #include "vulkan_debug_messenger.h"
+#include "core/logger.h"
 
 
-b8 CreateVulkanInstance(const Darray<const void*>& requiredExtensions, const Darray<const void*>& requiredLayers)
+b8 CreateVulkanInstance(void** requiredExtensionsDarray, void** requiredLayersDarray)
 {
 	// ================ App info =============================================
 	VkApplicationInfo appInfo{};
@@ -19,24 +20,24 @@ b8 CreateVulkanInstance(const Darray<const void*>& requiredExtensions, const Dar
 		// Checking if required extensions are available
 		u32 availableExtensionCount = 0;
 		vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, nullptr);
-		Darray<VkExtensionProperties> availableExtensions = CreateDarrayWithSize<VkExtensionProperties>(MEM_TAG_RENDERER_SUBSYS, availableExtensionCount);
-		vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, availableExtensions.GetRawElements());
+		VkExtensionProperties* availableExtensionsDarray = (VkExtensionProperties*)DarrayCreateWithSize(sizeof(VkExtensionProperties), availableExtensionCount, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+		vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, availableExtensionsDarray);
 
 		u32 availableRequiredExtensions = 0;
-		for (u32 i = 0; i < requiredExtensions.Size(); ++i)
+		for (u32 i = 0; i < DarrayGetSize(requiredExtensionsDarray); ++i)
 		{
 			for (u32 j = 0; j < availableExtensionCount; ++j)
 			{
-				if (0 == strncmp((const char*)requiredExtensions[i], availableExtensions[j].extensionName, VK_MAX_EXTENSION_NAME_SIZE))
+				if (0 == strncmp((const char*)requiredExtensionsDarray[i], availableExtensionsDarray[j].extensionName, VK_MAX_EXTENSION_NAME_SIZE))
 				{
 					availableRequiredExtensions++;
 				}
 			}
 		}
 
-		availableExtensions.Deinitialize();
+		DarrayDestroy(availableExtensionsDarray);
 
-		if (availableRequiredExtensions < requiredExtensions.Size())
+		if (availableRequiredExtensions < DarrayGetSize(requiredExtensionsDarray))
 		{
 			GRFATAL("Couldn't find required Vulkan extensions");
 			return false;
@@ -51,24 +52,24 @@ b8 CreateVulkanInstance(const Darray<const void*>& requiredExtensions, const Dar
 		// Checking if required layers are available
 		u32 availableLayerCount = 0;
 		vkEnumerateInstanceLayerProperties(&availableLayerCount, nullptr);
-		Darray<VkLayerProperties> availableLayers = CreateDarrayWithSize<VkLayerProperties>(MEM_TAG_RENDERER_SUBSYS, availableLayerCount);
-		vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers.GetRawElements());
+		VkLayerProperties* availableLayersDarray = (VkLayerProperties*)DarrayCreate(sizeof(VkLayerProperties), availableLayerCount, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+		vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayersDarray);
 
 		u32 availableRequiredLayers = 0;
-		for (u32 i = 0; i < requiredLayers.Size(); ++i)
+		for (u32 i = 0; i < DarrayGetSize(requiredLayersDarray); ++i)
 		{
 			for (u32 j = 0; j < availableLayerCount; ++j)
 			{
-				if (0 == strncmp((const char*)requiredLayers[i], availableLayers[j].layerName, VK_MAX_EXTENSION_NAME_SIZE))
+				if (0 == strncmp((const char*)requiredLayersDarray[i], availableLayersDarray[j].layerName, VK_MAX_EXTENSION_NAME_SIZE))
 				{
 					availableRequiredLayers++;
 				}
 			}
 		}
 
-		availableLayers.Deinitialize();
+		DarrayDestroy(availableLayersDarray);
 
-		if (availableRequiredLayers < requiredLayers.Size())
+		if (availableRequiredLayers < DarrayGetSize(requiredLayersDarray))
 		{
 			GRFATAL("Couldn't find required Vulkan layers");
 			return false;
@@ -103,10 +104,10 @@ b8 CreateVulkanInstance(const Darray<const void*>& requiredExtensions, const Dar
 #endif // !GR_DIST
 		createInfo.flags = 0;
 		createInfo.pApplicationInfo = &appInfo;
-		createInfo.enabledLayerCount = (u32)requiredLayers.Size();
-		createInfo.ppEnabledLayerNames = (const char* const*)requiredLayers.GetRawElements();
-		createInfo.enabledExtensionCount = (u32)requiredExtensions.Size();
-		createInfo.ppEnabledExtensionNames = (const char* const*)requiredExtensions.GetRawElements();
+		createInfo.enabledLayerCount = DarrayGetSize(requiredLayersDarray);
+		createInfo.ppEnabledLayerNames = (const char* const*)requiredLayersDarray;
+		createInfo.enabledExtensionCount = (u32)DarrayGetSize(requiredExtensionsDarray);
+		createInfo.ppEnabledExtensionNames = (const char* const*)requiredExtensionsDarray;
 
 		VkResult result = vkCreateInstance(&createInfo, vk_state->allocator, &vk_state->instance);
 

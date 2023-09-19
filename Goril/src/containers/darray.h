@@ -1,174 +1,30 @@
 #pragma once
 #include "defines.h"
 #include "core/gr_memory.h"
-#include "core/asserts.h"
+
 
 // This makes sure arrays are cache line aligned on most consumer hardware
 #define DARRAY_MIN_ALIGNMENT 64
 
+// Scaling factor for when a darray doesn't have enough memory anymore
+#define DARRAY_SCALING_FACTOR 1.6f
 
-	template<typename T>
-	class Darray
-	{
-	private:
-		T* elements = nullptr;
-		size_t size = 0;
-		size_t capacity = 0;
-		f32 scalingFactor = 0;
-		Allocator* m_allocator = nullptr;
-	public:
-		void Initialize(mem_tag tag = MEM_TAG_DARRAY, u32 reserveCapacity = 1, Allocator* allocator = nullptr, f32 _scalingFactor = 1.6f)
-		{
-			GRASSERT(reserveCapacity != 0);
 
-			if (!allocator)
-				m_allocator = GetGlobalAllocator();
-			else
-				m_allocator = allocator;
+#define DARRAY_STATE_SIZE (sizeof(Darray) + DARRAY_MIN_ALIGNMENT - 1)
 
-			size = 0;
-			capacity = reserveCapacity;
-			scalingFactor = _scalingFactor;
-			elements = (T*)m_allocator->AlignedAlloc(sizeof(T) * capacity, tag, DARRAY_MIN_ALIGNMENT);
-			Zero(elements, sizeof(T) * capacity);
-		}
+GRAPI void* DarrayCreate(u32 stride, u32 capacity, Allocator* allocator, mem_tag tag);
+GRAPI void* DarrayCreateWithSize(u32 stride, u32 capacityAndCapacity, Allocator* allocator, mem_tag tag);
 
-		void Deinitialize()
-		{
-			m_allocator->Free(elements);
-		}
+GRAPI void DarrayPushback(void* elements, void* element);
 
-		T* GetRawElements()
-		{
-			return elements;
-		}
+GRAPI void DarrayPop(void* elements);
 
-		const T* GetRawElements() const
-		{
-			return elements;
-		}
+GRAPI void DarrayPopAt(void* elements, u32 index);
 
-		size_t& Size()
-		{
-			return size;
-		}
+GRAPI void DarrayDestroy(void* elements);
 
-		const size_t& Size() const
-		{
-			return size;
-		}
+GRAPI u32 DarrayGetSize(void* elements);
+GRAPI void DarraySetSize(void* elements, u32 size);
 
-		T const& operator[](int index) const
-		{
-			GRASSERT_DEBUG(index < size);
-			return elements[index];
-		}
-
-		T& operator[](int index)
-		{
-			GRASSERT_DEBUG(index < size);
-			return elements[index];
-		}
-
-		void Clear()
-		{
-			size = 0;
-		}
-
-		void SetSize(u32 newSize)
-		{
-			GRASSERT_DEBUG(newSize > size);
-			if (capacity < newSize)
-			{
-				elements = (T*)m_allocator->ReAlloc(elements, newSize * sizeof(T));
-				capacity = newSize;
-			}
-
-			Zero(elements + size, sizeof(T) * (newSize - size));
-			size = newSize;
-		}
-
-		void SetCapacity(u32 newCapacity)
-		{
-			if (size > newCapacity)
-				size = newCapacity;
-			elements = (T*)m_allocator->ReAlloc(elements, newCapacity * sizeof(T));
-		}
-
-		void Pushback(T&& element)
-		{
-			if (size >= capacity)
-			{
-				capacity = (size_t)ceil(capacity * scalingFactor);
-				elements = (T*)m_allocator->ReAlloc(elements, capacity * sizeof(T));
-			}
-			elements[size] = element;
-			size++;
-		}
-
-		void Pushback(T& element)
-		{
-			if (size >= capacity)
-			{
-				capacity = (size_t)ceil(capacity * scalingFactor);
-				elements = (T*)m_allocator->ReAlloc(elements, capacity * sizeof(T));
-			}
-			elements[size] = element;
-			size++;
-		}
-
-		b8 Contains(const T& element)
-		{
-			for (u32 i = 0; i < size; ++i)
-			{
-				if (0 == memcmp(&element, &elements[i], sizeof(T)))
-				{
-					return true;
-				}
-			}
-			return false;
-		}
-
-		T PopAt(u32 index)
-		{
-			T popped = elements[index];
-			// Copying the buffer inward to fill in the open gap
-			size--;
-			MemCopy(elements + index, elements + index + 1, sizeof(T) * (size - index));
-			return popped;
-		}
-
-		T Pop()
-		{
-			size--;
-			return elements[size];
-		}
-	};
-
-	template<typename T>
-	Darray<T> CreateDarrayWithSize(mem_tag tag = MEM_TAG_DARRAY, u32 size = 0, Allocator* allocator = nullptr, f32 _scalingFactor = 1.6f)
-	{
-		Darray<T> darray = Darray<T>();
-
-		if (size)
-		{
-			darray.Initialize(tag, size, allocator, _scalingFactor);
-			darray.SetSize(size);
-		}
-		else
-		{
-			darray.Initialize(tag, 1, allocator, _scalingFactor);
-		}
-
-		return darray;
-	}
-
-	template<typename T>
-	Darray<T> CreateDarrayWithCapacity(mem_tag tag = MEM_TAG_DARRAY, u32 reserveCapacity = 1, Allocator* allocator = nullptr, f32 _scalingFactor = 1.6f)
-	{
-		Darray<T> darray = Darray<T>();
-
-		darray.Initialize(tag, reserveCapacity, allocator, _scalingFactor);
-
-		return darray;
-	}
+// Only use on small arrays because performance is poor, consider a hash map
+GRAPI b8 DarrayContains(void* elements, void* element);

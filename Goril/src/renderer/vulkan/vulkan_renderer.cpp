@@ -1,6 +1,7 @@
 #include "../renderer.h"
 
 #include "core/logger.h"
+#include "core/asserts.h"
 #include "core/gr_memory.h"
 #include "core/event.h"
 #include "containers/darray.h"
@@ -32,7 +33,6 @@ b8 InitializeRenderer()
 	Zero(vk_state, sizeof(RendererState));
 	vk_state->allocator = nullptr;
 
-	vk_state->maxFramesInFlight = 2;
 	vk_state->currentFrame = 0;
 	vk_state->shouldRecreateSwapchain = false;
 
@@ -40,34 +40,37 @@ b8 InitializeRenderer()
 
 	// ================== Getting required extensions and layers ================================
 	// Getting required extensions
-	Darray<const void*> requiredExtensions = CreateDarrayWithCapacity<const void*>(MEM_TAG_RENDERER_SUBSYS, 5);
-	GetPlatformExtensions(&requiredExtensions);
-	requiredExtensions.Pushback(&VK_KHR_SURFACE_EXTENSION_NAME);
+	void** requiredExtensionsDarray = (void**)DarrayCreate(sizeof(void*), 5, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: Change allocator
+	GetPlatformExtensions(requiredExtensionsDarray);
+	const char* vk_khr_surface_extension_name = VK_KHR_SURFACE_EXTENSION_NAME;
+	DarrayPushback(requiredExtensionsDarray, &vk_khr_surface_extension_name);
 #ifndef GR_DIST
-	requiredExtensions.Pushback(&VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+	const char* vk_ext_debug_utils_extension_name = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
+	DarrayPushback(requiredExtensionsDarray, &vk_ext_debug_utils_extension_name);
 #endif // !GR_DIST
 
 	// Getting required layers
-	Darray<const void*> requiredLayers = CreateDarrayWithCapacity<const void*>(MEM_TAG_RENDERER_SUBSYS, 1);
+	void** requiredLayersDarray = (void**)DarrayCreate(sizeof(void*), 1, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: Change allocator
 #ifndef GR_DIST
-	requiredLayers.Pushback(&"VK_LAYER_KHRONOS_validation");
+	const char* vk_layer_khronos_validation = "VK_LAYER_KHRONOS_validation";
+	DarrayPushback(requiredLayersDarray, &vk_layer_khronos_validation);
 #endif // !GR_DIST
 
 
 	// ================== Creating instance =================================
-	if (!CreateVulkanInstance(requiredExtensions, requiredLayers))
+	if (!CreateVulkanInstance(requiredExtensionsDarray, requiredLayersDarray))
 	{
-		requiredExtensions.Deinitialize();
-		requiredLayers.Deinitialize();
+		DarrayDestroy(requiredExtensionsDarray);
+		DarrayDestroy(requiredLayersDarray);
 		return false;
 	}
-	requiredExtensions.Deinitialize();
+	DarrayDestroy(requiredExtensionsDarray);
 
 	// =============== Creating debug messenger ============================
 #ifndef GR_DIST
 	if (!CreateDebugMessenger())
 	{
-		requiredLayers.Deinitialize();
+		DarrayDestroy(requiredLayersDarray);
 		return false;
 	}
 #endif // !GR_DIST
@@ -76,20 +79,22 @@ b8 InitializeRenderer()
 	if (!PlatformCreateSurface(vk_state->instance, vk_state->allocator, &vk_state->surface))
 	{
 		GRFATAL("Failed to create Vulkan surface");
-		requiredLayers.Deinitialize();
+		DarrayDestroy(requiredLayersDarray);
 		return false;
 	}
 
 	// ================ Getting a physical device ==============================
-	Darray<const void*> requiredDeviceExtensions = CreateDarrayWithCapacity<const void*>(MEM_TAG_RENDERER_SUBSYS, 3);
-	requiredDeviceExtensions.Pushback(&VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-	requiredDeviceExtensions.Pushback(&VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
-	requiredDeviceExtensions.Pushback(&VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
+	void** requiredDeviceExtensionsDarray = (void**)DarrayCreate(sizeof(void*), 3, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+	const char* vk_khr_swapchain_extension_name = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+	const char* vk_khr_synch2_extension_name = VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME;
+	const char* vk_khr_timeline_semaphore_extension_name = VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME;
+	DarrayPushback(requiredDeviceExtensionsDarray, &vk_khr_swapchain_extension_name);
+	DarrayPushback(requiredDeviceExtensionsDarray, &vk_khr_synch2_extension_name);
+	DarrayPushback(requiredDeviceExtensionsDarray, &vk_khr_timeline_semaphore_extension_name);
 
-	if (!SelectPhysicalDevice(vk_state, &requiredDeviceExtensions))
+	if (!SelectPhysicalDevice(requiredDeviceExtensionsDarray))
 	{
-		requiredDeviceExtensions.Deinitialize();
-		requiredLayers.Deinitialize();
+		DarrayDestroy(requiredLayersDarray);
 		return false;
 	}
 
@@ -97,14 +102,12 @@ b8 InitializeRenderer()
 	SelectQueueFamilies(vk_state);
 
 	// ===================== Creating logical device =============================================
-	if (!CreateLogicalDevice(vk_state, &requiredDeviceExtensions, &requiredLayers))
+	if (!CreateLogicalDevice(vk_state, requiredDeviceExtensionsDarray, requiredLayersDarray))
 	{
-		requiredLayers.Deinitialize();
-		requiredDeviceExtensions.Deinitialize();
+		DarrayDestroy(requiredLayersDarray);
 		return false;
 	}
-	requiredLayers.Deinitialize();
-	requiredDeviceExtensions.Deinitialize();
+	DarrayDestroy(requiredLayersDarray);
 
 	// ===================== sets up queues and command pools ================================
 	if (!CreateQueues())
@@ -127,9 +130,7 @@ b8 InitializeRenderer()
 		return false;
 
 	// ============================ Allocate a command buffer =======================================
-	vk_state->commandBuffers = CreateDarrayWithSize<CommandBuffer*>(MEM_TAG_RENDERER_SUBSYS, vk_state->maxFramesInFlight);
-
-	for (i32 i = 0; i < vk_state->maxFramesInFlight; ++i)
+	for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
 		if (!AllocateCommandBuffer(&vk_state->graphicsQueue, &vk_state->commandBuffers[i]))
 			return false;
@@ -139,7 +140,7 @@ b8 InitializeRenderer()
 	if (!CreateSyncObjects())
 		return false;
 
-	vk_state->requestedQueueAcquisitionOperations = CreateDarrayWithCapacity<VkDependencyInfo*>(MEM_TAG_RENDERER_SUBSYS, 10); /// TODO: change allocator to renderer local allocator (when it exists)
+	vk_state->requestedQueueAcquisitionOperationsDarray = (VkDependencyInfo**)DarrayCreate(sizeof(VkDependencyInfo*), 10, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); /// TODO: change allocator to renderer local allocator (when it exists)
 
 	return true;
 }
@@ -158,25 +159,17 @@ void ShutdownRenderer()
 
 	UnregisterEventListener(EVCODE_WINDOW_RESIZED, OnWindowResize);
 
-	vkDeviceWaitIdle(vk_state->device);
+	if (vk_state->device)
+		vkDeviceWaitIdle(vk_state->device);
 
-	TryDestroyResourcesPendingDestruction();
+	if (vk_state->graphicsQueue.resourcesPendingDestructionDarray)
+		TryDestroyResourcesPendingDestruction();
 
-	if (vk_state->requestedQueueAcquisitionOperations.GetRawElements())
-		vk_state->requestedQueueAcquisitionOperations.Deinitialize();
+	if (vk_state->requestedQueueAcquisitionOperationsDarray)
+		DarrayDestroy(vk_state->requestedQueueAcquisitionOperationsDarray);
 
 	// ================================ Destroy sync objects if they were created ===========================================
 	DestroySyncObjects();
-
-	// ================================== Destroy command buffers =============================================
-	if (vk_state->commandBuffers.GetRawElements())
-	{
-		for (i32 i = 0; i < vk_state->maxFramesInFlight; ++i)
-		{
-			FreeCommandBuffer(vk_state->commandBuffers[i]);
-		}
-		vk_state->commandBuffers.Deinitialize();
-	}
 
 	// ====================== Destroying swapchain framebuffers if they were created ================================
 	DestroySwapchainFramebuffers(vk_state);
@@ -238,12 +231,12 @@ b8 BeginFrame()
 	semaphoreWaitInfo.flags = 0;
 	semaphoreWaitInfo.semaphoreCount = 1;
 	semaphoreWaitInfo.pSemaphores = &vk_state->frameSemaphore.handle;
-	u64 waitForValue = vk_state->frameSemaphore.submitValue - (vk_state->maxFramesInFlight - 1);
+	u64 waitForValue = vk_state->frameSemaphore.submitValue - (MAX_FRAMES_IN_FLIGHT - 1);
 	semaphoreWaitInfo.pValues = &waitForValue;
 
 	vkWaitSemaphores(vk_state->device, &semaphoreWaitInfo, UINT64_MAX);
 
-	VkResult result = vkAcquireNextImageKHR(vk_state->device, vk_state->swapchain, UINT64_MAX, vk_state->imageAvailableSemaphores[vk_state->currentFrame], VK_NULL_HANDLE, &vk_state->currentSwapchainImageIndex);
+	VkResult result = vkAcquireNextImageKHR(vk_state->device, vk_state->swapchain, UINT64_MAX, vk_state->imageAvailableSemaphoresDarray[vk_state->currentFrame], VK_NULL_HANDLE, &vk_state->currentSwapchainImageIndex);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
@@ -266,13 +259,13 @@ b8 BeginFrame()
 	VkCommandBuffer currentCommandBuffer = vk_state->commandBuffers[vk_state->currentFrame]->handle;
 
 	// acquire ownership of all uploaded resources
-	for (u32 i = 0; i < vk_state->requestedQueueAcquisitionOperations.Size(); ++i)
+	for (u32 i = 0; i < DarrayGetSize(vk_state->requestedQueueAcquisitionOperationsDarray); ++i)
 	{
-		vkCmdPipelineBarrier2(currentCommandBuffer, vk_state->requestedQueueAcquisitionOperations[i]);
-		GRFree(vk_state->requestedQueueAcquisitionOperations[i]);
+		vkCmdPipelineBarrier2(currentCommandBuffer, vk_state->requestedQueueAcquisitionOperationsDarray[i]);
+		GRFree(vk_state->requestedQueueAcquisitionOperationsDarray[i]);
 	}
 
-	vk_state->requestedQueueAcquisitionOperations.Clear();
+	DarraySetSize(vk_state->requestedQueueAcquisitionOperationsDarray, 0);
 
 	/// TODO: begin renderpass function
 	VkClearValue clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -280,7 +273,7 @@ b8 BeginFrame()
 	renderpassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderpassBeginInfo.pNext = nullptr;
 	renderpassBeginInfo.renderPass = vk_state->renderpass;
-	renderpassBeginInfo.framebuffer = vk_state->swapchainFramebuffers[vk_state->currentSwapchainImageIndex];
+	renderpassBeginInfo.framebuffer = vk_state->swapchainFramebuffersDarray[vk_state->currentSwapchainImageIndex];
 	renderpassBeginInfo.renderArea.offset = { 0, 0 };
 	renderpassBeginInfo.renderArea.extent = vk_state->swapchainExtent;
 	renderpassBeginInfo.clearValueCount = 1;
@@ -306,7 +299,7 @@ b8 BeginFrame()
 	scissor.extent = vk_state->swapchainExtent;
 	vkCmdSetScissor(currentCommandBuffer, 0, 1, &scissor);
 
-	vkCmdBindDescriptorSets(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->pipelineLayout, 0, 1, &vk_state->uniformDescriptorSets[vk_state->currentFrame], 0, nullptr);
+	vkCmdBindDescriptorSets(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->pipelineLayout, 0, 1, &vk_state->uniformDescriptorSetsDarray[vk_state->currentFrame], 0, nullptr);
 
 	return true;
 }
@@ -326,7 +319,7 @@ void EndFrame()
 	// Swapchain image acquisition semaphore
 	waitSemaphores[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 	waitSemaphores[0].pNext = nullptr;
-	waitSemaphores[0].semaphore = vk_state->imageAvailableSemaphores[vk_state->currentFrame];
+	waitSemaphores[0].semaphore = vk_state->imageAvailableSemaphoresDarray[vk_state->currentFrame];
 	waitSemaphores[0].value = 0;
 	waitSemaphores[0].stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 	waitSemaphores[0].deviceIndex = 0;
@@ -357,7 +350,7 @@ void EndFrame()
 	VkSemaphoreSubmitInfo signalSemaphores[signalSemaphoreCount]{};
 	signalSemaphores[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 	signalSemaphores[0].pNext = nullptr;
-	signalSemaphores[0].semaphore = vk_state->renderFinishedSemaphores[vk_state->currentFrame];
+	signalSemaphores[0].semaphore = vk_state->renderFinishedSemaphoresDarray[vk_state->currentFrame];
 	signalSemaphores[0].value = 0;
 	signalSemaphores[0].stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 	signalSemaphores[0].deviceIndex = 0;
@@ -378,7 +371,7 @@ void EndFrame()
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pNext = nullptr;
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &vk_state->renderFinishedSemaphores[vk_state->currentFrame];
+	presentInfo.pWaitSemaphores = &vk_state->renderFinishedSemaphoresDarray[vk_state->currentFrame];
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = swapchains;
 	presentInfo.pImageIndices = &vk_state->currentSwapchainImageIndex;
@@ -386,13 +379,13 @@ void EndFrame()
 
 	vkQueuePresentKHR(vk_state->presentQueue, &presentInfo);
 
-	vk_state->currentFrame = (vk_state->currentFrame + 1) % vk_state->maxFramesInFlight;
+	vk_state->currentFrame = (vk_state->currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void UpdateGlobalUniforms(GlobalUniformObject* globalUniformObject, Texture texture)
 {
 	UpdateDescriptorSets(vk_state->currentFrame, (VulkanImage*)texture.internalState); /// HACK: make gfx pipelines configurable
-	MemCopy(vk_state->uniformBuffersMapped[vk_state->currentFrame], globalUniformObject, sizeof(GlobalUniformObject));
+	MemCopy(vk_state->uniformBuffersMappedDarray[vk_state->currentFrame], globalUniformObject, sizeof(GlobalUniformObject));
 }
 
 void DrawIndexed(VertexBuffer _vertexBuffer, IndexBuffer _indexBuffer, PushConstantObject* pPushConstantValues)

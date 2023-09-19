@@ -7,19 +7,19 @@
 b8 CreateSwapchain(RendererState* state)
 {
 	// Getting a swapchain format
-	VkSurfaceFormatKHR format = state->swapchainSupport.formats[0];
-	for (u32 i = 0; i < state->swapchainSupport.formats.Size(); ++i)
+	VkSurfaceFormatKHR format = state->swapchainSupport.formatsDarray[0];
+	for (u32 i = 0; i < DarrayGetSize(state->swapchainSupport.formatsDarray); ++i)
 	{
-		VkSurfaceFormatKHR availableFormat = state->swapchainSupport.formats[i];
+		VkSurfaceFormatKHR availableFormat = state->swapchainSupport.formatsDarray[i];
 		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
 			format = availableFormat;
 	}
 
 	// Getting a presentation mode
 	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
-	for (u32 i = 0; i < state->swapchainSupport.presentModes.Size(); ++i)
+	for (u32 i = 0; i < DarrayGetSize(state->swapchainSupport.presentModesDarray); ++i)
 	{
-		VkPresentModeKHR availablePresentMode = state->swapchainSupport.presentModes[i];
+		VkPresentModeKHR availablePresentMode = state->swapchainSupport.presentModesDarray[i];
 		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
 			presentMode = availablePresentMode;
 	}
@@ -28,8 +28,8 @@ b8 CreateSwapchain(RendererState* state)
 	glm::ivec2 windowSize = GetPlatformWindowSize();
 	VkExtent2D swapchainExtent = { (u32)windowSize.x, (u32)windowSize.y };
 	// Making sure the swapchain isn't too big or too small
-	state->swapchainSupport.formats.Deinitialize();
-	state->swapchainSupport.presentModes.Deinitialize();
+	DarrayDestroy(state->swapchainSupport.formatsDarray);
+	DarrayDestroy(state->swapchainSupport.presentModesDarray);
 	state->swapchainSupport = QuerySwapchainSupport(state->physicalDevice, state->surface);
 	if (swapchainExtent.width > state->swapchainSupport.capabilities.maxImageExtent.width)
 		swapchainExtent.width = state->swapchainSupport.capabilities.maxImageExtent.width;
@@ -87,10 +87,10 @@ b8 CreateSwapchain(RendererState* state)
 
 	u32 swapchainImageCount = 0;
 	vkGetSwapchainImagesKHR(state->device, state->swapchain, &swapchainImageCount, nullptr);
-	state->swapchainImages = CreateDarrayWithSize<VkImage>(MEM_TAG_RENDERER_SUBSYS, swapchainImageCount);
-	vkGetSwapchainImagesKHR(state->device, state->swapchain, &swapchainImageCount, state->swapchainImages.GetRawElements());
+	state->swapchainImagesDarray = (VkImage*)DarrayCreateWithSize(sizeof(VkImage), swapchainImageCount, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+	vkGetSwapchainImagesKHR(state->device, state->swapchain, &swapchainImageCount, state->swapchainImagesDarray);
 
-	state->swapchainImageViews = CreateDarrayWithSize<VkImageView>(MEM_TAG_RENDERER_SUBSYS, swapchainImageCount);
+	state->swapchainImageViewsDarray = (VkImageView*)DarrayCreateWithSize(sizeof(VkImageView), swapchainImageCount, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
 
 	for (u32 i = 0; i < swapchainImageCount; ++i)
 	{
@@ -98,7 +98,7 @@ b8 CreateSwapchain(RendererState* state)
 		viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		viewCreateInfo.pNext = nullptr;
 		viewCreateInfo.flags = 0;
-		viewCreateInfo.image = state->swapchainImages[i];
+		viewCreateInfo.image = state->swapchainImagesDarray[i];
 		viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		viewCreateInfo.format = state->swapchainFormat;
 		viewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -111,7 +111,7 @@ b8 CreateSwapchain(RendererState* state)
 		viewCreateInfo.subresourceRange.baseMipLevel = 0;
 		viewCreateInfo.subresourceRange.levelCount = 1;
 
-		if (VK_SUCCESS != vkCreateImageView(state->device, &viewCreateInfo, state->allocator, &state->swapchainImageViews[i]))
+		if (VK_SUCCESS != vkCreateImageView(state->device, &viewCreateInfo, state->allocator, &state->swapchainImageViewsDarray[i]))
 		{
 			GRFATAL("Swapchain image view creation failed");
 			return false;
@@ -123,30 +123,30 @@ b8 CreateSwapchain(RendererState* state)
 
 void DestroySwapchain(RendererState* state)
 {
-	if (state->swapchainImageViews.GetRawElements())
+	if (state->swapchainImageViewsDarray)
 	{
-		for (u32 i = 0; i < state->swapchainImageViews.Size(); ++i)
+		for (u32 i = 0; i < DarrayGetSize(state->swapchainImageViewsDarray); ++i)
 		{
-			vkDestroyImageView(state->device, state->swapchainImageViews[i], state->allocator);
+			vkDestroyImageView(state->device, state->swapchainImageViewsDarray[i], state->allocator);
 		}
 	}
 
 	if (state->swapchain)
 		vkDestroySwapchainKHR(state->device, state->swapchain, state->allocator);
 
-	if (state->swapchainImages.GetRawElements())
-		state->swapchainImages.Deinitialize();
-	if (state->swapchainImageViews.GetRawElements())
-		state->swapchainImageViews.Deinitialize();
+	if (state->swapchainImagesDarray)
+		DarrayDestroy(state->swapchainImagesDarray);
+	if (state->swapchainImageViewsDarray)
+		DarrayDestroy(state->swapchainImageViewsDarray);
 }
 
 b8 CreateSwapchainFramebuffers(RendererState* state)
 {
-	state->swapchainFramebuffers = CreateDarrayWithSize<VkFramebuffer>(MEM_TAG_RENDERER_SUBSYS, (u32)state->swapchainImages.Size());
+	state->swapchainFramebuffersDarray = (VkFramebuffer*)DarrayCreateWithSize(sizeof(VkFramebuffer), DarrayGetSize(state->swapchainImagesDarray), GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
 
-	for (u32 i = 0; i < state->swapchainFramebuffers.Size(); ++i)
+	for (u32 i = 0; i < DarrayGetSize(state->swapchainFramebuffersDarray); ++i)
 	{
-		VkImageView attachments[] = { state->swapchainImageViews[i] };
+		VkImageView attachments[] = { state->swapchainImageViewsDarray[i] };
 
 		VkFramebufferCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -159,7 +159,7 @@ b8 CreateSwapchainFramebuffers(RendererState* state)
 		createInfo.height = state->swapchainExtent.height;
 		createInfo.layers = 1;
 
-		if (VK_SUCCESS != vkCreateFramebuffer(state->device, &createInfo, state->allocator, &state->swapchainFramebuffers[i]))
+		if (VK_SUCCESS != vkCreateFramebuffer(state->device, &createInfo, state->allocator, &state->swapchainFramebuffersDarray[i]))
 		{
 			GRFATAL("Swapchain framebuffer creation failed");
 			return false;
@@ -171,12 +171,12 @@ b8 CreateSwapchainFramebuffers(RendererState* state)
 
 void DestroySwapchainFramebuffers(RendererState* state)
 {
-	if (state->swapchainFramebuffers.GetRawElements())
+	if (state->swapchainFramebuffersDarray)
 	{
-		for (u32 i = 0; i < state->swapchainFramebuffers.Size(); ++i)
+		for (u32 i = 0; i < DarrayGetSize(state->swapchainFramebuffersDarray); ++i)
 		{
-			vkDestroyFramebuffer(state->device, state->swapchainFramebuffers[i], state->allocator);
+			vkDestroyFramebuffer(state->device, state->swapchainFramebuffersDarray[i], state->allocator);
 		}
-		state->swapchainFramebuffers.Deinitialize();
+		DarrayDestroy(state->swapchainFramebuffersDarray);
 	}
 }

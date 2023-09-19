@@ -1,6 +1,6 @@
 #include "vulkan_queues.h"
 
-
+#include "core/logger.h"
 
 
 b8 CreateQueues()
@@ -13,11 +13,11 @@ b8 CreateQueues()
 	// Graphics, transfer and (in the future) compute queue
 	vkGetDeviceQueue(vk_state->device, vk_state->queueIndices.graphicsFamily, 0, &vk_state->graphicsQueue.handle);
 	vk_state->graphicsQueue.index = vk_state->queueIndices.graphicsFamily;
-	vk_state->graphicsQueue.resourcesPendingDestruction = CreateDarrayWithCapacity<ResourceDestructionInfo>(MEM_TAG_RENDERER_SUBSYS, 20); /// TODO: change allocator to renderer local allocator (when it exists)
+	vk_state->graphicsQueue.resourcesPendingDestructionDarray = (ResourceDestructionInfo*)DarrayCreate(sizeof(ResourceDestructionInfo), 20, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); /// TODO: change allocator to renderer local allocator (when it exists)
 
 	vkGetDeviceQueue(vk_state->device, vk_state->queueIndices.transferFamily, 0, &vk_state->transferQueue.handle);
 	vk_state->transferQueue.index = vk_state->queueIndices.transferFamily;
-	vk_state->transferQueue.resourcesPendingDestruction = CreateDarrayWithCapacity<ResourceDestructionInfo>(MEM_TAG_RENDERER_SUBSYS, 20); /// TODO: change allocator to renderer local allocator (when it exists)
+	vk_state->transferQueue.resourcesPendingDestructionDarray = (ResourceDestructionInfo*)DarrayCreate(sizeof(ResourceDestructionInfo), 20, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); /// TODO: change allocator to renderer local allocator (when it exists)
 
 	// ==================== Creating command pools for each of the queue families =============================
 	VkCommandPoolCreateInfo commandPoolCreateInfo{};
@@ -81,26 +81,26 @@ void DestroyQueues()
 	if (vk_state->transferQueue.commandPool)
 		vkDestroyCommandPool(vk_state->device, vk_state->transferQueue.commandPool, vk_state->allocator);
 
-	if (vk_state->graphicsQueue.resourcesPendingDestruction.GetRawElements())
-		vk_state->graphicsQueue.resourcesPendingDestruction.Deinitialize();
-	if (vk_state->transferQueue.resourcesPendingDestruction.GetRawElements())
-		vk_state->transferQueue.resourcesPendingDestruction.Deinitialize();
+	if (vk_state->graphicsQueue.resourcesPendingDestructionDarray)
+		DarrayDestroy(vk_state->graphicsQueue.resourcesPendingDestructionDarray);
+	if (vk_state->transferQueue.resourcesPendingDestructionDarray)
+		DarrayDestroy(vk_state->transferQueue.resourcesPendingDestructionDarray);
 }
 
 static void TryDestroyResourcesPendingDestructionInQueue(QueueFamily* queue)
 {
-	if (queue->resourcesPendingDestruction.Size() != 0)
+	if (DarrayGetSize(queue->resourcesPendingDestructionDarray) != 0)
 	{
 		u64 semaphoreValue;
 		vkGetSemaphoreCounterValue(vk_state->device, queue->semaphore.handle, &semaphoreValue);
 
 		// Looping from the end of the list to the beginning so we can remove elements without ruining the loop
-		for (i32 i = (i32)queue->resourcesPendingDestruction.Size() - 1; i >= 0; --i)
+		for (i32 i = (i32)DarrayGetSize(queue->resourcesPendingDestructionDarray) - 1; i >= 0; --i)
 		{
-			if (queue->resourcesPendingDestruction[i].signalValue <= semaphoreValue)
+			if (queue->resourcesPendingDestructionDarray[i].signalValue <= semaphoreValue)
 			{
-				queue->resourcesPendingDestruction[i].Destructor(queue->resourcesPendingDestruction[i].resource);
-				queue->resourcesPendingDestruction.PopAt(i);
+				queue->resourcesPendingDestructionDarray[i].Destructor(queue->resourcesPendingDestructionDarray[i].resource);
+				DarrayPopAt(queue->resourcesPendingDestructionDarray, i);
 			}
 		}
 	}

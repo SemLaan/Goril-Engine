@@ -7,6 +7,8 @@
 struct RendererState;
 extern RendererState* vk_state;
 
+#define MAX_FRAMES_IN_FLIGHT 2
+
 struct VulkanVertexBuffer
 {
 	VkDeviceSize size;
@@ -49,7 +51,7 @@ struct QueueFamily
 {
 	VkQueue handle;
 	VkCommandPool commandPool;
-	Darray<ResourceDestructionInfo> resourcesPendingDestruction;
+	ResourceDestructionInfo* resourcesPendingDestructionDarray;
 	VulkanSemaphore semaphore;
 	u32 index;
 };
@@ -60,11 +62,12 @@ struct CommandBuffer
 	QueueFamily* queueFamily;
 };
 
+
 struct SwapchainSupportDetails
 {
 	VkSurfaceCapabilitiesKHR capabilities;
-	Darray<VkSurfaceFormatKHR> formats;
-	Darray<VkPresentModeKHR> presentModes;
+	VkSurfaceFormatKHR* formatsDarray;
+	VkPresentModeKHR* presentModesDarray;
 };
 
 struct QueueFamilyIndices
@@ -86,29 +89,28 @@ struct RendererState
 	VkSurfaceKHR surface;
 	SwapchainSupportDetails swapchainSupport;
 	VkSwapchainKHR swapchain;
-	Darray<VkImage> swapchainImages;
-	Darray<VkImageView> swapchainImageViews;
+	VkImage* swapchainImagesDarray;
+	VkImageView* swapchainImageViewsDarray;
 	VkFormat swapchainFormat;
 	VkExtent2D swapchainExtent;
 	VkRenderPass renderpass;
 	VkDescriptorSetLayout descriptorSetLayout;
-	Darray<VkBuffer> uniformBuffers;
-	Darray<VkDeviceMemory> uniformBuffersMemory;
-	Darray<void*> uniformBuffersMapped;
+	VkBuffer* uniformBuffersDarray;
+	VkDeviceMemory* uniformBuffersMemoryDarray;
+	void** uniformBuffersMappedDarray;
 	VkDescriptorPool uniformDescriptorPool;
-	Darray<VkDescriptorSet> uniformDescriptorSets;
+	VkDescriptorSet* uniformDescriptorSetsDarray;
 	VkPipelineLayout pipelineLayout;
 	VkPipeline graphicsPipeline;
-	Darray<VkFramebuffer> swapchainFramebuffers;
-	Darray<CommandBuffer*> commandBuffers;
-	Darray<VkSemaphore> imageAvailableSemaphores;
-	Darray<VkSemaphore> renderFinishedSemaphores;
+	VkFramebuffer* swapchainFramebuffersDarray;
+	CommandBuffer* commandBuffers[MAX_FRAMES_IN_FLIGHT];
+	VkSemaphore* imageAvailableSemaphoresDarray;
+	VkSemaphore* renderFinishedSemaphoresDarray;
 	VulkanSemaphore vertexUploadSemaphore;
 	VulkanSemaphore indexUploadSemaphore;
 	VulkanSemaphore imageUploadSemaphore;
 	VulkanSemaphore frameSemaphore;
-	Darray<VkDependencyInfo*> requestedQueueAcquisitionOperations; /// TODO: make this part of the queuefamily
-	i32 maxFramesInFlight;
+	VkDependencyInfo** requestedQueueAcquisitionOperationsDarray; /// TODO: make this part of the queuefamily
 	u32 currentFrame;
 	u32 currentSwapchainImageIndex;
 	b8 shouldRecreateSwapchain;

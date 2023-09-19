@@ -4,6 +4,6 @@
 #include "containers/darray.h"
 
 
-void GetPlatformExtensions(Darray<const void*>* extensionNames);
+void GetPlatformExtensions(void** extensionNamesDarray);
 
 b8 PlatformCreateSurface(VkInstance instance, VkAllocationCallbacks* allocator, VkSurfaceKHR* out_surface);

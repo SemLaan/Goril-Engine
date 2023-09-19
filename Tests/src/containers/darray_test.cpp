@@ -14,69 +14,76 @@ struct Beef
 
 static b8 darray_pushback_test()
 {
-	Darray<Beef> darray = Darray<Beef>();
-	darray.Initialize();
+	Beef* darray = (Beef*)DarrayCreate(sizeof(Beef), 1, GetGlobalAllocator(), MEM_TAG_TEST);
 
 	u32 amountValue = 3;
 	f32 qualityValue = 2.3f;
 
-	darray.Pushback(Beef(amountValue, qualityValue));
-	darray.Pushback(Beef(amountValue, qualityValue));
-	darray.Pushback(Beef(amountValue, qualityValue));
-	darray.Pushback(Beef(amountValue, qualityValue));
+	Beef test(amountValue, qualityValue);
+	DarrayPushback(darray, &test);
+	DarrayPushback(darray, &test);
+	DarrayPushback(darray, &test);
+	DarrayPushback(darray, &test);
 
 	expect_float_to_be(qualityValue, darray[0].quality);
 	expect_should_be(amountValue, darray[0].amount);
 	expect_float_to_be(qualityValue, darray[3].quality);
 	expect_should_be(amountValue, darray[3].amount);
 
-	darray.Deinitialize();
+	DarrayDestroy(darray);
 
 	return true;
 }
 
 static b8 darray_pop_test()
 {
-	Darray<Beef> darray = Darray<Beef>();
-	darray.Initialize();
+	Beef* darray = (Beef*)DarrayCreate(sizeof(Beef), 1, GetGlobalAllocator(), MEM_TAG_TEST);
 
 	u32 amountValue = 3;
 	f32 qualityValue = 2.3f;
 
-	darray.Pushback(Beef(0, 0));
-	darray.Pushback(Beef(0, 0));
-	darray.Pushback(Beef(0, 0)); // 2, this one gets poped
-	darray.Pushback(Beef(amountValue, qualityValue));
+	Beef test1(0, 0);
+	Beef test2(amountValue, qualityValue);
 
-	darray.PopAt(2);
+	DarrayPushback(darray, &test1);
+	DarrayPushback(darray, &test1);
+	DarrayPushback(darray, &test1); // 2, this one gets popped
+	DarrayPushback(darray, &test2);
+
+	DarrayPopAt(darray, 2);
 
 	expect_float_to_be(qualityValue, darray[2].quality);
 	expect_should_be(amountValue, darray[2].amount);
 
-	darray.Pop();
+	DarrayPop(darray);
 
 	expect_float_to_be(0, darray[1].quality);
 	expect_should_be(0, darray[1].amount);
 
-	darray.Deinitialize();
+	DarrayDestroy(darray);
 
 	return true;
 }
 
 static b8 darray_contains_test()
 {
-	Darray<int> darray = Darray<int>();
-	darray.Initialize();
+	int* darray = (int*)DarrayCreate(sizeof(int), 1, GetGlobalAllocator(), MEM_TAG_TEST);
 
-	darray.Pushback(1);
-	darray.Pushback(3);
-	darray.Pushback(4);
-	darray.Pushback(5);
+	int i = 1;
+	DarrayPushback(darray, &i);
+	i = 3;
+	DarrayPushback(darray, &i);
+	i = 4;
+	DarrayPushback(darray, &i);
+	i = 5;
+	DarrayPushback(darray, &i);
 
-	expect_to_be_true(darray.Contains(4));
-	expect_to_be_false(darray.Contains(2));
+	i = 4;
+	expect_to_be_true(DarrayContains(darray, &i));
+	i = 2;
+	expect_to_be_false(DarrayContains(darray, &i));
 
-	darray.Deinitialize();
+	DarrayDestroy(darray);
 
 	return true;
 }
