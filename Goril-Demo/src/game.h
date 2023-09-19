@@ -7,9 +7,8 @@
 
 
 
-class Game : public GorilGame
+typedef struct GameState
 {
-private:
 	VertexBuffer vertexBuffer;
 	IndexBuffer indexBuffer;
 	Texture texture;
@@ -18,11 +17,12 @@ private:
 	glm::mat4 view;
 	glm::mat4 proj;
 	bool mouseEnabled;
+} GameState;
 
-public:
-	// Inherited via GorilGame
-	bool Init() override;
-	bool Update() override;
-	bool Render() override;
-	bool Shutdown() override;
-};
+extern GameState* gamestate;
+
+
+bool Init();
+bool Update();
+bool Render();
+bool Shutdown();

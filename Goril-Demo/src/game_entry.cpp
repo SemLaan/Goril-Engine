@@ -13,10 +13,15 @@ GameConfig GetGameConfig()
 	return config;
 }
 
-bool CreateGameInstance(GorilGame*& out_game)
+void GetGameConfigAndFunctions(GameConfig* out_config, GameFunctions* out_gameFunctions)
 {
-	out_game = (GorilGame*)Alloc(GetGlobalAllocator(), sizeof(Game), MEM_TAG_GAME);
-	out_game = new(out_game) Game();
+	out_config->game_instance_memory_requirement = KiB;
+	out_config->windowTitle = L"Test game";
+	out_config->width = 1280;
+	out_config->height = 720;
 
-	return true;
+	out_gameFunctions->GameInit = Init;
+	out_gameFunctions->GameUpdate = Update;
+	out_gameFunctions->GameRender = Render;
+	out_gameFunctions->GameShutdown = Shutdown;
 }

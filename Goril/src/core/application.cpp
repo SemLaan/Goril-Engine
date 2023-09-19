@@ -64,9 +64,9 @@ bool InitializeEngine(GameConfig config)
 	return true;
 }
 
-bool RunEngine(GorilGame* gameInstance)
+bool RunEngine(GameFunctions* gameFunctions)
 {
-	gameInstance->Init();
+	gameFunctions->GameInit();
 
 	while (appRunning)
 	{
@@ -91,11 +91,11 @@ bool RunEngine(GorilGame* gameInstance)
 		PlatformProcessMessage(); /// TODO: sleep platform every loop if app suspended to not waste pc resources
 		if (!appSuspended)
 		{
-			gameInstance->Update();
+			gameFunctions->GameUpdate();
 			bool succesfull = BeginFrame();
 			if (succesfull)
 			{
-				gameInstance->Render();
+				gameFunctions->GameRender();
 				EndFrame();
 			}
 			if (GetKeyDown(KEY_ESCAPE))
@@ -106,7 +106,7 @@ bool RunEngine(GorilGame* gameInstance)
 	UnregisterEventListener(EVCODE_QUIT, OnQuit);
 	UnregisterEventListener(EVCODE_WINDOW_RESIZED, OnResize);
 	UnregisterEventListener(EVCODE_KEY_DOWN, OnKeyDown);
-	gameInstance->Shutdown();
+	gameFunctions->GameShutdown();
 
 	return true;
 }

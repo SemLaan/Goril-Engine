@@ -7,8 +7,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <core/platform.h>
 
-bool Game::Init()
+
+GameState* gamestate = nullptr;
+
+bool Init()
 {
+	gamestate = (GameState*)Alloc(GetGlobalAllocator(), sizeof(*gamestate), MEM_TAG_GAME);
+
     PrintMemoryStats();
 
 	const u32 vertexCount = 8;
@@ -24,7 +29,7 @@ bool Game::Init()
 		Vertex({ {1, 1, -1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f} })
 	};
 
-	vertexBuffer = CreateVertexBuffer(vertices, sizeof(Vertex) * vertexCount);
+	gamestate->vertexBuffer = CreateVertexBuffer(vertices, sizeof(Vertex) * vertexCount);
 
 	const u32 indexCount = 6 * 6;
 	u32 indices[indexCount] = { 
@@ -47,13 +52,13 @@ bool Game::Init()
 		4, 6, 7,
 		7, 5, 4
 	};
-	indexBuffer = CreateIndexBuffer(indices, indexCount);
+	gamestate->indexBuffer = CreateIndexBuffer(indices, indexCount);
 
 	glm::ivec2 windowSize = GetPlatformWindowSize();
-	proj = glm::perspective(glm::radians(45.0f), windowSize.x / (float)windowSize.y, 0.1f, 1000.0f);
-	view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	camPosition = glm::vec3(0, -3, 0);
-	camRotation = glm::vec3(0);
+	gamestate->proj = glm::perspective(glm::radians(45.0f), windowSize.x / (float)windowSize.y, 0.1f, 1000.0f);
+	gamestate->view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	gamestate->camPosition = glm::vec3(0, -3, 0);
+	gamestate->camRotation = glm::vec3(0);
 
 	u32 textureWidth = 100;
 	u32 textureHeight = 100;
@@ -69,28 +74,28 @@ bool Game::Init()
 		texturePixels[pixelIndex + 3] = 255;
 	}
 
-	texture = CreateTexture(textureWidth, textureHeight, texturePixels);
+	gamestate->texture = CreateTexture(textureWidth, textureHeight, texturePixels);
 
 	Free(GetGlobalAllocator(), texturePixels);
 
     return true;
 }
 
-bool Game::Update()
+bool Update()
 {
 	f32 mouseMoveSpeed = 3500;
 
-	camRotation.x += GetMouseDistanceFromCenter().x / mouseMoveSpeed;
-	camRotation.y += GetMouseDistanceFromCenter().y / mouseMoveSpeed;
-	if (camRotation.y > 1.5f)
-		camRotation.y = 1.5f;
-	if (camRotation.y < -1.5f)
-		camRotation.y = -1.5f;
+	gamestate->camRotation.x += GetMouseDistanceFromCenter().x / mouseMoveSpeed;
+	gamestate->camRotation.y += GetMouseDistanceFromCenter().y / mouseMoveSpeed;
+	if (gamestate->camRotation.y > 1.5f)
+		gamestate->camRotation.y = 1.5f;
+	if (gamestate->camRotation.y < -1.5f)
+		gamestate->camRotation.y = -1.5f;
 
 	// Create individual rotation matrices
-	glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), camRotation.x, glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), camRotation.y, glm::vec3(1.0f, 0.0f, 0.0f));
-	glm::mat4 Rz = glm::rotate(glm::mat4(1.0f), camRotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), gamestate->camRotation.x, glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), gamestate->camRotation.y, glm::vec3(1.0f, 0.0f, 0.0f));
+	glm::mat4 Rz = glm::rotate(glm::mat4(1.0f), gamestate->camRotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 
 	// Combine the rotation matrices
 	glm::mat4 R_combined = Rz * Ry * Rx;
@@ -112,11 +117,11 @@ bool Game::Update()
 		frameMovement.y += 1;
 	if (GetKeyDown(KEY_SPACE))
 		frameMovement.y -= 1;
-	camPosition += frameMovement / 300.f;
+	gamestate->camPosition += frameMovement / 300.f;
 
-	glm::mat4 translate = glm::translate(glm::mat4(1.0f), camPosition);
+	glm::mat4 translate = glm::translate(glm::mat4(1.0f), gamestate->camPosition);
 
-	view = R_combined * translate;
+	gamestate->view = R_combined * translate;
 
 	if (GetButtonDown(BUTTON_LEFTMOUSEBTN) && !GetButtonDownPrevious(BUTTON_LEFTMOUSEBTN))
 		ToggleMouseCentered();
@@ -124,11 +129,11 @@ bool Game::Update()
     return true;
 }
 
-bool Game::Render()
+bool Render()
 {
 	GlobalUniformObject ubo{};
-	ubo.projView = proj * view;
-	UpdateGlobalUniforms(&ubo, texture);
+	ubo.projView = gamestate->proj * gamestate->view;
+	UpdateGlobalUniforms(&ubo, gamestate->texture);
 
 	for (u32 i = 0; i < 3; ++i)
 	{
@@ -137,16 +142,19 @@ bool Game::Render()
 		pushValues.model = glm::rotate(pushValues.model, (i+0.1f)/0.4f, glm::vec3(1, 0, 0));
 		pushValues.model = glm::translate(pushValues.model, glm::vec3(i * 3, 0, 0));
 
-		DrawIndexed(vertexBuffer, indexBuffer, &pushValues);
+		DrawIndexed(gamestate->vertexBuffer, gamestate->indexBuffer, &pushValues);
 	}
 	
     return true;
 }
 
-bool Game::Shutdown()
+bool Shutdown()
 {
-	DestroyIndexBuffer(indexBuffer);
-	DestroyVertexBuffer(vertexBuffer);
-	DestroyTexture(texture);
+	DestroyIndexBuffer(gamestate->indexBuffer);
+	DestroyVertexBuffer(gamestate->vertexBuffer);
+	DestroyTexture(gamestate->texture);
+	
+	Free(GetGlobalAllocator(), gamestate);
+
     return true;
 }

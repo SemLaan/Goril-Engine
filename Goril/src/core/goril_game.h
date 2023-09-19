@@ -2,22 +2,23 @@
 #include "defines.h"
 
 
-struct GameConfig
+typedef struct GameConfig
 {
 	size_t game_instance_memory_requirement;
 	const wchar_t* windowTitle;
 	u32 width;
 	u32 height;
-};
+} GameConfig;
 
-class GRAPI GorilGame
+typedef bool (*PFN_Init)();
+typedef bool (*PFN_Update)();
+typedef bool (*PFN_Render)();
+typedef bool (*PFN_Shutdown)();
+
+typedef struct GameFunctions
 {
-public:
-	virtual bool Init() = 0;
-
-	virtual bool Update() = 0;
-
-	virtual bool Render() = 0;
-
-	virtual bool Shutdown() = 0;
-};
+	PFN_Init     GameInit;
+	PFN_Update   GameUpdate;
+	PFN_Render   GameRender;
+	PFN_Shutdown GameShutdown;
+} GameFunctions;

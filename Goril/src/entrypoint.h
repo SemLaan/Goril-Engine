@@ -5,46 +5,31 @@
 #include "core/asserts.h"
 #include "core/gr_memory.h"
 
-extern GameConfig GetGameConfig();
-extern bool CreateGameInstance(GorilGame*& out_game);
+extern void GetGameConfigAndFunctions(GameConfig* out_config, GameFunctions* out_gameFunctions);
 
 int main()
 {
 	// Engine initialization
+	GameFunctions gameFunctions{};
 	{
-		GameConfig config = GetGameConfig();
+		GameConfig config{};
+		GetGameConfigAndFunctions(&config, &gameFunctions);
 
 		if (!InitializeEngine(config))
 		{
 			GRFATAL("Failed to initialize engine, shutting down");
 			ShutdownEngine();
-			GRASSERT_DEBUG(false);
 			return 1;
 		}
 	}
-	
-	// Getting the game instance object
-	GorilGame* gameInstance = nullptr;
-	if (!CreateGameInstance(gameInstance))
-	{
-		GRFATAL("Failed to create game instance, shutting down");
-		ShutdownEngine();
-		GRASSERT_DEBUG(false);
-		return 1;
-	}
-	GRASSERT_DEBUG(gameInstance);
 
 	// Running the engine and game
-	if (!RunEngine(gameInstance))
+	if (!RunEngine(&gameFunctions))
 	{
 		GRFATAL("Engine failed while running, shutting down");
-		Free(GetGlobalAllocator(), gameInstance);
 		ShutdownEngine();
-		GRASSERT_DEBUG(false);
 		return 1;
 	}
-
-	Free(GetGlobalAllocator(), gameInstance);
 
 	ShutdownEngine();
 	

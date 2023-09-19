@@ -4,10 +4,10 @@
 
 
 
-struct Timer
+typedef struct Timer
 {
 	std::chrono::steady_clock::time_point startTime;
-};
+} Timer;
 
 extern Timer g_timer;
 extern f64 g_deltaTime;

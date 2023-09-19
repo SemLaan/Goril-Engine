@@ -5,7 +5,7 @@
 
 GRAPI bool InitializeEngine(GameConfig config);
 
-GRAPI bool RunEngine(GorilGame* gameInstance);
+GRAPI bool RunEngine(GameFunctions* gameFunctions);
 
 GRAPI void ShutdownEngine();
 
