@@ -38,13 +38,13 @@ int main()
 	if (!RunEngine(gameInstance))
 	{
 		GRFATAL("Engine failed while running, shutting down");
-		GRFree(gameInstance);
+		Free(GetGlobalAllocator(), gameInstance);
 		ShutdownEngine();
 		GRASSERT_DEBUG(false);
 		return 1;
 	}
 
-	GRFree(gameInstance);
+	Free(GetGlobalAllocator(), gameInstance);
 
 	ShutdownEngine();
 	

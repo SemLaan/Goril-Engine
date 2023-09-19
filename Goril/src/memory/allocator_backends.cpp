@@ -32,8 +32,6 @@ static void FreelistFree(void* backendState, void* block, size_t size);
 
 Allocator CreateFreelistAllocator(size_t arenaSize, bool safetySpace /*default: true*/)
 {
-	Allocator allocator = Allocator();
-
 	if (safetySpace)
 		arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
 
@@ -46,7 +44,7 @@ Allocator CreateFreelistAllocator(size_t arenaSize, bool safetySpace /*default: 
 	size_t requiredMemory = arenaSize + stateSize;
 
 	// Allocating memory for state and arena and zeroing state memory
-	void* arenaBlock = GRAlloc(requiredMemory, MEM_TAG_SUB_ARENA);
+	void* arenaBlock = Alloc(GetGlobalAllocator(), requiredMemory, MEM_TAG_SUB_ARENA);
 	Zero(arenaBlock, stateSize);
 #ifndef GR_DIST
 	AllocInfo(stateSize, MEM_TAG_ALLOCATOR_STATE);
@@ -70,7 +68,11 @@ Allocator CreateFreelistAllocator(size_t arenaSize, bool safetySpace /*default: 
 	state->head->next = nullptr;
 
 	// Linking the allocator object to the freelist functions
-	allocator.Initialize(state, FreelistAlloc, FreelistTryReAlloc, FreelistFree);
+	Allocator allocator{};
+	allocator.BackendAlloc = FreelistAlloc;
+	allocator.BackendTryReAlloc = FreelistTryReAlloc;
+	allocator.BackendFree = FreelistFree;
+	allocator.backendState = state;
 
 	return allocator;
 }
@@ -83,7 +85,7 @@ void DestroyFreelistAllocator(Allocator allocator)
 #endif // !GR_DIST
 
 	// Frees the entire arena including state
-	GRFree(state);
+	Free(GetGlobalAllocator(), state);
 }
 
 size_t FreelistGetFreeNodes(void* backendState)
@@ -302,8 +304,6 @@ static void BumpFree(void* backendState, void* block, size_t size);
 
 Allocator CreateBumpAllocator(size_t arenaSize, bool safetySpace /*default: true*/)
 {
-	Allocator allocator = Allocator();
-
 	if (safetySpace)
 		arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
 
@@ -312,7 +312,7 @@ Allocator CreateBumpAllocator(size_t arenaSize, bool safetySpace /*default: true
 	size_t requiredMemory = arenaSize + stateSize;
 
 	// Allocating memory for state and arena and zeroing state memory
-	void* arenaBlock = GRAlloc(requiredMemory, MEM_TAG_SUB_ARENA);
+	void* arenaBlock = Alloc(GetGlobalAllocator(), requiredMemory, MEM_TAG_SUB_ARENA);
 	Zero(arenaBlock, stateSize);
 #ifndef GR_DIST
 	AllocInfo(stateSize, MEM_TAG_ALLOCATOR_STATE);
@@ -329,7 +329,11 @@ Allocator CreateBumpAllocator(size_t arenaSize, bool safetySpace /*default: true
 	state->allocCount = 0;
 
 	// Linking the allocator object to the freelist functions
-	allocator.Initialize(state, BumpAlloc, BumpTryReAlloc, BumpFree);
+	Allocator allocator{};
+	allocator.BackendAlloc = BumpAlloc;
+	allocator.BackendTryReAlloc = BumpTryReAlloc;
+	allocator.BackendFree = BumpFree;
+	allocator.backendState = state;
 
 	return allocator;
 }
@@ -342,7 +346,7 @@ void DestroyBumpAllocator(Allocator allocator)
 #endif // !GR_DIST
 
 	// Frees the entire arena including state
-	GRFree(state);
+	Free(GetGlobalAllocator(), state);
 }
 
 static void* BumpAlloc(void* backendState, size_t size)
@@ -427,7 +431,10 @@ bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* o
 	state->head->next = nullptr;
 
 	// Linking the allocator object to the freelist functions
-	out_allocator->Initialize(state, FreelistAlloc, FreelistTryReAlloc, FreelistFree);
+	out_allocator->BackendAlloc = FreelistAlloc;
+	out_allocator->BackendTryReAlloc = FreelistTryReAlloc;
+	out_allocator->BackendFree = FreelistFree;
+	out_allocator->backendState = state;
 
 	return true;
 }

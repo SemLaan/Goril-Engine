@@ -52,12 +52,12 @@ static bool event_test()
 	RegisterEventListener(EVCODE_TEST, TestListener2);
 
 	testData = {};
-	testData.bool[0] = true;
+	testData.b8[0] = true;
 
 	InvokeEvent(EVCODE_TEST, testData);
 
-	expect_to_be_true((bool)g_data1.bool[0]);
-	expect_to_be_false((bool)g_data2.bool[0]);
+	expect_to_be_true(g_data1.b8[0]);
+	expect_to_be_false(g_data2.b8[0]);
 
 	UnregisterEventListener(EVCODE_TEST, TestListener1);
 	UnregisterEventListener(EVCODE_TEST, TestListener2);

@@ -94,7 +94,7 @@ VertexBuffer CreateVertexBuffer(void* vertices, size_t size)
 {
 	// Allocating memory for the buffer
 	VertexBuffer clientBuffer;
-	clientBuffer.internalState = GRAlloc(sizeof(VulkanVertexBuffer), MEM_TAG_VERTEX_BUFFER);
+	clientBuffer.internalState = Alloc(GetGlobalAllocator(), sizeof(VulkanVertexBuffer), MEM_TAG_VERTEX_BUFFER);
 	VulkanVertexBuffer* buffer = (VulkanVertexBuffer*)clientBuffer.internalState;
 	buffer->size = size;
 
@@ -155,7 +155,7 @@ VertexBuffer CreateVertexBuffer(void* vertices, size_t size)
 	// Creating the buffer memory barrier for the queue family acquire operation
 	// This is put in the requestedQueueAcquisitionOperations list and will be submitted as a command in the draw loop, 
 	// also synced with vertex upload semaphore, so ownership isn't acquired before it is released
-	VkDependencyInfo* acquireDependencyInfo = (VkDependencyInfo*)GRAlloc(sizeof(VkDependencyInfo) + sizeof(VkBufferMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
+	VkDependencyInfo* acquireDependencyInfo = (VkDependencyInfo*)Alloc(GetGlobalAllocator(), sizeof(VkDependencyInfo) + sizeof(VkBufferMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
 	VkBufferMemoryBarrier2* acquireBufferInfo = (VkBufferMemoryBarrier2*)(acquireDependencyInfo + 1);
 
 	acquireBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
@@ -206,7 +206,7 @@ static void VertexBufferDestructor(void* resource)
 	vkDestroyBuffer(vk_state->device, buffer->handle, vk_state->allocator);
 	vkFreeMemory(vk_state->device, buffer->memory, vk_state->allocator);
 
-	GRFree(buffer);
+	Free(GetGlobalAllocator(), buffer);
 }
 
 void DestroyVertexBuffer(VertexBuffer clientBuffer)
@@ -222,7 +222,7 @@ void DestroyVertexBuffer(VertexBuffer clientBuffer)
 IndexBuffer CreateIndexBuffer(u32* indices, size_t indexCount)
 {
 	IndexBuffer clientBuffer;
-	clientBuffer.internalState = GRAlloc(sizeof(VulkanIndexBuffer), MEM_TAG_INDEX_BUFFER);
+	clientBuffer.internalState = Alloc(GetGlobalAllocator(), sizeof(VulkanIndexBuffer), MEM_TAG_INDEX_BUFFER);
 	VulkanIndexBuffer* buffer = (VulkanIndexBuffer*)clientBuffer.internalState;
 	buffer->size = indexCount * sizeof(u32);
 	buffer->indexCount = indexCount;
@@ -284,7 +284,7 @@ IndexBuffer CreateIndexBuffer(u32* indices, size_t indexCount)
 	// Creating the buffer memory barrier for the queue family acquire operation
 	// This is put in the requestedQueueAcquisitionOperations list and will be submitted as a command in the draw loop, 
 	// also synced with index upload semaphore, so ownership isn't acquired before it is released
-	VkDependencyInfo* acquireDependencyInfo = (VkDependencyInfo*)GRAlloc(sizeof(VkDependencyInfo) + sizeof(VkBufferMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
+	VkDependencyInfo* acquireDependencyInfo = (VkDependencyInfo*)Alloc(GetGlobalAllocator(), sizeof(VkDependencyInfo) + sizeof(VkBufferMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
 	VkBufferMemoryBarrier2* acquireBufferInfo = (VkBufferMemoryBarrier2*)(acquireDependencyInfo + 1);
 
 	acquireBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
@@ -335,7 +335,7 @@ static void IndexBufferDestructor(void* resource)
 	vkDestroyBuffer(vk_state->device, buffer->handle, vk_state->allocator);
 	vkFreeMemory(vk_state->device, buffer->memory, vk_state->allocator);
 
-	GRFree(buffer);
+	Free(GetGlobalAllocator(), buffer);
 }
 
 void DestroyIndexBuffer(IndexBuffer clientBuffer)

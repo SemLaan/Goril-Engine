@@ -8,17 +8,17 @@
 
 static bool bump_allocator_test()
 {
-	size_t arena_size = 12 + Allocator::GetAllocHeaderSize() * 2 + MIN_ALIGNMENT * 2;
+	size_t arena_size = 12 + GetAllocHeaderSize() * 2 + MIN_ALIGNMENT * 2;
 
 	Allocator allocator = CreateBumpAllocator(arena_size, false);
 
-	void* temp = allocator.Alloc(8, MEM_TAG_TEST);
-	void* temp2 = allocator.Alloc(4, MEM_TAG_TEST);
-	allocator.Free(temp2);
-	allocator.Free(temp);
+	void* temp = Alloc(&allocator, 8, MEM_TAG_TEST);
+	void* temp2 = Alloc(&allocator, 4, MEM_TAG_TEST);
+	Free(&allocator, temp2);
+	Free(&allocator, temp);
 
-	void* temp3 = allocator.Alloc(12, MEM_TAG_TEST);
-	allocator.Free(temp3);
+	void* temp3 = Alloc(&allocator, 12, MEM_TAG_TEST);
+	Free(&allocator, temp3);
 
 	DestroyBumpAllocator(allocator);
 
@@ -27,16 +27,16 @@ static bool bump_allocator_test()
 
 static bool bump_allocator_realloc_test()
 {
-	size_t arena_size = 1000 + Allocator::GetAllocHeaderSize() + MIN_ALIGNMENT;
+	size_t arena_size = 1000 + GetAllocHeaderSize() + MIN_ALIGNMENT;
 
 	Allocator allocator = CreateBumpAllocator(arena_size, false);
 
-	void* temp = allocator.Alloc(700, MEM_TAG_TEST);
-	temp = allocator.ReAlloc(temp, 800);
-	allocator.Free(temp);
+	void* temp = Alloc(&allocator, 700, MEM_TAG_TEST);
+	temp = ReAlloc(&allocator, temp, 800);
+	Free(&allocator, temp);
 
-	void* temp4 = allocator.Alloc(1000, MEM_TAG_TEST);
-	allocator.Free(temp4);
+	void* temp4 = Alloc(&allocator, 1000, MEM_TAG_TEST);
+	Free(&allocator, temp4);
 
 	DestroyBumpAllocator(allocator);
 
@@ -46,32 +46,32 @@ static bool bump_allocator_realloc_test()
 
 static bool freelist_allocator_test()
 {
-	size_t arena_size = 1000 + Allocator::GetAllocHeaderSize() + MIN_ALIGNMENT;
+	size_t arena_size = 1000 + GetAllocHeaderSize() + MIN_ALIGNMENT;
 
 	Allocator allocator = CreateFreelistAllocator(arena_size, false);
 
 	// Testing full allocation and deallocation
-	void* temp = allocator.Alloc(1000, MEM_TAG_TEST);
-	allocator.Free(temp);
+	void* temp = Alloc(&allocator, 1000, MEM_TAG_TEST);
+	Free(&allocator, temp);
 
 	expect_should_be(1, FreelistGetFreeNodes(allocator.backendState));
 
 	// Testing mixed allocs and deallocs
-	void* temp0 = allocator.Alloc(200, MEM_TAG_TEST);
-	void* temp1 = allocator.Alloc(300, MEM_TAG_TEST);
-	void* temp2 = allocator.Alloc(300, MEM_TAG_TEST);
-	expect_should_be(300, allocator.GetBlockSize(temp2));
-	void* temp3 = allocator.Alloc(80, MEM_TAG_TEST);
-	allocator.Free(temp1);
-	allocator.Free(temp2);
+	void* temp0 = Alloc(&allocator, 200, MEM_TAG_TEST);
+	void* temp1 = Alloc(&allocator, 300, MEM_TAG_TEST);
+	void* temp2 = Alloc(&allocator, 300, MEM_TAG_TEST);
+	expect_should_be(300, GetBlockSize(temp2));
+	void* temp3 = Alloc(&allocator, 80, MEM_TAG_TEST);
+	Free(&allocator, temp1);
+	Free(&allocator, temp2);
 	expect_should_be(2, FreelistGetFreeNodes(allocator.backendState));
-	void* temp4 = allocator.Alloc(500, MEM_TAG_TEST); // This will only allocate if it has properly combined free elements that are next to each other
-	allocator.Free(temp0);
-	allocator.Free(temp3);
-	allocator.Free(temp4);
+	void* temp4 = Alloc(&allocator, 500, MEM_TAG_TEST); // This will only allocate if it has properly combined free elements that are next to each other
+	Free(&allocator, temp0);
+	Free(&allocator, temp3);
+	Free(&allocator, temp4);
 
-	temp = allocator.Alloc(1000, MEM_TAG_TEST);
-	allocator.Free(temp);
+	temp = Alloc(&allocator, 1000, MEM_TAG_TEST);
+	Free(&allocator, temp);
 
 	DestroyFreelistAllocator(allocator);
 
@@ -80,35 +80,35 @@ static bool freelist_allocator_test()
 
 static bool freelist_allocator_realloc_test()
 {
-	size_t arena_size = 1000 + Allocator::GetAllocHeaderSize() + MIN_ALIGNMENT;
+	size_t arena_size = 1000 + GetAllocHeaderSize() + MIN_ALIGNMENT;
 
 	Allocator allocator = CreateFreelistAllocator(arena_size, false);
 
-	void* temp = allocator.Alloc(700, MEM_TAG_TEST);
-	temp = allocator.ReAlloc(temp, 800);
-	expect_should_be(800, allocator.GetBlockSize(temp));
-	allocator.Free(temp);
+	void* temp = Alloc(&allocator, 700, MEM_TAG_TEST);
+	temp = ReAlloc(&allocator, temp, 800);
+	expect_should_be(800, GetBlockSize(temp));
+	Free(&allocator, temp);
 
-	void* temp4 = allocator.Alloc(1000, MEM_TAG_TEST);
-	allocator.Free(temp4);
+	void* temp4 = Alloc(&allocator, 1000, MEM_TAG_TEST);
+	Free(&allocator, temp4);
 
 
-	void* temp1 = allocator.Alloc(200, MEM_TAG_TEST);
-	void* temp2 = allocator.Alloc(200, MEM_TAG_TEST);
-	temp1 = allocator.ReAlloc(temp1, 300);
-	expect_should_be(300, allocator.GetBlockSize(temp1));
-	allocator.Free(temp1);
-	allocator.Free(temp2);
+	void* temp1 = Alloc(&allocator, 200, MEM_TAG_TEST);
+	void* temp2 = Alloc(&allocator, 200, MEM_TAG_TEST);
+	temp1 = ReAlloc(&allocator, temp1, 300);
+	expect_should_be(300, GetBlockSize(temp1));
+	Free(&allocator, temp1);
+	Free(&allocator, temp2);
 
-	void* temp3 = allocator.Alloc(1000, MEM_TAG_TEST);
-	allocator.Free(temp3);
+	void* temp3 = Alloc(&allocator, 1000, MEM_TAG_TEST);
+	Free(&allocator, temp3);
 
-	void* temp5 = allocator.Alloc(800, MEM_TAG_TEST);
-	temp5 = allocator.ReAlloc(temp5, 200);
-	expect_should_be(200, allocator.GetBlockSize(temp5));
-	void* temp6 = allocator.Alloc(500, MEM_TAG_TEST);
-	allocator.Free(temp5);
-	allocator.Free(temp6);
+	void* temp5 = Alloc(&allocator, 800, MEM_TAG_TEST);
+	temp5 = ReAlloc(&allocator, temp5, 200);
+	expect_should_be(200, GetBlockSize(temp5));
+	void* temp6 = Alloc(&allocator, 500, MEM_TAG_TEST);
+	Free(&allocator, temp5);
+	Free(&allocator, temp6);
 
 	DestroyFreelistAllocator(allocator);
 
@@ -117,21 +117,21 @@ static bool freelist_allocator_realloc_test()
 
 static bool freelist_allocator_alignment_test()
 {
-	size_t arena_size = 1000 + Allocator::GetAllocHeaderSize() + MIN_ALIGNMENT;
+	size_t arena_size = 1000 + GetAllocHeaderSize() + MIN_ALIGNMENT;
 
 	Allocator allocator = CreateFreelistAllocator(arena_size, false);
 
-	void* temp = allocator.AlignedAlloc(200, MEM_TAG_TEST, 8);
+	void* temp = AlignedAlloc(&allocator, 200, MEM_TAG_TEST, 8);
 	expect_should_be(0, (u64)temp & 7);
-	void* temp1 = allocator.AlignedAlloc(200, MEM_TAG_TEST, 64);
+	void* temp1 = AlignedAlloc(&allocator, 200, MEM_TAG_TEST, 64);
 	expect_should_be(0, (u64)temp1 & 63);
-	temp = allocator.ReAlloc(temp, 300);
+	temp = ReAlloc(&allocator, temp, 300);
 	expect_should_be(0, (u64)temp & 7);
-	allocator.Free(temp1);
-	allocator.Free(temp);
+	Free(&allocator, temp1);
+	Free(&allocator, temp);
 
-	void* temp4 = allocator.Alloc(1000, MEM_TAG_TEST);
-	allocator.Free(temp4);
+	void* temp4 = Alloc(&allocator, 1000, MEM_TAG_TEST);
+	Free(&allocator, temp4);
 
 	DestroyFreelistAllocator(allocator);
 

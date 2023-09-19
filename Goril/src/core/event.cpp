@@ -16,7 +16,7 @@ bool InitializeEvent()
 {
 	GRASSERT_DEBUG(state == nullptr); // If this triggers init got called twice
 	GRINFO("Initializing event subsystem...");
-	state = (EventState*)GetGlobalAllocator()->Alloc(sizeof(EventState), MEM_TAG_EVENT_SUBSYS);
+	state = (EventState*)Alloc(GetGlobalAllocator(), sizeof(EventState), MEM_TAG_EVENT_SUBSYS);
 	Zero(state, sizeof(EventState));
 
 	return true;
@@ -41,7 +41,7 @@ void ShutdownEvent()
 			DarrayDestroy(callbackDarray);
 		}
 	}
-	GetGlobalAllocator()->Free(state);
+	Free(GetGlobalAllocator(), state);
 }
 
 void RegisterEventListener(EventCode type, PFN_OnEvent listener)

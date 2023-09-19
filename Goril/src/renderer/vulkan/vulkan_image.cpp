@@ -85,7 +85,7 @@ static void CopyBufferToImageAndTransitionQueue(VkImage dstImage, VkBuffer srcBu
 Texture CreateTexture(u32 width, u32 height, void* pixels)
 {
 	Texture out_texture{};
-	out_texture.internalState = GRAlloc(sizeof(VulkanImage), MEM_TAG_TEXTURE);
+	out_texture.internalState = Alloc(GetGlobalAllocator(), sizeof(VulkanImage), MEM_TAG_TEXTURE);
 	VulkanImage* image = (VulkanImage*)out_texture.internalState;
 
 	size_t size = width * height * TEXTURE_CHANNELS;
@@ -222,7 +222,7 @@ Texture CreateTexture(u32 width, u32 height, void* pixels)
 	// Creating the image memory barrier for the queue family acquire operation
 	// This is put in the requestedQueueAcquisitionOperations list and will be submitted as a command in the draw loop, 
 	// also synced with image upload semaphore, so ownership isn't acquired before it is released
-	VkDependencyInfo* acquireDependencyInfo = (VkDependencyInfo*)GRAlloc(sizeof(VkDependencyInfo) + sizeof(VkImageMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
+	VkDependencyInfo* acquireDependencyInfo = (VkDependencyInfo*)Alloc(GetGlobalAllocator(), sizeof(VkDependencyInfo) + sizeof(VkImageMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
 	VkImageMemoryBarrier2* acquireImageInfo = (VkImageMemoryBarrier2*)(acquireDependencyInfo + 1);
 
 	acquireImageInfo->sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
@@ -314,7 +314,7 @@ static void ImageDestructor(void* resource)
 	vkDestroyImage(vk_state->device, image->handle, vk_state->allocator);
 	vkFreeMemory(vk_state->device, image->memory, vk_state->allocator);
 
-	GRFree(image);
+	Free(GetGlobalAllocator(), image);
 }
 
 void DestroyTexture(Texture clientTexture)

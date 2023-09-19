@@ -57,7 +57,7 @@ bool Game::Init()
 
 	u32 textureWidth = 100;
 	u32 textureHeight = 100;
-	u8* texturePixels = (u8*)GRAlloc(textureWidth * textureHeight * TEXTURE_CHANNELS, MEM_TAG_GAME);
+	u8* texturePixels = (u8*)Alloc(GetGlobalAllocator(), textureWidth * textureHeight * TEXTURE_CHANNELS, MEM_TAG_GAME);
 
 	for (u32 i = 0; i < textureWidth * textureHeight; ++i)
 	{
@@ -71,7 +71,7 @@ bool Game::Init()
 
 	texture = CreateTexture(textureWidth, textureHeight, texturePixels);
 
-	GRFree(texturePixels);
+	Free(GetGlobalAllocator(), texturePixels);
 
     return true;
 }

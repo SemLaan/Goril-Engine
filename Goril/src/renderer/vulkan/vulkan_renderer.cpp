@@ -29,7 +29,7 @@ bool InitializeRenderer()
 	GRASSERT_DEBUG(vk_state == nullptr); // If this triggers init got called twice
 	GRINFO("Initializing renderer subsystem...");
 
-	vk_state = (RendererState*)GRAlloc(sizeof(RendererState), MEM_TAG_RENDERER_SUBSYS);
+	vk_state = (RendererState*)Alloc(GetGlobalAllocator(), sizeof(RendererState), MEM_TAG_RENDERER_SUBSYS);
 	Zero(vk_state, sizeof(RendererState));
 	vk_state->allocator = nullptr;
 
@@ -200,7 +200,7 @@ void ShutdownRenderer()
 
 	// ======================= Destroying instance if it was created =======================================
 	DestroyVulkanInstance();
-	GRFree(vk_state);
+	Free(GetGlobalAllocator(), vk_state);
 	vk_state = nullptr;
 }
 
@@ -262,7 +262,7 @@ bool BeginFrame()
 	for (u32 i = 0; i < DarrayGetSize(vk_state->requestedQueueAcquisitionOperationsDarray); ++i)
 	{
 		vkCmdPipelineBarrier2(currentCommandBuffer, vk_state->requestedQueueAcquisitionOperationsDarray[i]);
-		GRFree(vk_state->requestedQueueAcquisitionOperationsDarray[i]);
+		Free(GetGlobalAllocator(), vk_state->requestedQueueAcquisitionOperationsDarray[i]);
 	}
 
 	DarraySetSize(vk_state->requestedQueueAcquisitionOperationsDarray, 0);

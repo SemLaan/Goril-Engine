@@ -9,7 +9,7 @@
 
 bool AllocateCommandBuffer(QueueFamily* queueFamily, CommandBuffer** out_pCommandBuffer)
 {
-	*out_pCommandBuffer = (CommandBuffer*)GRAlloc(sizeof(CommandBuffer), MEM_TAG_RENDERER_SUBSYS);
+	*out_pCommandBuffer = (CommandBuffer*)Alloc(GetGlobalAllocator(), sizeof(CommandBuffer), MEM_TAG_RENDERER_SUBSYS);
 	CommandBuffer* commandBuffer = *out_pCommandBuffer;
 
 	VkCommandBufferAllocateInfo allocateInfo{};
@@ -22,7 +22,7 @@ bool AllocateCommandBuffer(QueueFamily* queueFamily, CommandBuffer** out_pComman
 	if (VK_SUCCESS != vkAllocateCommandBuffers(vk_state->device, &allocateInfo, &commandBuffer->handle))
 	{
 		GRFATAL("Failed to allocate command buffer");
-		GRFree(commandBuffer);
+		Free(GetGlobalAllocator(), commandBuffer);
 		return false;
 	}
 
@@ -34,12 +34,12 @@ bool AllocateCommandBuffer(QueueFamily* queueFamily, CommandBuffer** out_pComman
 void FreeCommandBuffer(CommandBuffer* commandBuffer)
 {
 	vkFreeCommandBuffers(vk_state->device, commandBuffer->queueFamily->commandPool, 1, &commandBuffer->handle);
-	GRFree(commandBuffer);
+	Free(GetGlobalAllocator(), commandBuffer);
 }
 
 bool AllocateAndBeginSingleUseCommandBuffer(QueueFamily* queueFamily, CommandBuffer** out_pCommandBuffer)
 {
-	*out_pCommandBuffer = (CommandBuffer*)GRAlloc(sizeof(CommandBuffer), MEM_TAG_RENDERER_SUBSYS);
+	*out_pCommandBuffer = (CommandBuffer*)Alloc(GetGlobalAllocator(), sizeof(CommandBuffer), MEM_TAG_RENDERER_SUBSYS);
 	CommandBuffer* commandBuffer = *out_pCommandBuffer;
 
 	VkCommandBufferAllocateInfo allocateInfo{};
@@ -52,7 +52,7 @@ bool AllocateAndBeginSingleUseCommandBuffer(QueueFamily* queueFamily, CommandBuf
 	if (VK_SUCCESS != vkAllocateCommandBuffers(vk_state->device, &allocateInfo, &commandBuffer->handle))
 	{
 		GRFATAL("Failed to allocate command buffer");
-		GRFree(commandBuffer);
+		Free(GetGlobalAllocator(), commandBuffer);
 		return false;
 	}
 
@@ -77,7 +77,7 @@ static void SingleUseCommandBufferDestructor(void* resource)
 {
 	CommandBuffer* commandBuffer = (CommandBuffer*)resource;
 	vkFreeCommandBuffers(vk_state->device, commandBuffer->queueFamily->commandPool, 1, &commandBuffer->handle);
-	GRFree(commandBuffer);
+	Free(GetGlobalAllocator(), commandBuffer);
 }
 
 bool EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 signalSemaphoreCount /*default: 0*/, VkSemaphoreSubmitInfo* pSemaphoreSubmitInfos /*default: null*/, u64* out_signaledValue /*default: null*/)
@@ -103,7 +103,7 @@ bool EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 si
 	semaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
 	semaphoreInfo.deviceIndex = 0;
 
-	VkSemaphoreSubmitInfo* semaphoreInfosDarray = (VkSemaphoreSubmitInfo*)DarrayCreate(sizeof(VkSemaphoreSubmitInfo), signalSemaphoreCount + 1, &g_Allocators->temporaryAllocator, MEM_TAG_RENDERER_SUBSYS);
+	VkSemaphoreSubmitInfo* semaphoreInfosDarray = (VkSemaphoreSubmitInfo*)DarrayCreate(sizeof(VkSemaphoreSubmitInfo), signalSemaphoreCount + 1, &g_Allocators->temporary, MEM_TAG_RENDERER_SUBSYS);
 	semaphoreInfosDarray = (VkSemaphoreSubmitInfo*)DarrayPushback(semaphoreInfosDarray, &semaphoreInfo);
 
 	for (u32 i = 0; i < signalSemaphoreCount; ++i)
@@ -189,7 +189,7 @@ bool SubmitCommandBuffers(u32 waitSemaphoreCount, VkSemaphoreSubmitInfo* pWaitSe
 	}
 #endif // GR_DEBUG
 
-	VkCommandBufferSubmitInfo* commandBufferSubmitInfosDarray = (VkCommandBufferSubmitInfo*)DarrayCreate(sizeof(VkCommandBufferSubmitInfo), commandBufferCount, &g_Allocators->temporaryAllocator, MEM_TAG_RENDERER_SUBSYS);
+	VkCommandBufferSubmitInfo* commandBufferSubmitInfosDarray = (VkCommandBufferSubmitInfo*)DarrayCreate(sizeof(VkCommandBufferSubmitInfo), commandBufferCount, &g_Allocators->temporary, MEM_TAG_RENDERER_SUBSYS);
 	for (u32 i = 0; i < commandBufferCount; ++i)
 	{
 		VkCommandBufferSubmitInfo commandBufferInfo{};
@@ -209,7 +209,7 @@ bool SubmitCommandBuffers(u32 waitSemaphoreCount, VkSemaphoreSubmitInfo* pWaitSe
 	semaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
 	semaphoreInfo.deviceIndex = 0;
 
-	VkSemaphoreSubmitInfo* semaphoreInfosDarray = (VkSemaphoreSubmitInfo*)DarrayCreate(sizeof(VkSemaphoreSubmitInfo), signalSemaphoreCount + 1, &g_Allocators->temporaryAllocator, MEM_TAG_RENDERER_SUBSYS);
+	VkSemaphoreSubmitInfo* semaphoreInfosDarray = (VkSemaphoreSubmitInfo*)DarrayCreate(sizeof(VkSemaphoreSubmitInfo), signalSemaphoreCount + 1, &g_Allocators->temporary, MEM_TAG_RENDERER_SUBSYS);
 	semaphoreInfosDarray = (VkSemaphoreSubmitInfo*)DarrayPushback(semaphoreInfosDarray, &semaphoreInfo);
 
 	for (u32 i = 0; i < signalSemaphoreCount; ++i)

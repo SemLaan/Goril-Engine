@@ -5,7 +5,7 @@
 
 
 
-b8 InitializePlatform(const wchar_t* windowName);
+bool InitializePlatform(const wchar_t* windowName);
 
 void ShutdownPlatform();
 
@@ -20,4 +20,4 @@ void SetMousePosition(glm::ivec2 position);
 void SetWindowTitle(const wchar_t* windowName);
 
 GRAPI void ToggleFullscreen();
-GRAPI void SetFullscreen(b8 enabled);
+GRAPI void SetFullscreen(bool enabled);

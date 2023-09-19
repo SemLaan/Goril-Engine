@@ -9,12 +9,12 @@ static bool alloc_and_dealloc_test()
 {
 	u64 initial_allocation_count = GetNetAllocations();
 	size_t test_allocation_size = 18;
-	size_t test_change_pos = test_allocation_size + GetGlobalAllocator()->GetAllocHeaderSize();
+	size_t test_change_pos = test_allocation_size + GetAllocHeaderSize();
 
-	void* test_mem = GRAlloc(test_allocation_size, MEM_TAG_TEST);
+	void* test_mem = Alloc(GetGlobalAllocator(), test_allocation_size, MEM_TAG_TEST);
 	expect_to_be_true(test_mem != nullptr);
 
-	int* nextAlloc = (int*)GRAlloc(sizeof(int), MEM_TAG_TEST);
+	int* nextAlloc = (int*)Alloc(GetGlobalAllocator(), sizeof(int), MEM_TAG_TEST);
 	expect_to_be_true(nextAlloc != nullptr);
 
 	// Making sure that the allocator gives the right amount of memory by testing 
@@ -22,11 +22,11 @@ static bool alloc_and_dealloc_test()
 	*nextAlloc = 64;
 	expect_should_be(64, *nextAlloc);
 
-	GRFree(test_mem);
+	Free(GetGlobalAllocator(), test_mem);
 
 	expect_should_be(GetNetAllocations() - initial_allocation_count, 1);
 
-	GRFree(nextAlloc);
+	Free(GetGlobalAllocator(), nextAlloc);
 
 	expect_should_be(GetNetAllocations(), initial_allocation_count);
 

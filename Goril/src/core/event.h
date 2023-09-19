@@ -10,10 +10,7 @@ struct EventData
 	{
 		u8 u8[16];
 		i8 i8[16];
-		bool bool[16];
-
-		u16 u16[8];
-		i16 i16[8];
+		bool b8[16];
 
 		u32 u32[4];
 		i32 i32[4];

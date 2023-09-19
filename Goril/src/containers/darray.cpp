@@ -17,7 +17,7 @@ void* DarrayCreate(u32 stride, u32 capacity, Allocator* allocator, mem_tag tag)
 {
 	GRASSERT_DEBUG(sizeof(Darray) < DARRAY_MIN_ALIGNMENT);
 
-	void* block = allocator->AlignedAlloc(DARRAY_MIN_ALIGNMENT + (capacity * stride), tag, DARRAY_MIN_ALIGNMENT);
+	void* block = AlignedAlloc(allocator, DARRAY_MIN_ALIGNMENT + (capacity * stride), tag, DARRAY_MIN_ALIGNMENT);
 
 	void* elements = (u8*)block + DARRAY_MIN_ALIGNMENT;
 
@@ -33,7 +33,7 @@ void* DarrayCreate(u32 stride, u32 capacity, Allocator* allocator, mem_tag tag)
 
 void* DarrayCreateWithSize(u32 stride, u32 capacityAndSize, Allocator* allocator, mem_tag tag)
 {
-	void* block = allocator->AlignedAlloc(DARRAY_MIN_ALIGNMENT + (capacityAndSize * stride), tag, DARRAY_MIN_ALIGNMENT);
+	void* block = AlignedAlloc(allocator, DARRAY_MIN_ALIGNMENT + (capacityAndSize * stride), tag, DARRAY_MIN_ALIGNMENT);
 
 	void* elements = (u8*)block + DARRAY_MIN_ALIGNMENT;
 
@@ -53,7 +53,7 @@ void* DarrayPushback(void* elements, void* element)
 	if (state->size >= state->capacity)
 	{
 		state->capacity = (u32)(state->capacity * DARRAY_SCALING_FACTOR + 1);
-		void* temp = state->allocator->ReAlloc(state->memoryBlock, (state->stride * state->capacity) + DARRAY_MIN_ALIGNMENT);
+		void* temp = ReAlloc(state->allocator, state->memoryBlock, (state->stride * state->capacity) + DARRAY_MIN_ALIGNMENT);
 		elements = (u8*)temp + DARRAY_MIN_ALIGNMENT;
 		state = (Darray*)elements - 1;
 		state->memoryBlock = temp;
@@ -83,7 +83,7 @@ void DarrayPopAt(void* elements, u32 index)
 void DarrayDestroy(void* elements)
 {
 	Darray* state = (Darray*)elements - 1;
-	state->allocator->Free(state->memoryBlock);
+	Free(state->allocator, state->memoryBlock);
 }
 
 u32 DarrayGetSize(void* elements)

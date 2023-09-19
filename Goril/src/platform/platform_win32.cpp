@@ -40,7 +40,7 @@ bool InitializePlatform(const wchar_t* windowName)
 {
 	GRASSERT_DEBUG(state == nullptr); // If this fails init platform was called twice
 	GRINFO("Initializing platform subsystem...");
-	state = (PlatformState*)GetGlobalAllocator()->Alloc(sizeof(PlatformState), MEM_TAG_PLATFORM_SUBSYS);
+	state = (PlatformState*)Alloc(GetGlobalAllocator(), sizeof(PlatformState), MEM_TAG_PLATFORM_SUBSYS);
 	Zero(state, sizeof(PlatformState));
 
 	const wchar_t* menuName = L"gorilwinmenu";
@@ -76,7 +76,7 @@ bool InitializePlatform(const wchar_t* windowName)
 	if (state->hwnd == NULL)
 	{
 		GRFATAL("Creating window failed");
-		GetGlobalAllocator()->Free(state);
+		Free(GetGlobalAllocator(), state);
 		state = nullptr;
 		return false;
 	}
@@ -105,7 +105,7 @@ void ShutdownPlatform()
 		GRINFO("Shutting down platform subsystem...");
 	}
 
-	GetGlobalAllocator()->Free(state);
+	Free(GetGlobalAllocator(), state);
 }
 
 void PlatformProcessMessage()

@@ -25,12 +25,11 @@ GRAPI u32 GetAllocHeaderSize();
 
 GRAPI u64 GetBlockSize(void* block);
 
-GRAPI inline void* Alloc(Allocator* allocator, u64 size, mem_tag tag)
-{
-	return AlignedAlloc(allocator, size, tag, MIN_ALIGNMENT);
-}
-
 GRAPI void* AlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 alignment);
 GRAPI void* ReAlloc(Allocator* allocator, void* block, u64 size);
 GRAPI void Free(Allocator* allocator, void* block);
 
+GRAPI inline void* Alloc(Allocator* allocator, u64 size, mem_tag tag)
+{
+	return AlignedAlloc(allocator, size, tag, MIN_ALIGNMENT);
+}

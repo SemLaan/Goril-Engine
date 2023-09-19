@@ -15,7 +15,7 @@ GameConfig GetGameConfig()
 
 bool CreateGameInstance(GorilGame*& out_game)
 {
-	out_game = (GorilGame*)GRAlloc(sizeof(Game), MEM_TAG_GAME);
+	out_game = (GorilGame*)Alloc(GetGlobalAllocator(), sizeof(Game), MEM_TAG_GAME);
 	out_game = new(out_game) Game();
 
 	return true;

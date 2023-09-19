@@ -25,7 +25,6 @@ typedef enum mem_tag
 typedef struct GlobalAllocators
 {
 	Allocator temporary;
-	Allocator global;
 } GlobalAllocators;
 
 extern GlobalAllocators* g_Allocators;
@@ -35,11 +34,6 @@ bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement);
 void ShutdownMemory();
 
 GRAPI inline Allocator* GetGlobalAllocator();
-
-GRAPI inline void* GRAlloc(size_t size, mem_tag tag);
-GRAPI inline void* GRAlignedAlloc(size_t size, mem_tag tag, u32 alignment);
-GRAPI inline void* GReAlloc(void* block, size_t size);
-GRAPI inline void GRFree(void* block);
 
 #ifndef GR_DIST
 GRAPI inline void AllocInfo(size_t size, mem_tag tag);

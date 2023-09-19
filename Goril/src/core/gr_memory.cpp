@@ -77,9 +77,8 @@ bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 	AllocInfo(0, MEM_TAG_ALLOCATOR_STATE);
 #endif // !GR_DIST
 
-	g_Allocators = (GlobalAllocators*)GRAlloc(sizeof(GlobalAllocators), MEM_TAG_MEMORY_SUBSYS);
+	g_Allocators = (GlobalAllocators*)Alloc(&globalAllocator, sizeof(GlobalAllocators), MEM_TAG_MEMORY_SUBSYS);
 	g_Allocators->temporary = CreateBumpAllocator(KiB * 5); /// TODO: make configurable
-	g_Allocators->global = globalAllocator;
 
 	return true;
 }
@@ -99,7 +98,7 @@ void ShutdownMemory()
 	if (g_Allocators)
 	{
 		DestroyBumpAllocator(g_Allocators->temporary);
-		GRFree(g_Allocators);
+		Free(GetGlobalAllocator(), g_Allocators);
 	}
 
 #ifndef GR_DIST
@@ -113,7 +112,7 @@ void ShutdownMemory()
 	initialized = false;
 
 	Allocator globalAllocator = state->globalAllocator;
-	GRFree(state);
+	Free(GetGlobalAllocator(), state);
 
 	// Return all the application memory back to the OS
 	DestroyGlobalAllocator(globalAllocator);
@@ -123,7 +122,6 @@ Allocator* GetGlobalAllocator()
 {
 	return &state->globalAllocator;
 }
-
 
 #ifndef GR_DIST // These functions only get compiled if it's not a distribution build
 void AllocInfo(size_t size, mem_tag tag)
@@ -172,10 +170,10 @@ void MemCopy(void* destination, void* source, size_t size)
 	// Checking if destination and source overlap
 	if ((u8*)destination + size > source && destination < (u8*)source + size)
 	{
-		void* intermediateBlock = GRAlloc(size, MEM_TAG_MEMORY_SUBSYS);
+		void* intermediateBlock = Alloc(GetGlobalAllocator(), size, MEM_TAG_MEMORY_SUBSYS);
 		memcpy(intermediateBlock, source, size);
 		memcpy(destination, intermediateBlock, size);
-		GRFree(intermediateBlock);
+		Free(GetGlobalAllocator(), intermediateBlock);
 	}
 	else // If the blocks don't overlap just copy them
 	{
