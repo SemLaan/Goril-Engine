@@ -20,10 +20,10 @@ static b8 darray_pushback_test()
 	f32 qualityValue = 2.3f;
 
 	Beef test(amountValue, qualityValue);
-	DarrayPushback(darray, &test);
-	DarrayPushback(darray, &test);
-	DarrayPushback(darray, &test);
-	DarrayPushback(darray, &test);
+	darray = (Beef*)DarrayPushback(darray, &test);
+	darray = (Beef*)DarrayPushback(darray, &test);
+	darray = (Beef*)DarrayPushback(darray, &test);
+	darray = (Beef*)DarrayPushback(darray, &test);
 
 	expect_float_to_be(qualityValue, darray[0].quality);
 	expect_should_be(amountValue, darray[0].amount);
@@ -45,10 +45,10 @@ static b8 darray_pop_test()
 	Beef test1(0, 0);
 	Beef test2(amountValue, qualityValue);
 
-	DarrayPushback(darray, &test1);
-	DarrayPushback(darray, &test1);
-	DarrayPushback(darray, &test1); // 2, this one gets popped
-	DarrayPushback(darray, &test2);
+	darray = (Beef*)DarrayPushback(darray, &test1);
+	darray = (Beef*)DarrayPushback(darray, &test1);
+	darray = (Beef*)DarrayPushback(darray, &test1); // 2, this one gets popped
+	darray = (Beef*)DarrayPushback(darray, &test2);
 
 	DarrayPopAt(darray, 2);
 
@@ -70,13 +70,13 @@ static b8 darray_contains_test()
 	int* darray = (int*)DarrayCreate(sizeof(int), 1, GetGlobalAllocator(), MEM_TAG_TEST);
 
 	int i = 1;
-	DarrayPushback(darray, &i);
+	darray = (int*)DarrayPushback(darray, &i);
 	i = 3;
-	DarrayPushback(darray, &i);
+	darray = (int*)DarrayPushback(darray, &i);
 	i = 4;
-	DarrayPushback(darray, &i);
+	darray = (int*)DarrayPushback(darray, &i);
 	i = 5;
-	DarrayPushback(darray, &i);
+	darray = (int*)DarrayPushback(darray, &i);
 
 	i = 4;
 	expect_to_be_true(DarrayContains(darray, &i));
