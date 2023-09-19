@@ -27,10 +27,10 @@ struct FreelistState
 };
 
 static void* FreelistAlloc(void* backendState, size_t size);
-static b8 FreelistTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize);
+static bool FreelistTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize);
 static void FreelistFree(void* backendState, void* block, size_t size);
 
-Allocator CreateFreelistAllocator(size_t arenaSize, b8 safetySpace /*default: true*/)
+Allocator CreateFreelistAllocator(size_t arenaSize, bool safetySpace /*default: true*/)
 {
 	Allocator allocator = Allocator();
 
@@ -162,7 +162,7 @@ static void* FreelistAlloc(void* backendState, size_t size)
 	return nullptr;
 }
 
-static b8 FreelistTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize)
+static bool FreelistTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize)
 {
 	FreelistState* state = (FreelistState*)backendState;
 
@@ -297,10 +297,10 @@ struct BumpAllocatorState
 };
 
 static void* BumpAlloc(void* backendState, size_t size);
-static b8 BumpTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize);
+static bool BumpTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize);
 static void BumpFree(void* backendState, void* block, size_t size);
 
-Allocator CreateBumpAllocator(size_t arenaSize, b8 safetySpace /*default: true*/)
+Allocator CreateBumpAllocator(size_t arenaSize, bool safetySpace /*default: true*/)
 {
 	Allocator allocator = Allocator();
 
@@ -357,7 +357,7 @@ static void* BumpAlloc(void* backendState, size_t size)
 	return block;
 }
 
-static b8 BumpTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize)
+static bool BumpTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize)
 {
 	BumpAllocatorState* state = (BumpAllocatorState*)backendState;
 
@@ -388,7 +388,7 @@ static void BumpFree(void* backendState, void* block, size_t size)
 // =====================================================================================================================================================================================================
 // ================================== Global allocator creation =====================================================================
 // =====================================================================================================================================================================================================
-b8 CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* out_stateSize)
+bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* out_stateSize)
 {
 	// Calculating the required nodes for an arena of the given size
 	// Make one node for every "freelist node factor" nodes that fit in the arena

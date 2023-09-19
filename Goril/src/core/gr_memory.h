@@ -3,7 +3,7 @@
 #include "memory/allocator.h"
 #include "memory/allocator_backends.h"
 
-enum mem_tag
+typedef enum mem_tag
 {
 	MEM_TAG_ALLOCATOR_STATE,
 	MEM_TAG_SUB_ARENA,
@@ -20,16 +20,17 @@ enum mem_tag
 	MEM_TAG_INDEX_BUFFER,
 	MEM_TAG_TEXTURE,
 	MAX_MEMORY_TAGS
-};
+} mem_tag;
 
-struct GlobalAllocators
+typedef struct GlobalAllocators
 {
-	Allocator temporaryAllocator;
-};
+	Allocator temporary;
+	Allocator global;
+} GlobalAllocators;
 
 extern GlobalAllocators* g_Allocators;
 
-b8 InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement);
+bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement);
 
 void ShutdownMemory();
 

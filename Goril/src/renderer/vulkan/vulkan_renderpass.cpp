@@ -3,7 +3,7 @@
 
 #include "core/logger.h"
 
-b8 CreateRenderpass(RendererState* state)
+bool CreateRenderpass(RendererState* state)
 {
 	VkAttachmentDescription colorAttachment{};
 	colorAttachment.flags = 0;

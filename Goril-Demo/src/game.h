@@ -17,12 +17,12 @@ private:
 	glm::vec3 camRotation;
 	glm::mat4 view;
 	glm::mat4 proj;
-	b8 mouseEnabled;
+	bool mouseEnabled;
 
 public:
 	// Inherited via GorilGame
-	b8 Init() override;
-	b8 Update() override;
-	b8 Render() override;
-	b8 Shutdown() override;
+	bool Init() override;
+	bool Update() override;
+	bool Render() override;
+	bool Shutdown() override;
 };

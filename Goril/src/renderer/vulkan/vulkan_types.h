@@ -113,7 +113,7 @@ struct RendererState
 	VkDependencyInfo** requestedQueueAcquisitionOperationsDarray; /// TODO: make this part of the queuefamily
 	u32 currentFrame;
 	u32 currentSwapchainImageIndex;
-	b8 shouldRecreateSwapchain;
+	bool shouldRecreateSwapchain;
 	VkAllocationCallbacks* allocator;
 #ifndef GR_DIST
 	VkDebugUtilsMessengerEXT debugMessenger;

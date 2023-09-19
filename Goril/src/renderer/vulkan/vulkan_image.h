@@ -13,6 +13,6 @@ struct VulkanCreateImageParameters
 	VkMemoryPropertyFlags	properties;
 };
 
-b8 CreateImage(VulkanCreateImageParameters* pCreateParameters, VkImage* pImage, VkDeviceMemory* pMemory);
+bool CreateImage(VulkanCreateImageParameters* pCreateParameters, VkImage* pImage, VkDeviceMemory* pMemory);
 
 ///TODO: create image view helper function maybe? since swapchain also needs it

@@ -3,9 +3,9 @@
 #include "goril_game.h"
 
 
-GRAPI b8 InitializeEngine(GameConfig config);
+GRAPI bool InitializeEngine(GameConfig config);
 
-GRAPI b8 RunEngine(GorilGame* gameInstance);
+GRAPI bool RunEngine(GorilGame* gameInstance);
 
 GRAPI void ShutdownEngine();
 

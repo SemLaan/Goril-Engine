@@ -9,7 +9,7 @@ static std::vector<std::string> test_names;
 static Timer timer;
 
 
-b8 initialize_test_manager()
+bool initialize_test_manager()
 {
 	tests = std::vector<PFN_test>();
 	timer = CreateAndStartTimer();
@@ -27,9 +27,9 @@ void register_test(PFN_test test, std::string test_name)
 	test_names.push_back(test_name);
 }
 
-b8 run_tests()
+bool run_tests()
 {
-	b8 any_failed = false;
+	bool any_failed = false;
 
 	TESTINFO("=================== Starting tests... ====================");
 
@@ -37,7 +37,7 @@ b8 run_tests()
 	{
 		TESTINFO("Running test [{}/{}]: {}", i + 1, tests.size(), test_names[i]);
 		f64 test_start_time = TimerSecondsSinceStart(timer);
-		b8 result = tests[i]();
+		bool result = tests[i]();
 		f64 test_end_time = TimerSecondsSinceStart(timer);
 		if (result == false)
 		{

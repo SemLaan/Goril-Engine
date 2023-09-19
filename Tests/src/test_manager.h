@@ -2,12 +2,12 @@
 #include "defines.h"
 #include <string>
 
-typedef b8(*PFN_test)();
+typedef bool(*PFN_test)();
 
-b8 initialize_test_manager();
+bool initialize_test_manager();
 
 void shutdown_test_manager();
 
 void register_test(PFN_test test, std::string test_name);
 
-b8 run_tests();
+bool run_tests();

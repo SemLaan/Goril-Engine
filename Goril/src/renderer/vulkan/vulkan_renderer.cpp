@@ -22,9 +22,9 @@
 
 RendererState* vk_state = nullptr;
 
-static b8 OnWindowResize(EventCode type, EventData data);
+static bool OnWindowResize(EventCode type, EventData data);
 
-b8 InitializeRenderer()
+bool InitializeRenderer()
 {
 	GRASSERT_DEBUG(vk_state == nullptr); // If this triggers init got called twice
 	GRINFO("Initializing renderer subsystem...");
@@ -218,7 +218,7 @@ void RecreateSwapchain()
 	GRINFO("Vulkan Swapchain resized");
 }
 
-b8 BeginFrame()
+bool BeginFrame()
 {
 	TryDestroyResourcesPendingDestruction();
 
@@ -405,7 +405,7 @@ void DrawIndexed(VertexBuffer _vertexBuffer, IndexBuffer _indexBuffer, PushConst
 	vkCmdDrawIndexed(currentCommandBuffer, (u32)indexBuffer->indexCount, 1, 0, 0, 0);
 }
 
-static b8 OnWindowResize(EventCode type, EventData data)
+static bool OnWindowResize(EventCode type, EventData data)
 {
 	vk_state->shouldRecreateSwapchain = true;
 	return false;

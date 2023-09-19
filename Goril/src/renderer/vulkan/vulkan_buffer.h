@@ -5,7 +5,7 @@
 
 
 // Creates VkBuffer and VkDeviceMemory objects for a buffer with the specified size and flags
-b8 CreateBuffer(VkDeviceSize size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkBuffer* out_buffer, VkDeviceMemory* out_memory);
+bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkBuffer* out_buffer, VkDeviceMemory* out_memory);
 
 void VulkanBufferDestructor(void* resource);
 void VulkanMemoryDestructor(void* resource);

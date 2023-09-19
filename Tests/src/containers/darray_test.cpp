@@ -12,7 +12,7 @@ struct Beef
 };
 
 
-static b8 darray_pushback_test()
+static bool darray_pushback_test()
 {
 	Beef* darray = (Beef*)DarrayCreate(sizeof(Beef), 1, GetGlobalAllocator(), MEM_TAG_TEST);
 
@@ -35,7 +35,7 @@ static b8 darray_pushback_test()
 	return true;
 }
 
-static b8 darray_pop_test()
+static bool darray_pop_test()
 {
 	Beef* darray = (Beef*)DarrayCreate(sizeof(Beef), 1, GetGlobalAllocator(), MEM_TAG_TEST);
 
@@ -65,7 +65,7 @@ static b8 darray_pop_test()
 	return true;
 }
 
-static b8 darray_contains_test()
+static bool darray_contains_test()
 {
 	int* darray = (int*)DarrayCreate(sizeof(int), 1, GetGlobalAllocator(), MEM_TAG_TEST);
 

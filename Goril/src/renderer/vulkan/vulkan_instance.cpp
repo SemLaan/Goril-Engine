@@ -4,7 +4,7 @@
 #include "core/logger.h"
 
 
-b8 CreateVulkanInstance(void** requiredExtensionsDarray, void** requiredLayersDarray)
+bool CreateVulkanInstance(void** requiredExtensionsDarray, void** requiredLayersDarray)
 {
 	// ================ App info =============================================
 	VkApplicationInfo appInfo{};

@@ -22,7 +22,7 @@ SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurface
 	return details;
 }
 
-static b8 DeviceHasExtensions(VkPhysicalDevice physicalDevice, void** requiredDeviceExtensionsDarray)
+static bool DeviceHasExtensions(VkPhysicalDevice physicalDevice, void** requiredDeviceExtensionsDarray)
 {
 	u32 availableExtensionCount = 0;
 	vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &availableExtensionCount, nullptr);
@@ -46,7 +46,7 @@ static b8 DeviceHasExtensions(VkPhysicalDevice physicalDevice, void** requiredDe
 	return availableRequiredExtensions == DarrayGetSize(requiredDeviceExtensionsDarray);
 }
 
-b8 SelectPhysicalDevice(void** requiredDeviceExtensionsDarray)
+bool SelectPhysicalDevice(void** requiredDeviceExtensionsDarray)
 {
 	vk_state->physicalDevice = VK_NULL_HANDLE;
 
@@ -66,8 +66,8 @@ b8 SelectPhysicalDevice(void** requiredDeviceExtensionsDarray)
 	{
 		VkPhysicalDeviceProperties properties;
 		vkGetPhysicalDeviceProperties(availableDevicesDarray[i], &properties);
-		b8 isDiscrete = properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
-		b8 hasExtensions = DeviceHasExtensions(availableDevicesDarray[i], requiredDeviceExtensionsDarray);
+		bool isDiscrete = properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+		bool hasExtensions = DeviceHasExtensions(availableDevicesDarray[i], requiredDeviceExtensionsDarray);
 		if (isDiscrete && hasExtensions)
 		{
 			GRINFO("Device with required extensions, features and properties found");
@@ -107,8 +107,8 @@ void SelectQueueFamilies(RendererState* state)
 	{
 		VkBool32 presentSupport = false;
 		vkGetPhysicalDeviceSurfaceSupportKHR(state->physicalDevice, i, state->surface, &presentSupport);
-		b8 graphicsSupport = availableQueueFamiliesDarray[i].queueFlags & VK_QUEUE_GRAPHICS_BIT;
-		b8 transferSupport = availableQueueFamiliesDarray[i].queueFlags & VK_QUEUE_TRANSFER_BIT;
+		bool graphicsSupport = availableQueueFamiliesDarray[i].queueFlags & VK_QUEUE_GRAPHICS_BIT;
+		bool transferSupport = availableQueueFamiliesDarray[i].queueFlags & VK_QUEUE_TRANSFER_BIT;
 		if (graphicsSupport)
 			state->queueIndices.graphicsFamily = i;
 		if (presentSupport)
@@ -123,7 +123,7 @@ void SelectQueueFamilies(RendererState* state)
 	DarrayDestroy(availableQueueFamiliesDarray);
 }
 
-b8 CreateLogicalDevice(RendererState* state, void** requiredDeviceExtensionsDarray, void** requiredDeviceLayersDarray)
+bool CreateLogicalDevice(RendererState* state, void** requiredDeviceExtensionsDarray, void** requiredDeviceLayersDarray)
 {
 
 	// ===================== Specifying queues for logical device =================================

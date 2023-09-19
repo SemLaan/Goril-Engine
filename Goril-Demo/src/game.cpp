@@ -7,7 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <core/platform.h>
 
-b8 Game::Init()
+bool Game::Init()
 {
     PrintMemoryStats();
 
@@ -76,7 +76,7 @@ b8 Game::Init()
     return true;
 }
 
-b8 Game::Update()
+bool Game::Update()
 {
 	f32 mouseMoveSpeed = 3500;
 
@@ -124,7 +124,7 @@ b8 Game::Update()
     return true;
 }
 
-b8 Game::Render()
+bool Game::Render()
 {
 	GlobalUniformObject ubo{};
 	ubo.projView = proj * view;
@@ -143,7 +143,7 @@ b8 Game::Render()
     return true;
 }
 
-b8 Game::Shutdown()
+bool Game::Shutdown()
 {
 	DestroyIndexBuffer(indexBuffer);
 	DestroyVertexBuffer(vertexBuffer);

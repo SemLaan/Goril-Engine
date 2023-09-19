@@ -4,7 +4,7 @@
 
 
 
-b8 CreateSwapchain(RendererState* state)
+bool CreateSwapchain(RendererState* state)
 {
 	// Getting a swapchain format
 	VkSurfaceFormatKHR format = state->swapchainSupport.formatsDarray[0];
@@ -140,7 +140,7 @@ void DestroySwapchain(RendererState* state)
 		DarrayDestroy(state->swapchainImageViewsDarray);
 }
 
-b8 CreateSwapchainFramebuffers(RendererState* state)
+bool CreateSwapchainFramebuffers(RendererState* state)
 {
 	state->swapchainFramebuffersDarray = (VkFramebuffer*)DarrayCreateWithSize(sizeof(VkFramebuffer), DarrayGetSize(state->swapchainImagesDarray), GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
 

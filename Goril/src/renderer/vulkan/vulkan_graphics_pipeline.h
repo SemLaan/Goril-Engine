@@ -4,7 +4,7 @@
 #include "containers/darray.h"
 
 
-b8 CreateGraphicsPipeline();
+bool CreateGraphicsPipeline();
 void DestroyGraphicsPipeline();
 
 void UpdateDescriptorSets(u32 index, VulkanImage* image);

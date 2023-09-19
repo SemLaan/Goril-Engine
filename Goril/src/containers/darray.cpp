@@ -98,7 +98,7 @@ void DarraySetSize(void* elements, u32 size)
 	state->size = size;
 }
 
-b8 DarrayContains(void* elements, void* element)
+bool DarrayContains(void* elements, void* element)
 {
 	Darray* state = (Darray*)elements - 1;
 

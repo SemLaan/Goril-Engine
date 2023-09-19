@@ -3,7 +3,7 @@
 #include "core/logger.h"
 
 
-b8 CreateQueues()
+bool CreateQueues()
 {
 	// =================== Getting the device queues ======================================================
 	// Present family queue

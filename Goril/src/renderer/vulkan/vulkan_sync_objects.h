@@ -3,6 +3,6 @@
 #include "vulkan_types.h"
 
 
-b8 CreateSyncObjects();
+bool CreateSyncObjects();
 
 void DestroySyncObjects();

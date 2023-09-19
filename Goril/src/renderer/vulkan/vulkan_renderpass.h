@@ -3,6 +3,6 @@
 #include "vulkan_types.h"
 #include "containers/darray.h"
 
-b8 CreateRenderpass(RendererState* state);
+bool CreateRenderpass(RendererState* state);
 
 void DestroyRenderpass(RendererState* state);

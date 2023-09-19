@@ -10,7 +10,7 @@ struct EventData
 	{
 		u8 u8[16];
 		i8 i8[16];
-		b8 b8[16];
+		bool bool[16];
 
 		u16 u16[8];
 		i16 i16[8];
@@ -39,9 +39,9 @@ enum EventCode
 	MAX_EVENTS
 };
 
-typedef b8(*PFN_OnEvent)(EventCode type, EventData data);
+typedef bool(*PFN_OnEvent)(EventCode type, EventData data);
 
-b8 InitializeEvent();
+bool InitializeEvent();
 
 void ShutdownEvent();
 

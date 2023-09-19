@@ -37,11 +37,11 @@ struct MemoryState
 };
 
 static MemoryState* state = nullptr;
-static b8 initialized = false;
+static bool initialized = false;
 
 GlobalAllocators* g_Allocators = nullptr;
 
-b8 InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
+bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 {
 	GRASSERT_DEBUG(state == nullptr); // If this fails it means init was called twice
 	GRINFO("Initializing memory subsystem...");
@@ -57,7 +57,7 @@ b8 InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 	}
 
 	// Creating the memory state
-	state = (MemoryState*)globalAllocator.Alloc(sizeof(MemoryState), mem_tag::MEM_TAG_MEMORY_SUBSYS);
+	state = (MemoryState*)Alloc(&globalAllocator, sizeof(MemoryState), mem_tag::MEM_TAG_MEMORY_SUBSYS);
 	Zero(state, sizeof(MemoryState));
 	initialized = true;
 
@@ -66,7 +66,7 @@ b8 InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 #ifndef GR_DIST
 	state->allocated = 0;
 	state->deferredMemory = 0;
-	state->memorySubsystemStateSize = sizeof(MemoryState) + globalAllocatorStateSize + globalAllocator.GetAllocHeaderSize();
+	state->memorySubsystemStateSize = sizeof(MemoryState) + globalAllocatorStateSize + GetAllocHeaderSize();
 	state->netAllocationCount = 0;
 	for (u32 i = 0; i < mem_tag::MAX_MEMORY_TAGS; i++)
 	{
@@ -78,7 +78,8 @@ b8 InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 #endif // !GR_DIST
 
 	g_Allocators = (GlobalAllocators*)GRAlloc(sizeof(GlobalAllocators), MEM_TAG_MEMORY_SUBSYS);
-	g_Allocators->temporaryAllocator = CreateBumpAllocator(KiB * 5); /// TODO: make configurable
+	g_Allocators->temporary = CreateBumpAllocator(KiB * 5); /// TODO: make configurable
+	g_Allocators->global = globalAllocator;
 
 	return true;
 }
@@ -97,7 +98,7 @@ void ShutdownMemory()
 
 	if (g_Allocators)
 	{
-		DestroyBumpAllocator(g_Allocators->temporaryAllocator);
+		DestroyBumpAllocator(g_Allocators->temporary);
 		GRFree(g_Allocators);
 	}
 
@@ -123,25 +124,6 @@ Allocator* GetGlobalAllocator()
 	return &state->globalAllocator;
 }
 
-void* GRAlloc(size_t size, mem_tag tag)
-{
-	return state->globalAllocator.AlignedAlloc(size, tag, MIN_ALIGNMENT);
-}
-
-void* GRAlignedAlloc(size_t size, mem_tag tag, u32 alignment)
-{
-	return state->globalAllocator.AlignedAlloc(size, tag, alignment);
-}
-
-void* GReAlloc(void* block, size_t size)
-{
-	return state->globalAllocator.ReAlloc(block, size);
-}
-
-void GRFree(void* block)
-{
-	state->globalAllocator.Free(block);
-}
 
 #ifndef GR_DIST // These functions only get compiled if it's not a distribution build
 void AllocInfo(size_t size, mem_tag tag)

@@ -26,4 +26,4 @@ GRAPI u32 DarrayGetSize(void* elements);
 GRAPI void DarraySetSize(void* elements, u32 size);
 
 // Only use on small arrays because performance is poor, consider a hash map
-GRAPI b8 DarrayContains(void* elements, void* element);
+GRAPI bool DarrayContains(void* elements, void* element);

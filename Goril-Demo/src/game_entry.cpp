@@ -13,7 +13,7 @@ GameConfig GetGameConfig()
 	return config;
 }
 
-b8 CreateGameInstance(GorilGame*& out_game)
+bool CreateGameInstance(GorilGame*& out_game)
 {
 	out_game = (GorilGame*)GRAlloc(sizeof(Game), MEM_TAG_GAME);
 	out_game = new(out_game) Game();

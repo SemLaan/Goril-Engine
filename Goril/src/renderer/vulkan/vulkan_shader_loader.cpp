@@ -3,7 +3,7 @@
 #include "core/logger.h"
 
 
-b8 ReadFile(const char* filename, mem_tag tag, char** out_data)
+bool ReadFile(const char* filename, mem_tag tag, char** out_data)
 {
 	std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
@@ -23,7 +23,7 @@ b8 ReadFile(const char* filename, mem_tag tag, char** out_data)
 	return true;
 }
 
-b8 CreateShaderModule(RendererState* state, char* codeDarray, VkShaderModule* out_shaderModule)
+bool CreateShaderModule(RendererState* state, char* codeDarray, VkShaderModule* out_shaderModule)
 {
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

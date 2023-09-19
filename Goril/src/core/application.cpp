@@ -11,19 +11,19 @@
 #include <string>
 
 
-static b8 appRunning = false;
-static b8 appSuspended = false;
+static bool appRunning = false;
+static bool appSuspended = false;
 
 static f64 previousFrameTime{};
 /// NOTE: temporary
 static f64 previousFrameTimes[1000]{};
 static u32 frameIndex = 0;
 
-static b8 OnQuit(EventCode type, EventData data);
-static b8 OnResize(EventCode type, EventData data);
-static b8 OnKeyDown(EventCode type, EventData data);
+static bool OnQuit(EventCode type, EventData data);
+static bool OnResize(EventCode type, EventData data);
+static bool OnKeyDown(EventCode type, EventData data);
 
-b8 InitializeEngine(GameConfig config)
+bool InitializeEngine(GameConfig config)
 {
 	g_timer = CreateAndStartTimer();
 
@@ -64,7 +64,7 @@ b8 InitializeEngine(GameConfig config)
 	return true;
 }
 
-b8 RunEngine(GorilGame* gameInstance)
+bool RunEngine(GorilGame* gameInstance)
 {
 	gameInstance->Init();
 
@@ -92,7 +92,7 @@ b8 RunEngine(GorilGame* gameInstance)
 		if (!appSuspended)
 		{
 			gameInstance->Update();
-			b8 succesfull = BeginFrame();
+			bool succesfull = BeginFrame();
 			if (succesfull)
 			{
 				gameInstance->Render();
@@ -124,13 +124,13 @@ void ShutdownEngine()
 	WriteLogsToFile();
 }
 
-static b8 OnQuit(EventCode type, EventData data)
+static bool OnQuit(EventCode type, EventData data)
 {
 	appRunning = false;
 	return false;
 }
 
-static b8 OnResize(EventCode type, EventData data)
+static bool OnResize(EventCode type, EventData data)
 {
 	if (data.u32[0] == 0 || data.u32[1] == 0)
 	{
@@ -145,7 +145,7 @@ static b8 OnResize(EventCode type, EventData data)
 	return false;
 }
 
-static b8 OnKeyDown(EventCode type, EventData data)
+static bool OnKeyDown(EventCode type, EventData data)
 {
 	if (data.u8[0] == KEY_F11)
 		ToggleFullscreen();

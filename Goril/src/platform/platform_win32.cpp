@@ -27,8 +27,8 @@ struct PlatformState
 	u32 widthPreMaximize, heightPreMaximize;
 	DWORD windowStyle;
 	DWORD windowExStyle;
-	b8 fullscreenKeyDown;
-	b8 fullscreenActive;
+	bool fullscreenKeyDown;
+	bool fullscreenActive;
 };
 
 static PlatformState* state = nullptr;
@@ -36,7 +36,7 @@ static PlatformState* state = nullptr;
 // Forward declaring window callbacks
 static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-b8 InitializePlatform(const wchar_t* windowName)
+bool InitializePlatform(const wchar_t* windowName)
 {
 	GRASSERT_DEBUG(state == nullptr); // If this fails init platform was called twice
 	GRINFO("Initializing platform subsystem...");
@@ -176,7 +176,7 @@ void ToggleFullscreen()
 	SetFullscreen(!state->fullscreenActive);
 }
 
-void SetFullscreen(b8 enabled)
+void SetFullscreen(bool enabled)
 {
 	if (enabled == state->fullscreenActive)
 		return;
@@ -325,7 +325,7 @@ void GetPlatformExtensions(void** extensionNamesDarray)
 	extensionNamesDarray = (void**)DarrayPushback(extensionNamesDarray, &vk_khr_win32_surface_extensionname);
 }
 
-b8 PlatformCreateSurface(VkInstance instance, VkAllocationCallbacks* allocator, VkSurfaceKHR* out_surface)
+bool PlatformCreateSurface(VkInstance instance, VkAllocationCallbacks* allocator, VkSurfaceKHR* out_surface)
 {
 	VkWin32SurfaceCreateInfoKHR createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;

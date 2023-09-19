@@ -12,16 +12,17 @@
 #pragma warning(disable : 6386)
 #endif
 
+// 16 bit int types are commented out because they are rarely used and slower than 32 bit according to my stdint.h implementation
 
 // Unsigned int types.
 typedef std::uint8_t u8;
-typedef std::uint16_t u16;
+//typedef std::uint16_t u16;
 typedef std::uint32_t u32;
 typedef std::uint64_t u64;
 
 // Signed int types.
 typedef std::int8_t i8;
-typedef std::int16_t i16;
+//typedef std::int16_t i16;
 typedef std::int32_t i32;
 typedef std::int64_t i64;
 
@@ -31,10 +32,9 @@ typedef double f64;
 
 // Boolean types
 typedef std::int32_t b32;
-typedef bool b8;
 
-#define KiB ((size_t)1024u)
-#define MiB ((size_t)1024u * (size_t)1024u)
-#define GiB ((size_t)1024u * (size_t)1024u * (size_t)1024u)
+#define KiB (1024ULL)
+#define MiB (1024ULL * 1024ULL)
+#define GiB (1024ULL * 1024ULL * 1024ULL)
 
 #define MIN_ALIGNMENT 4

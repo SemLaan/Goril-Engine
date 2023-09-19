@@ -13,11 +13,11 @@ struct GameConfig
 class GRAPI GorilGame
 {
 public:
-	virtual b8 Init() = 0;
+	virtual bool Init() = 0;
 
-	virtual b8 Update() = 0;
+	virtual bool Update() = 0;
 
-	virtual b8 Render() = 0;
+	virtual bool Render() = 0;
 
-	virtual b8 Shutdown() = 0;
+	virtual bool Shutdown() = 0;
 };

@@ -3,10 +3,10 @@
 #include "vulkan_types.h"
 
 
-b8 CreateSwapchain(RendererState* state);
+bool CreateSwapchain(RendererState* state);
 
 void DestroySwapchain(RendererState* state);
 
-b8 CreateSwapchainFramebuffers(RendererState* state);
+bool CreateSwapchainFramebuffers(RendererState* state);
 
 void DestroySwapchainFramebuffers(RendererState* state);

@@ -60,7 +60,7 @@ VkDebugUtilsMessengerCreateInfoEXT GetDebugMessengerCreateInfo()
 	return debugMessengerCreateInfo;
 }
 
-b8 CreateDebugMessenger()
+bool CreateDebugMessenger()
 {
 	PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(vk_state->instance, "vkCreateDebugUtilsMessengerEXT");
 	VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo = GetDebugMessengerCreateInfo();

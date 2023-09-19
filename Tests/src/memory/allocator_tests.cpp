@@ -6,7 +6,7 @@
 #include <core/gr_memory.h>
 
 
-static b8 bump_allocator_test()
+static bool bump_allocator_test()
 {
 	size_t arena_size = 12 + Allocator::GetAllocHeaderSize() * 2 + MIN_ALIGNMENT * 2;
 
@@ -25,7 +25,7 @@ static b8 bump_allocator_test()
 	return true;
 }
 
-static b8 bump_allocator_realloc_test()
+static bool bump_allocator_realloc_test()
 {
 	size_t arena_size = 1000 + Allocator::GetAllocHeaderSize() + MIN_ALIGNMENT;
 
@@ -44,7 +44,7 @@ static b8 bump_allocator_realloc_test()
 }
 
 
-static b8 freelist_allocator_test()
+static bool freelist_allocator_test()
 {
 	size_t arena_size = 1000 + Allocator::GetAllocHeaderSize() + MIN_ALIGNMENT;
 
@@ -78,7 +78,7 @@ static b8 freelist_allocator_test()
 	return true;
 }
 
-static b8 freelist_allocator_realloc_test()
+static bool freelist_allocator_realloc_test()
 {
 	size_t arena_size = 1000 + Allocator::GetAllocHeaderSize() + MIN_ALIGNMENT;
 
@@ -115,7 +115,7 @@ static b8 freelist_allocator_realloc_test()
 	return true;
 }
 
-static b8 freelist_allocator_alignment_test()
+static bool freelist_allocator_alignment_test()
 {
 	size_t arena_size = 1000 + Allocator::GetAllocHeaderSize() + MIN_ALIGNMENT;
 

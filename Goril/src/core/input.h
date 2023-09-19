@@ -254,23 +254,23 @@ enum KeyCode
 #pragma endregion
 };
 
-b8 InitializeInput();
+bool InitializeInput();
 
 void ShutdownInput();
 
 void UpdateInput();
 
-GRAPI void SetMouseCentered(b8 enabled);
+GRAPI void SetMouseCentered(bool enabled);
 GRAPI void ToggleMouseCentered();
 
-GRAPI b8 GetKeyDown(KeyCode key);
-GRAPI b8 GetKeyDownPrevious(KeyCode key);
-GRAPI b8 GetButtonDown(ButtonCode button);
-GRAPI b8 GetButtonDownPrevious(ButtonCode button);
+GRAPI bool GetKeyDown(KeyCode key);
+GRAPI bool GetKeyDownPrevious(KeyCode key);
+GRAPI bool GetButtonDown(ButtonCode button);
+GRAPI bool GetButtonDownPrevious(ButtonCode button);
 GRAPI glm::ivec2 GetMousePos();
 GRAPI glm::ivec2 GetMousePosPrevious();
 GRAPI glm::ivec2 GetMouseDistanceFromCenter();
 
-void ProcessKey(b8 down, KeyCode key);
-void ProcessButton(b8 down, ButtonCode button);
+void ProcessKey(bool down, KeyCode key);
+void ProcessButton(bool down, ButtonCode button);
 void ProcessMouseMove(i32 x, i32 y);

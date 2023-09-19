@@ -7,10 +7,10 @@
 
 SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
 
-b8 SelectPhysicalDevice(void** requiredDeviceExtensionsDarray);
+bool SelectPhysicalDevice(void** requiredDeviceExtensionsDarray);
 
 void SelectQueueFamilies(RendererState* state);
 
-b8 CreateLogicalDevice(RendererState* state, void** requiredDeviceExtensionsDarray, void** requiredDeviceLayersDarray);
+bool CreateLogicalDevice(RendererState* state, void** requiredDeviceExtensionsDarray, void** requiredDeviceLayersDarray);
 
 void DestroyLogicalDevice(RendererState* state);

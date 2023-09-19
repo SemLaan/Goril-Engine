@@ -3,7 +3,7 @@
 #include "core/logger.h"
 
 
-b8 CreateSyncObjects()
+bool CreateSyncObjects()
 {
 	vk_state->imageAvailableSemaphoresDarray = (VkSemaphore*)DarrayCreateWithSize(sizeof(VkSemaphore), MAX_FRAMES_IN_FLIGHT, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
 	vk_state->renderFinishedSemaphoresDarray = (VkSemaphore*)DarrayCreateWithSize(sizeof(VkSemaphore), MAX_FRAMES_IN_FLIGHT, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);

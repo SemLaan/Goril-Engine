@@ -6,7 +6,7 @@
 #include "core/logger.h"
 #include "../renderer_types.h"
 
-b8 CreateGraphicsPipeline()
+bool CreateGraphicsPipeline()
 {
 	// Creating shader modules
 	char* vert;

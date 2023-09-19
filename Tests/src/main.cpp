@@ -45,7 +45,7 @@ int main()
 	GRTRACE("Testing log functions: {}", "succesfull");
 
 	// Run tests
-	b8 result = run_tests();
+	bool result = run_tests();
 
 	if (result == false)
 	{

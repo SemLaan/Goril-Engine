@@ -5,7 +5,7 @@
 
 
 
-b8 CreateQueues();
+bool CreateQueues();
 void DestroyQueues();
 
 void TryDestroyResourcesPendingDestruction();

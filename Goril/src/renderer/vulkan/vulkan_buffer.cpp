@@ -42,7 +42,7 @@ static void CopyBufferAndTransitionQueue(VkBuffer dstBuffer, VkBuffer srcBuffer,
 	EndSubmitAndFreeSingleUseCommandBuffer(transferCommandBuffer, signalSemaphoreCount, pSemaphoreInfos, out_signaledValue);
 }
 
-b8 CreateBuffer(VkDeviceSize size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkBuffer* out_buffer, VkDeviceMemory* out_memory)
+bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkBuffer* out_buffer, VkDeviceMemory* out_memory)
 {
 	VkBufferCreateInfo bufferCreateInfo{};
 	bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

@@ -6,4 +6,4 @@
 
 void GetPlatformExtensions(void** extensionNamesDarray);
 
-b8 PlatformCreateSurface(VkInstance instance, VkAllocationCallbacks* allocator, VkSurfaceKHR* out_surface);
+bool PlatformCreateSurface(VkInstance instance, VkAllocationCallbacks* allocator, VkSurfaceKHR* out_surface);

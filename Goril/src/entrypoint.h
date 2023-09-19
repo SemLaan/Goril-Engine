@@ -6,7 +6,7 @@
 #include "core/gr_memory.h"
 
 extern GameConfig GetGameConfig();
-extern b8 CreateGameInstance(GorilGame*& out_game);
+extern bool CreateGameInstance(GorilGame*& out_game);
 
 int main()
 {

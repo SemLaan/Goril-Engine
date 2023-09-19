@@ -12,7 +12,7 @@ struct EventState
 
 static EventState* state = nullptr;
 
-b8 InitializeEvent()
+bool InitializeEvent()
 {
 	GRASSERT_DEBUG(state == nullptr); // If this triggers init got called twice
 	GRINFO("Initializing event subsystem...");

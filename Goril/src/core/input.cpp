@@ -7,21 +7,21 @@
 
 struct InputState
 {
-	b8 keyStates[256];
-	b8 previousKeyStates[256];
-	b8 buttonStates[7];
-	b8 previousButtonStates[7];
+	bool keyStates[256];
+	bool previousKeyStates[256];
+	bool buttonStates[7];
+	bool previousButtonStates[7];
 	i32 mousePosX;
 	i32 mousePosY;
 	i32 previousMousePosX;
 	i32 previousMousePosY;
-	b8 mouseCentered;
+	bool mouseCentered;
 };
 
 static InputState* state = nullptr;
 
 
-b8 InitializeInput()
+bool InitializeInput()
 {
 	GRASSERT_DEBUG(state == nullptr); // If this fails it means init was called twice
 	GRINFO("Initializing input subsystem...");
@@ -57,7 +57,7 @@ void UpdateInput()
 		SetMousePosition(GetPlatformWindowSize() / 2);
 }
 
-void SetMouseCentered(b8 enabled)
+void SetMouseCentered(bool enabled)
 {
 	state->mouseCentered = enabled;
 }
@@ -67,22 +67,22 @@ void ToggleMouseCentered()
 	state->mouseCentered = !state->mouseCentered;
 }
 
-b8 GetKeyDown(KeyCode key)
+bool GetKeyDown(KeyCode key)
 {
 	return state->keyStates[key];
 }
 
-b8 GetKeyDownPrevious(KeyCode key)
+bool GetKeyDownPrevious(KeyCode key)
 {
 	return state->previousKeyStates[key];
 }
 
-b8 GetButtonDown(ButtonCode button)
+bool GetButtonDown(ButtonCode button)
 {
 	return state->buttonStates[button];
 }
 
-b8 GetButtonDownPrevious(ButtonCode button)
+bool GetButtonDownPrevious(ButtonCode button)
 {
 	return state->previousButtonStates[button];
 }
@@ -102,7 +102,7 @@ glm::ivec2 GetMouseDistanceFromCenter()
 	return glm::ivec2(state->mousePosX, state->mousePosY) - (GetPlatformWindowSize() / 2);
 }
 
-void ProcessKey(b8 down, KeyCode key)
+void ProcessKey(bool down, KeyCode key)
 {
 	if (state->keyStates[key] != down)
 	{
@@ -116,7 +116,7 @@ void ProcessKey(b8 down, KeyCode key)
 	}
 }
 
-void ProcessButton(b8 down, ButtonCode button)
+void ProcessButton(bool down, ButtonCode button)
 {
 	if (state->buttonStates[button] != down)
 	{

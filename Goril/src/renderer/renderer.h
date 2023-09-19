@@ -3,12 +3,12 @@
 #include "buffer.h"
 
 
-b8 InitializeRenderer();
+bool InitializeRenderer();
 void ShutdownRenderer();
 
 void RecreateSwapchain();
 
-b8 BeginFrame();
+bool BeginFrame();
 void EndFrame();
 
 GRAPI void UpdateGlobalUniforms(GlobalUniformObject* globalUniformObject, Texture texture);

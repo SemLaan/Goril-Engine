@@ -7,7 +7,7 @@
 
 
 
-b8 AllocateCommandBuffer(QueueFamily* queueFamily, CommandBuffer** out_pCommandBuffer)
+bool AllocateCommandBuffer(QueueFamily* queueFamily, CommandBuffer** out_pCommandBuffer)
 {
 	*out_pCommandBuffer = (CommandBuffer*)GRAlloc(sizeof(CommandBuffer), MEM_TAG_RENDERER_SUBSYS);
 	CommandBuffer* commandBuffer = *out_pCommandBuffer;
@@ -37,7 +37,7 @@ void FreeCommandBuffer(CommandBuffer* commandBuffer)
 	GRFree(commandBuffer);
 }
 
-b8 AllocateAndBeginSingleUseCommandBuffer(QueueFamily* queueFamily, CommandBuffer** out_pCommandBuffer)
+bool AllocateAndBeginSingleUseCommandBuffer(QueueFamily* queueFamily, CommandBuffer** out_pCommandBuffer)
 {
 	*out_pCommandBuffer = (CommandBuffer*)GRAlloc(sizeof(CommandBuffer), MEM_TAG_RENDERER_SUBSYS);
 	CommandBuffer* commandBuffer = *out_pCommandBuffer;
@@ -80,7 +80,7 @@ static void SingleUseCommandBufferDestructor(void* resource)
 	GRFree(commandBuffer);
 }
 
-b8 EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 signalSemaphoreCount /*default: 0*/, VkSemaphoreSubmitInfo* pSemaphoreSubmitInfos /*default: null*/, u64* out_signaledValue /*default: null*/)
+bool EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 signalSemaphoreCount /*default: 0*/, VkSemaphoreSubmitInfo* pSemaphoreSubmitInfos /*default: null*/, u64* out_signaledValue /*default: null*/)
 {
 	if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer->handle))
 	{
@@ -149,7 +149,7 @@ void ResetCommandBuffer(CommandBuffer* commandBuffer)
 	vkResetCommandBuffer(commandBuffer->handle, 0);
 }
 
-b8 ResetAndBeginCommandBuffer(CommandBuffer* commandBuffer)
+bool ResetAndBeginCommandBuffer(CommandBuffer* commandBuffer)
 {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -175,7 +175,7 @@ void EndCommandBuffer(CommandBuffer* commandBuffer)
 	}
 }
 
-b8 SubmitCommandBuffers(u32 waitSemaphoreCount, VkSemaphoreSubmitInfo* pWaitSemaphoreInfos, u32 signalSemaphoreCount, VkSemaphoreSubmitInfo* pSignalSemaphoreInfos, u32 commandBufferCount, CommandBuffer* commandBuffers, VkFence fence)
+bool SubmitCommandBuffers(u32 waitSemaphoreCount, VkSemaphoreSubmitInfo* pWaitSemaphoreInfos, u32 signalSemaphoreCount, VkSemaphoreSubmitInfo* pSignalSemaphoreInfos, u32 commandBufferCount, CommandBuffer* commandBuffers, VkFence fence)
 {
 #ifdef GR_DEBUG
 	if (commandBufferCount > MAX_SUBMITTED_COMMAND_BUFFERS)
