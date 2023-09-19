@@ -53,9 +53,10 @@ void* DarrayPushback(void* elements, void* element)
 	if (state->size >= state->capacity)
 	{
 		state->capacity = (u32)(state->capacity * DARRAY_SCALING_FACTOR + 1);
-		void* temp = state->allocator->ReAlloc(state->memoryBlock, (size_t)((state->stride * state->capacity) + DARRAY_MIN_ALIGNMENT));
-		state->memoryBlock = temp;
+		void* temp = state->allocator->ReAlloc(state->memoryBlock, (state->stride * state->capacity) + DARRAY_MIN_ALIGNMENT);
 		elements = (u8*)temp + DARRAY_MIN_ALIGNMENT;
+		state = (Darray*)elements - 1;
+		state->memoryBlock = temp;
 	}
 
 	memcpy((u8*)elements + (state->stride * state->size), element, (size_t)state->stride);

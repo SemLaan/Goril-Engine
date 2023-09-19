@@ -127,7 +127,7 @@ b8 CreateLogicalDevice(RendererState* state, void** requiredDeviceExtensionsDarr
 {
 
 	// ===================== Specifying queues for logical device =================================
-	VkDeviceQueueCreateInfo* queueCreateInfosDarray = (VkDeviceQueueCreateInfo*)DarrayCreate(sizeof(VkDeviceQueueCreateInfo), 3, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: switch allocator
+	VkDeviceQueueCreateInfo* queueCreateInfosDarray = (VkDeviceQueueCreateInfo*)DarrayCreate(sizeof(VkDeviceQueueCreateInfo), 1, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: switch allocator
 
 	u32* uniqueQueueFamiliesDarray = (u32*)DarrayCreate(sizeof(u32), 5, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: switch allocator
 	if (!DarrayContains(uniqueQueueFamiliesDarray, &state->queueIndices.graphicsFamily))
