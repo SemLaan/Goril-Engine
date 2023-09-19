@@ -1,10 +1,9 @@
 #pragma once
 #include "defines.h"
-#include <fstream>
 #include "containers/darray.h"
 #include "vulkan_types.h"
 
 
-bool ReadFile(const char* filename, mem_tag tag, char** out_data);
+bool ReadFile(const char* filename, mem_tag tag, char** out_data, u64* out_fileSize);
 
-bool CreateShaderModule(RendererState* state, char* codeDarray, VkShaderModule* out_shaderModule);
+bool CreateShaderModule(const char* filename, RendererState* state, VkShaderModule* out_shaderModule);

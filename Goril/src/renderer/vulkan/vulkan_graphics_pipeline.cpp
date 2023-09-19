@@ -9,16 +9,10 @@
 bool CreateGraphicsPipeline()
 {
 	// Creating shader modules
-	char* vert;
-	char* frag;
-	ReadFile("C:/Users/semla/Documents/Git_Repos/zelf_projecten/c++/Goril/Goril/src/renderer/shaders/vershader.spv", MEM_TAG_RENDERER_SUBSYS, &vert);
-	ReadFile("C:/Users/semla/Documents/Git_Repos/zelf_projecten/c++/Goril/Goril/src/renderer/shaders/frshader.spv", MEM_TAG_RENDERER_SUBSYS, &frag);
 	VkShaderModule vertShaderModule;
 	VkShaderModule fragShaderModule;
-	CreateShaderModule(vk_state, vert, &vertShaderModule);
-	CreateShaderModule(vk_state, frag, &fragShaderModule);
-	DarrayDestroy(vert);
-	DarrayDestroy(frag);
+	CreateShaderModule("C:/Users/semla/Documents/Git_Repos/zelf_projecten/c++/Goril/Goril/src/renderer/shaders/vershader.spv", vk_state, &vertShaderModule);
+	CreateShaderModule("C:/Users/semla/Documents/Git_Repos/zelf_projecten/c++/Goril/Goril/src/renderer/shaders/frshader.spv", vk_state, &fragShaderModule);
 
 	VkDescriptorSetLayoutBinding uboLayoutBindings[2]{};
 	uboLayoutBindings[0].binding = 0;

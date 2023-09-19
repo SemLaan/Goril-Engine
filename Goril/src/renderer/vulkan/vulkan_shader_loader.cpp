@@ -1,41 +1,53 @@
 #include "vulkan_shader_loader.h"
 
 #include "core/logger.h"
+#include <stdio.h>
 
 
-bool ReadFile(const char* filename, mem_tag tag, char** out_data)
+bool ReadFile(const char* filename, mem_tag tag, char** out_data, u64* out_fileSize)
 {
-	std::ifstream file(filename, std::ios::ate | std::ios::binary);
+	FILE* file = fopen(filename, "rb");
 
-	if (!file.is_open()) {
+	if (file == NULL)
+	{
 		GRERROR("Failed to open file");
 		return false;
 	}
 
-	size_t fileSize = (size_t)file.tellg();
-	*out_data = (char*)DarrayCreateWithSize(sizeof(char), (u32)fileSize, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: different allocator
+	fseek(file, 0L, SEEK_END);
 
-	file.seekg(0);
-	file.read(*out_data, fileSize);
+	*out_fileSize = ftell(file);
 
-	file.close();
+	*out_data = (char*)AlignedAlloc(GetGlobalAllocator(), *out_fileSize, tag, 64);
+
+	rewind(file);
+	fread(*out_data, 1, *out_fileSize, file);
+
+	fclose(file);
 
 	return true;
 }
 
-bool CreateShaderModule(RendererState* state, char* codeDarray, VkShaderModule* out_shaderModule)
+bool CreateShaderModule(const char* filename, RendererState* state, VkShaderModule* out_shaderModule)
 {
+	char* fileData;
+	u64 fileSize;
+	ReadFile(filename, MEM_TAG_RENDERER_SUBSYS, &fileData, &fileSize);
+
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	createInfo.codeSize = DarrayGetSize(codeDarray);
+	createInfo.codeSize = fileSize;
 	// This cast from char* to u32* is possible because darray's are aligned on 64B
-	createInfo.pCode = (u32*)codeDarray;
+	createInfo.pCode = (u32*)fileData;
 
 	if (VK_SUCCESS != vkCreateShaderModule(state->device, &createInfo, state->allocator, out_shaderModule))
 	{
+		Free(GetGlobalAllocator(), fileData);
 		GRERROR("Shader module creation failed");
 		return false;
 	}
+
+	Free(GetGlobalAllocator(), fileData);
 
 	return true;
 }
