@@ -4,7 +4,7 @@
 
 
 
-struct AllocHeader
+typedef struct AllocHeader
 {
 	void* start;
 	u32 size; // Size of the client allocation
@@ -12,33 +12,22 @@ struct AllocHeader
 #ifndef GR_DIST
 	mem_tag tag; // Only for debugging, gets optimized out of dist builds
 #endif
-};
+} AllocHeader;
 
-size_t Allocator::GetAllocHeaderSize()
+
+
+u32 GetAllocHeaderSize()
 {
 	return sizeof(AllocHeader);
 }
 
-void Allocator::Initialize(void* backendState, PFN_BackendAlloc allocPFN, PFN_BackendTryReAlloc tryReAllocPFN, PFN_BackendFree freePFN)
-{
-	this->backendState = backendState;
-	BackendAlloc = allocPFN;
-	BackendTryReAlloc = tryReAllocPFN;
-	BackendFree = freePFN;
-}
-
-u32 Allocator::GetBlockSize(void* block)
+u64 GetBlockSize(void* block)
 {
 	AllocHeader* header = (AllocHeader*)block - 1;
 	return header->size;
 }
 
-void* Allocator::Alloc(size_t size, mem_tag tag)
-{
-	return AlignedAlloc(size, tag, MIN_ALIGNMENT);
-}
-
-void* Allocator::AlignedAlloc(size_t size, mem_tag tag, u32 alignment)
+void* AlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 alignment)
 {
 	// Checking if the alignment is greater than min alignment and is a power of two
 	GRASSERT_DEBUG((alignment >= MIN_ALIGNMENT) && ((alignment & (alignment - 1)) == 0));
@@ -48,7 +37,7 @@ void* Allocator::AlignedAlloc(size_t size, mem_tag tag, u32 alignment)
 	AllocInfo(requiredSize, tag);
 #endif
 
-	void* block = BackendAlloc(backendState, requiredSize);
+	void* block = allocator->BackendAlloc(allocator->backendState, requiredSize);
 	u64 blockExcludingHeader = (u64)block + sizeof(AllocHeader);
 	// Gets the next address that is aligned on the requested boundary
 	void* alignedBlock = (void*)((blockExcludingHeader + alignment - 1) & ~((u64)alignment - 1));
@@ -65,13 +54,13 @@ void* Allocator::AlignedAlloc(size_t size, mem_tag tag, u32 alignment)
 	return alignedBlock;
 }
 
-void* Allocator::ReAlloc(void* block, size_t size)
+void* ReAlloc(Allocator* allocator, void* block, u64 size)
 {
 	// Going slightly before the block and grabbing the alloc header that is stored there for debug info
 	AllocHeader* header = (AllocHeader*)block - 1;
 	GRASSERT(size != header->size);
-	size_t newTotalSize = size + header->alignment - 1 + sizeof(AllocHeader);
-	size_t oldTotalSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
+	u64 newTotalSize = size + header->alignment - 1 + sizeof(AllocHeader);
+	u64 oldTotalSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
 
 #ifndef GR_DIST
 	ReAllocInfo((i64)newTotalSize - oldTotalSize);
@@ -79,7 +68,7 @@ void* Allocator::ReAlloc(void* block, size_t size)
 
 	// ================== If the realloc is smaller than the original alloc ==========================
 	// ===================== Or if there is enough space after the old alloc to just extend it ========================
-	if (BackendTryReAlloc(backendState, header->start, oldTotalSize, newTotalSize))
+	if (allocator->BackendTryReAlloc(allocator->backendState, header->start, oldTotalSize, newTotalSize))
 	{
 		header->size = (u32)size;
 		return block;
@@ -88,7 +77,7 @@ void* Allocator::ReAlloc(void* block, size_t size)
 	// ==================== If there's no space at the old allocation ==========================================
 	// ======================= Copy it to a new allocation and delete the old one ===============================
 	// Get new allocation and align it
-	void* newBlock = BackendAlloc(backendState, newTotalSize);
+	void* newBlock = allocator->BackendAlloc(allocator->backendState, newTotalSize);
 	u64 blockExcludingHeader = (u64)newBlock + sizeof(AllocHeader);
 	void* alignedBlock = (void*)((blockExcludingHeader + header->alignment - 1) & ~((u64)header->alignment - 1));
 
@@ -105,20 +94,20 @@ void* Allocator::ReAlloc(void* block, size_t size)
 #endif // !GR_DIST
 
 	// Free the old data
-	BackendFree(backendState, header->start, oldTotalSize);
+	allocator->BackendFree(allocator->backendState, header->start, oldTotalSize);
 
 	return alignedBlock;
 }
 
-void Allocator::Free(void* block)
+void Free(Allocator* allocator, void* block)
 {
 	// Going slightly before the block and grabbing the alloc header that is stored there for debug info
 	AllocHeader* header = (AllocHeader*)block - 1;
-	size_t totalFreeSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
+	u64 totalFreeSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
 
 #ifndef GR_DIST
 	FreeInfo(totalFreeSize, header->tag);
 #endif
 
-	BackendFree(backendState, header->start, totalFreeSize);
+	allocator->BackendFree(allocator->backendState, header->start, totalFreeSize);
 }
