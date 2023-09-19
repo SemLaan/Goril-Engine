@@ -127,15 +127,15 @@ b8 CreateLogicalDevice(RendererState* state, void** requiredDeviceExtensionsDarr
 {
 
 	// ===================== Specifying queues for logical device =================================
-	VkDeviceQueueCreateInfo* queueCreateInfosDarray = (VkDeviceQueueCreateInfo*)DarrayCreate(sizeof(VkDeviceQueueCreateInfo), 1, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: switch allocator
+	VkDeviceQueueCreateInfo* queueCreateInfosDarray = (VkDeviceQueueCreateInfo*)DarrayCreate(sizeof(VkDeviceQueueCreateInfo), 3, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: switch allocator
 
 	u32* uniqueQueueFamiliesDarray = (u32*)DarrayCreate(sizeof(u32), 5, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: switch allocator
 	if (!DarrayContains(uniqueQueueFamiliesDarray, &state->queueIndices.graphicsFamily))
-		DarrayPushback(uniqueQueueFamiliesDarray, &state->queueIndices.graphicsFamily);
+		uniqueQueueFamiliesDarray = (u32*)DarrayPushback(uniqueQueueFamiliesDarray, &state->queueIndices.graphicsFamily);
 	if (!DarrayContains(uniqueQueueFamiliesDarray, &state->queueIndices.presentFamily))
-		DarrayPushback(uniqueQueueFamiliesDarray, &state->queueIndices.presentFamily);
+		uniqueQueueFamiliesDarray = (u32*)DarrayPushback(uniqueQueueFamiliesDarray, &state->queueIndices.presentFamily);
 	if (!DarrayContains(uniqueQueueFamiliesDarray, &state->queueIndices.transferFamily))
-		DarrayPushback(uniqueQueueFamiliesDarray, &state->queueIndices.transferFamily);
+		uniqueQueueFamiliesDarray = (u32*)DarrayPushback(uniqueQueueFamiliesDarray, &state->queueIndices.transferFamily);
 
 	f32 queuePriority = 1.0f;
 
@@ -148,7 +148,7 @@ b8 CreateLogicalDevice(RendererState* state, void** requiredDeviceExtensionsDarr
 		queueCreateInfo.queueFamilyIndex = uniqueQueueFamiliesDarray[i];
 		queueCreateInfo.queueCount = 1;
 		queueCreateInfo.pQueuePriorities = &queuePriority;
-		DarrayPushback(queueCreateInfosDarray, &queueCreateInfo);
+		queueCreateInfosDarray = (VkDeviceQueueCreateInfo*)DarrayPushback(queueCreateInfosDarray, &queueCreateInfo);
 	}
 
 	DarrayDestroy(uniqueQueueFamiliesDarray);

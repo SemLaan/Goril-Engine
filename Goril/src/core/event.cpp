@@ -58,7 +58,7 @@ void RegisterEventListener(EventCode type, PFN_OnEvent listener)
 	}
 #endif // !GR_DIST
 
-	DarrayPushback(state->eventCallbacksDarrays[type], &listener);
+	state->eventCallbacksDarrays[type] = (PFN_OnEvent*)DarrayPushback(state->eventCallbacksDarrays[type], &listener);
 }
 
 void UnregisterEventListener(EventCode type, PFN_OnEvent listener)

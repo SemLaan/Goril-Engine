@@ -43,17 +43,17 @@ b8 InitializeRenderer()
 	void** requiredExtensionsDarray = (void**)DarrayCreate(sizeof(void*), 5, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: Change allocator
 	GetPlatformExtensions(requiredExtensionsDarray);
 	const char* vk_khr_surface_extension_name = VK_KHR_SURFACE_EXTENSION_NAME;
-	DarrayPushback(requiredExtensionsDarray, &vk_khr_surface_extension_name);
+	requiredExtensionsDarray = (void**)DarrayPushback(requiredExtensionsDarray, &vk_khr_surface_extension_name);
 #ifndef GR_DIST
 	const char* vk_ext_debug_utils_extension_name = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
-	DarrayPushback(requiredExtensionsDarray, &vk_ext_debug_utils_extension_name);
+	requiredExtensionsDarray = (void**)DarrayPushback(requiredExtensionsDarray, &vk_ext_debug_utils_extension_name);
 #endif // !GR_DIST
 
 	// Getting required layers
 	void** requiredLayersDarray = (void**)DarrayCreate(sizeof(void*), 1, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: Change allocator
 #ifndef GR_DIST
 	const char* vk_layer_khronos_validation = "VK_LAYER_KHRONOS_validation";
-	DarrayPushback(requiredLayersDarray, &vk_layer_khronos_validation);
+	requiredLayersDarray = (void**)DarrayPushback(requiredLayersDarray, &vk_layer_khronos_validation);
 #endif // !GR_DIST
 
 
@@ -88,9 +88,9 @@ b8 InitializeRenderer()
 	const char* vk_khr_swapchain_extension_name = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
 	const char* vk_khr_synch2_extension_name = VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME;
 	const char* vk_khr_timeline_semaphore_extension_name = VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME;
-	DarrayPushback(requiredDeviceExtensionsDarray, &vk_khr_swapchain_extension_name);
-	DarrayPushback(requiredDeviceExtensionsDarray, &vk_khr_synch2_extension_name);
-	DarrayPushback(requiredDeviceExtensionsDarray, &vk_khr_timeline_semaphore_extension_name);
+	requiredDeviceExtensionsDarray = (void**)DarrayPushback(requiredDeviceExtensionsDarray, &vk_khr_swapchain_extension_name);
+	requiredDeviceExtensionsDarray = (void**)DarrayPushback(requiredDeviceExtensionsDarray, &vk_khr_synch2_extension_name);
+	requiredDeviceExtensionsDarray = (void**)DarrayPushback(requiredDeviceExtensionsDarray, &vk_khr_timeline_semaphore_extension_name);
 
 	if (!SelectPhysicalDevice(requiredDeviceExtensionsDarray))
 	{

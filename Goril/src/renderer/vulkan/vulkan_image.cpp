@@ -215,8 +215,8 @@ Texture CreateTexture(u32 width, u32 height, void* pixels)
 		memoryDestructionInfo.Destructor = VulkanMemoryDestructor;
 		memoryDestructionInfo.signalValue = signaledValue;
 
-		DarrayPushback(vk_state->transferQueue.resourcesPendingDestructionDarray, &bufferDestructionInfo);
-		DarrayPushback(vk_state->transferQueue.resourcesPendingDestructionDarray, &memoryDestructionInfo);
+		vk_state->transferQueue.resourcesPendingDestructionDarray = (ResourceDestructionInfo*)DarrayPushback(vk_state->transferQueue.resourcesPendingDestructionDarray, &bufferDestructionInfo);
+		vk_state->transferQueue.resourcesPendingDestructionDarray = (ResourceDestructionInfo*)DarrayPushback(vk_state->transferQueue.resourcesPendingDestructionDarray, &memoryDestructionInfo);
 	}
 
 	// Creating the image memory barrier for the queue family acquire operation
@@ -250,7 +250,7 @@ Texture CreateTexture(u32 width, u32 height, void* pixels)
 	acquireDependencyInfo->imageMemoryBarrierCount = 1;
 	acquireDependencyInfo->pImageMemoryBarriers = acquireImageInfo;
 
-	DarrayPushback(vk_state->requestedQueueAcquisitionOperationsDarray, &acquireDependencyInfo);
+	vk_state->requestedQueueAcquisitionOperationsDarray = (VkDependencyInfo**)DarrayPushback(vk_state->requestedQueueAcquisitionOperationsDarray, &acquireDependencyInfo);
 
 	// Creating the image view
 	VkImageViewCreateInfo viewCreateInfo{};
@@ -324,5 +324,5 @@ void DestroyTexture(Texture clientTexture)
 	imageDestructionInfo.Destructor = ImageDestructor;
 	imageDestructionInfo.signalValue = vk_state->graphicsQueue.semaphore.submitValue;
 
-	DarrayPushback(vk_state->graphicsQueue.resourcesPendingDestructionDarray, &imageDestructionInfo);
+	vk_state->graphicsQueue.resourcesPendingDestructionDarray = (ResourceDestructionInfo*)DarrayPushback(vk_state->graphicsQueue.resourcesPendingDestructionDarray, &imageDestructionInfo);
 }

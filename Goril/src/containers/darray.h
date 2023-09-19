@@ -10,12 +10,11 @@
 #define DARRAY_SCALING_FACTOR 1.6f
 
 
-#define DARRAY_STATE_SIZE (sizeof(Darray) + DARRAY_MIN_ALIGNMENT - 1)
 
 GRAPI void* DarrayCreate(u32 stride, u32 capacity, Allocator* allocator, mem_tag tag);
 GRAPI void* DarrayCreateWithSize(u32 stride, u32 capacityAndCapacity, Allocator* allocator, mem_tag tag);
 
-GRAPI void DarrayPushback(void* elements, void* element);
+GRAPI void* DarrayPushback(void* elements, void* element);
 
 GRAPI void DarrayPop(void* elements);
 
