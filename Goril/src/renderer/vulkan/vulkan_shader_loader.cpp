@@ -17,12 +17,10 @@ bool ReadFile(const char* filename, mem_tag tag, char** out_data, u64* out_fileS
 	fseek(file, 0L, SEEK_END);
 
 	*out_fileSize = ftell(file);
-
 	*out_data = (char*)AlignedAlloc(GetGlobalAllocator(), *out_fileSize, tag, 64);
 
 	rewind(file);
 	fread(*out_data, 1, *out_fileSize, file);
-
 	fclose(file);
 
 	return true;

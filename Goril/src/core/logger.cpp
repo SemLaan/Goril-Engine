@@ -3,7 +3,7 @@
 #include "platform.h"
 #include "asserts.h"
 #include "gr_memory.h"
-#include <fstream>
+#include <stdio.h>
 
 
 
@@ -18,19 +18,23 @@ static std::string logLevels[MAX_LOG_LEVELS] =
 };
 
 
-static std::ofstream file("console.log");
+static FILE* file = nullptr;
 
 
 void WriteLogsToFile()
 {
 	GRINFO("Writing logs to file...");
 
-	file.close();
+	if (file != nullptr)
+		fclose(file);
 }
 
 void Log(log_level level, std::string message)
 {
 	std::string string = logLevels[level] + message + "\n";
-	file << string.c_str();
+
+	if (file == nullptr)
+		file = fopen("console.log", "w+");
+	fprintf(file, string.c_str());
 	PlatformLogString(level, string.c_str());
 }
