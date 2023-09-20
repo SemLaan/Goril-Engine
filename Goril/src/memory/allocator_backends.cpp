@@ -160,7 +160,7 @@ static void* FreelistAlloc(void* backendState, size_t size)
 		node = node->next;
 	}
 
-	GRFATAL("Can't allocate object of size {}", size);
+	GRFATAL("Can't allocate object of size %llu", size);
 	GRASSERT_MSG(false, "Freelist allocator ran out of memory or too fragmented");
 	return nullptr;
 }
@@ -408,7 +408,7 @@ bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* o
 	void* arenaBlock = malloc(requiredMemory);
 	if (arenaBlock == nullptr)
 	{
-		GRFATAL("Couldn't allocate arena memory, tried allocating {}B, initializing memory failed", requiredMemory);
+		GRFATAL("Couldn't allocate arena memory, tried allocating %lluB, initializing memory failed", requiredMemory);
 		return false;
 	}
 

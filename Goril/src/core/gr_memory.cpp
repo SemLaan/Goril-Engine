@@ -226,16 +226,16 @@ void PrintMemoryStats()
 	const char* scaleString;
 	size_t scale;
 	scaleString = GetMemoryScaleString(state->deferredMemory, scale);
-	GRINFO("Memory deferred to local allocators: {:.2f}{}", (f32)state->deferredMemory / scale, scaleString);
+	GRINFO("Memory deferred to local allocators: %.2f%s", (f32)state->deferredMemory / scale, scaleString);
 	scaleString = GetMemoryScaleString(state->arenaSize, scale);
-	GRINFO("Total allocated memory and total arena size ({}): {:.2f}/{:.2f}", scaleString, (f32)state->allocated / scale, (f32)state->arenaSize / scale);
-	GRINFO("Percent allocated: {:.2f}%%", 100 * (f32)state->allocated / (f32)state->arenaSize);
-	GRINFO("Total allocations: {}", state->netAllocationCount);
-	GRINFO("Fragmentation (amount of separate free blocks): {}", FreelistGetFreeNodes(GetGlobalAllocator()->backendState));
+	GRINFO("Total allocated memory and total arena size (%s): %.2f/%.2f", scaleString, (f32)state->allocated / scale, (f32)state->arenaSize / scale);
+	GRINFO("Percent allocated: %.2f%%", 100 * (f32)state->allocated / (f32)state->arenaSize);
+	GRINFO("Total allocations: %llu", state->netAllocationCount);
+	GRINFO("Fragmentation (amount of separate free blocks): %llu", FreelistGetFreeNodes(GetGlobalAllocator()->backendState));
 	GRINFO("Allocations by tag:");
 	for (u32 i = 0; i < mem_tag::MAX_MEMORY_TAGS; ++i)
 	{
-		GRINFO("	{}: {}", memTagToText[i], state->perTagAllocCount[i]);
+		GRINFO("	%s: %u", memTagToText[i], state->perTagAllocCount[i]);
 	}
 #endif // !GR_DIST
 }

@@ -5,7 +5,7 @@
 
 
 static std::vector<PFN_test> tests;
-static std::vector<std::string> test_names;
+static std::vector<const char*> test_names;
 static Timer timer;
 
 
@@ -21,7 +21,7 @@ void shutdown_test_manager()
 {
 }
 
-void register_test(PFN_test test, std::string test_name)
+void register_test(PFN_test test, const char* test_name)
 {
 	tests.push_back(test);
 	test_names.push_back(test_name);
@@ -35,7 +35,7 @@ bool run_tests()
 
 	for (u32 i = 0; i < tests.size(); ++i)
 	{
-		TESTINFO("Running test [{}/{}]: {}", i + 1, tests.size(), test_names[i]);
+		TESTINFO("Running test [%u/%llu]: %s", i + 1, tests.size(), test_names[i]);
 		f64 test_start_time = TimerSecondsSinceStart(timer);
 		bool result = tests[i]();
 		f64 test_end_time = TimerSecondsSinceStart(timer);
@@ -46,7 +46,7 @@ bool run_tests()
 		}
 		else
 		{
-			TESTINFO("Test succesfull, took: {:.4f}s", test_end_time - test_start_time);
+			TESTINFO("Test succesfull, took: %.4fs", test_end_time - test_start_time);
 		}
 	}
 

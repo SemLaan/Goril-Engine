@@ -12,21 +12,21 @@ static EventData g_data2;
 static bool TestListener(EventCode type, EventData data)
 {
 	g_data = data;
-	//GRDEBUG("Test, {}, {}, {}, {}", data.u32[0], data.u32[1], data.u32[2], data.u32[3]);
+	//GRDEBUG("Test, %u, %u, %u, %u", data.u32[0], data.u32[1], data.u32[2], data.u32[3]);
 	return false;
 }
 
 static bool TestListener1(EventCode type, EventData data)
 {
 	g_data1 = data;
-	//GRDEBUG("Test, {}, {}, {}, {}", data.u32[0], data.u32[1], data.u32[2], data.u32[3]);
+	//GRDEBUG("Test, %u, %u, %u, %u", data.u32[0], data.u32[1], data.u32[2], data.u32[3]);
 	return true;
 }
 
 static bool TestListener2(EventCode type, EventData data)
 {
 	g_data2 = data;
-	//GRDEBUG("Test, {}, {}, {}, {}", data.u32[0], data.u32[1], data.u32[2], data.u32[3]);
+	//GRDEBUG("Test, %u, %u, %u, %u", data.u32[0], data.u32[1], data.u32[2], data.u32[3]);
 	return true;
 }
 

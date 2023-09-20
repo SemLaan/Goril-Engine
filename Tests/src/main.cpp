@@ -37,12 +37,12 @@ int main()
 	InitializeEngine(config);
 
 	// Testing logging functions
-	GRFATAL("Testing log functions: {}", "succesfull");
-	GRERROR("Testing log functions: {}", "succesfull");
-	GRWARN("Testing log functions: {}", "succesfull");
-	GRINFO("Testing log functions: {}", "succesfull");
-	GRDEBUG("Testing log functions: {}", "succesfull");
-	GRTRACE("Testing log functions: {}", "succesfull");
+	GRFATAL("Testing log functions: %s", "succesfull");
+	GRERROR("Testing log functions: %s", "succesfull");
+	GRWARN("Testing log functions: %s", "succesfull");
+	GRINFO("Testing log functions: %s", "succesfull");
+	GRDEBUG("Testing log functions: %s", "succesfull");
+	GRTRACE("Testing log functions: %s", "succesfull");
 
 	// Run tests
 	bool result = run_tests();

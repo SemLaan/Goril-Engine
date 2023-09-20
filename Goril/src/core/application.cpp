@@ -120,7 +120,7 @@ void ShutdownEngine()
 	ShutdownEvent();
 	ShutdownMemory();
 
-	GRINFO("Application ran for: {:.2f}s", TimerSecondsSinceStart(g_timer));
+	GRINFO("Application ran for: %.2fs", TimerSecondsSinceStart(g_timer));
 	WriteLogsToFile();
 }
 

@@ -27,16 +27,16 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 	switch (messageSeverity)
 	{
 	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-		GRTRACE("VK Validation, {}: {}", type, pCallbackData->pMessage);
+		GRTRACE("VK Validation, %s: %s", type, pCallbackData->pMessage);
 		break;
 	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-		GRTRACE("VK Validation, {}: {}", type, pCallbackData->pMessage);
+		GRTRACE("VK Validation, %s: %s", type, pCallbackData->pMessage);
 		break;
 	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-		GRWARN("VK Validation, {}: {}", type, pCallbackData->pMessage);
+		GRWARN("VK Validation, %s: %s", type, pCallbackData->pMessage);
 		break;
 	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-		GRERROR("VK Validation, {}: {}", type, pCallbackData->pMessage);
+		GRERROR("VK Validation, %s: %s", type, pCallbackData->pMessage);
 		break;
 	}
 
