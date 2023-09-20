@@ -1,6 +1,6 @@
 #pragma once
 #include "defines.h"
-#include "glm/glm.hpp"
+#include "math/math_types.h"
 
 enum ButtonCode
 {
@@ -267,9 +267,9 @@ GRAPI bool GetKeyDown(KeyCode key);
 GRAPI bool GetKeyDownPrevious(KeyCode key);
 GRAPI bool GetButtonDown(ButtonCode button);
 GRAPI bool GetButtonDownPrevious(ButtonCode button);
-GRAPI glm::ivec2 GetMousePos();
-GRAPI glm::ivec2 GetMousePosPrevious();
-GRAPI glm::ivec2 GetMouseDistanceFromCenter();
+GRAPI vec2i GetMousePos();
+GRAPI vec2i GetMousePosPrevious();
+GRAPI vec2i GetMouseDistanceFromCenter();
 
 void ProcessKey(bool down, KeyCode key);
 void ProcessButton(bool down, ButtonCode button);

@@ -54,7 +54,7 @@ void UpdateInput()
 	state->previousMousePosX = state->mousePosX;
 	state->previousMousePosY = state->mousePosY;
 	if (state->mouseCentered)
-		SetMousePosition(GetPlatformWindowSize() / 2);
+		SetMousePosition({ GetPlatformWindowSize().x / 2, GetPlatformWindowSize().y / 2 });
 }
 
 void SetMouseCentered(bool enabled)
@@ -87,19 +87,19 @@ bool GetButtonDownPrevious(ButtonCode button)
 	return state->previousButtonStates[button];
 }
 
-glm::ivec2 GetMousePos()
+vec2i GetMousePos()
 {
 	return { state->mousePosX, state->mousePosY };
 }
 
-glm::ivec2 GetMousePosPrevious()
+vec2i GetMousePosPrevious()
 {
 	return { state->previousMousePosX, state->previousMousePosY };
 }
 
-glm::ivec2 GetMouseDistanceFromCenter()
+vec2i GetMouseDistanceFromCenter()
 {
-	return glm::ivec2(state->mousePosX, state->mousePosY) - (GetPlatformWindowSize() / 2);
+	return {state->mousePosX - (GetPlatformWindowSize().x / 2), state->mousePosY - (GetPlatformWindowSize().y / 2)};
 }
 
 void ProcessKey(bool down, KeyCode key)

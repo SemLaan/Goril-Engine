@@ -290,8 +290,8 @@ bool BeginFrame()
 	viewport.y = (f32)vk_state->swapchainExtent.height;
 	viewport.width = (f32)vk_state->swapchainExtent.width;
 	viewport.height = -(f32)vk_state->swapchainExtent.height;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
+	viewport.minDepth = 1.0f;
+	viewport.maxDepth = 0.0f;
 	vkCmdSetViewport(currentCommandBuffer, 0, 1, &viewport);
 
 	VkRect2D scissor{};

@@ -1,14 +1,14 @@
 #pragma once
 #include "defines.h"
-#include "glm/glm.hpp"
+#include "math/math_types.h"
 #include "containers/darray.h"
 
 
 struct Vertex
 {
-	glm::vec3 position;
-	glm::vec3 color;
-	glm::vec2 texCoord;
+	vec3 position;
+	vec3 color;
+	vec2 texCoord;
 };
 
 struct VertexBuffer
@@ -28,10 +28,10 @@ struct Texture
 
 struct GlobalUniformObject
 {
-	glm::mat4 projView;
+	mat4 projView;
 };
 
 struct PushConstantObject
 {
-	glm::mat4 model;
+	mat4 model;
 };

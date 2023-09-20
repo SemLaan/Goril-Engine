@@ -1,6 +1,5 @@
 #pragma once
 #include "defines.h"
-#include "glm/glm.hpp"
 #include "containers/darray.h"
 #include "core/gr_memory.h"
 #include "renderer_types.h"

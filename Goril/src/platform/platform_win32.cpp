@@ -142,12 +142,12 @@ void PlatformLogString(log_level level, const char* message)
 	printf(message);
 }
 
-glm::ivec2 GetPlatformWindowSize()
+vec2i GetPlatformWindowSize()
 {
 	return { (i32)state->width, (i32)state->height };
 }
 
-void SetMousePosition(glm::ivec2 position)
+void SetMousePosition(vec2i position)
 {
 	if (state->fullscreenActive)
 	{

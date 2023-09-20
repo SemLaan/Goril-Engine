@@ -25,7 +25,7 @@ bool CreateSwapchain(RendererState* state)
 	}
 
 	// Setting swapchain resolution to window size
-	glm::ivec2 windowSize = GetPlatformWindowSize();
+	vec2i windowSize = GetPlatformWindowSize();
 	VkExtent2D swapchainExtent = { (u32)windowSize.x, (u32)windowSize.y };
 	// Making sure the swapchain isn't too big or too small
 	DarrayDestroy(state->swapchainSupport.formatsDarray);

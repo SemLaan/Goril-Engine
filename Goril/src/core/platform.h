@@ -1,8 +1,7 @@
 #pragma once
 #include "defines.h"
 #include "logger.h"
-#include "glm/glm.hpp"
-
+#include "math/math_types.h"
 
 
 bool InitializePlatform(const wchar_t* windowName);
@@ -14,9 +13,9 @@ GRAPI void PlatformProcessMessage();
 
 void PlatformLogString(log_level level, const char* message);
 
-GRAPI glm::ivec2 GetPlatformWindowSize();
+GRAPI vec2i GetPlatformWindowSize();
 
-void SetMousePosition(glm::ivec2 position);
+void SetMousePosition(vec2i position);
 void SetWindowTitle(const wchar_t* windowName);
 
 GRAPI void ToggleFullscreen();
