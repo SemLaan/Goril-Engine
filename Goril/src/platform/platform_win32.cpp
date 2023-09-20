@@ -15,6 +15,7 @@
 #include "core/gr_memory.h"
 #include "core/event.h"
 #include "core/input.h"
+#include <stdio.h>
 
 
 

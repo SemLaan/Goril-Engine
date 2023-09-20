@@ -89,8 +89,8 @@ static mat4 mat4_mul_mat4(mat4 a, mat4 b)
 
 static mat4 mat4_rotate_x(f32 angle_radians) 
 {
-	f32 c = cos(angle_radians);
-	f32 s = sin(angle_radians);
+	f32 c = (f32)cos(angle_radians);
+	f32 s = (f32)sin(angle_radians);
 
 	mat4 out_matrix = mat4_identity();
 	out_matrix.values[1][1] = c;
@@ -102,8 +102,8 @@ static mat4 mat4_rotate_x(f32 angle_radians)
 
 static mat4 mat4_rotate_y(f32 angle_radians) 
 {
-	f32 c = cos(angle_radians);
-	f32 s = sin(angle_radians);
+	f32 c = (f32)cos(angle_radians);
+	f32 s = (f32)sin(angle_radians);
 
 	mat4 out_matrix = mat4_identity();
 	out_matrix.values[0][0] = c;
@@ -115,8 +115,8 @@ static mat4 mat4_rotate_y(f32 angle_radians)
 
 static mat4 mat4_rotate_z(f32 angle_radians) 
 {
-	f32 c = cos(angle_radians);
-	f32 s = sin(angle_radians);
+	f32 c = (f32)cos(angle_radians);
+	f32 s = (f32)sin(angle_radians);
 
 	mat4 out_matrix = mat4_identity();
 	out_matrix.values[0][0] = c;
@@ -154,7 +154,7 @@ static mat4 mat4_transpose(mat4 mat)
 static mat4 mat4_perspective(f32 verticalFovDegrees, f32 aspectRatio, f32 near, f32 far)
 {
 	f32 verticalFovRadians = verticalFovDegrees * 2.0f * PI / 360.0f;
-	f32 focalLength = 1.0f / std::tan(verticalFovRadians / 2.0f);
+	f32 focalLength = 1.0f / (f32)tan(verticalFovRadians / 2.0f);
 
 	f32 x = focalLength / aspectRatio;
 	f32 y = -focalLength;

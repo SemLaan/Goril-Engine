@@ -2,6 +2,7 @@
 
 #include "vulkan_debug_messenger.h"
 #include "core/logger.h"
+#include <cstring> ///TODO: remove
 
 
 bool CreateVulkanInstance(void** requiredExtensionsDarray, void** requiredLayersDarray)

@@ -1,7 +1,7 @@
 #include "vulkan_device.h"
 
 #include "core/logger.h"
-
+#include <cstring> ///TODO: remove
 
 SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
 {

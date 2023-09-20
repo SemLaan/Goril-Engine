@@ -1,6 +1,7 @@
 #include "darray.h"
 
 #include "core/asserts.h"
+#include <vcruntime_string.h> /// TODO: remove
 
 // NOTE: Darray size NEEDS to be smaller than DARRAY_MIN_ALIGNMENT
 typedef struct Darray
