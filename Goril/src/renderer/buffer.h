@@ -5,8 +5,9 @@
 #include "renderer_types.h"
 
 
-GRAPI VertexBuffer CreateVertexBuffer(void* vertices, size_t size);
-GRAPI void DestroyVertexBuffer(VertexBuffer clientBuffer);
+VertexBuffer CreateVertexBuffer(void* vertices, size_t size);
+
+void DestroyVertexBuffer(VertexBuffer clientBuffer);
 
 /// <summary>
 /// Creates an index buffer
@@ -14,5 +15,5 @@ GRAPI void DestroyVertexBuffer(VertexBuffer clientBuffer);
 /// <param name="indices">Array of indices, type needs to be u32</param>
 /// <param name="indexCount"></param>
 /// <returns></returns>
-GRAPI IndexBuffer CreateIndexBuffer(u32* indices, size_t indexCount);
-GRAPI void DestroyIndexBuffer(IndexBuffer clientBuffer);
+IndexBuffer CreateIndexBuffer(u32* indices, size_t indexCount);
+void DestroyIndexBuffer(IndexBuffer clientBuffer);

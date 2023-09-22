@@ -258,16 +258,16 @@ void ShutdownInput();
 
 void UpdateInput();
 
-GRAPI void InputSetMouseCentered(bool enabled);
-GRAPI void InputToggleMouseCentered();
+void InputSetMouseCentered(bool enabled);
+void InputToggleMouseCentered();
 
-GRAPI bool GetKeyDown(KeyCode key);
-GRAPI bool GetKeyDownPrevious(KeyCode key);
-GRAPI bool GetButtonDown(ButtonCode button);
-GRAPI bool GetButtonDownPrevious(ButtonCode button);
-GRAPI vec2i GetMousePos();
-GRAPI vec2i GetMousePosPrevious();
-GRAPI vec2i GetMouseDistanceFromCenter();
+bool GetKeyDown(KeyCode key);
+bool GetKeyDownPrevious(KeyCode key);
+bool GetButtonDown(ButtonCode button);
+bool GetButtonDownPrevious(ButtonCode button);
+vec2i GetMousePos();
+vec2i GetMousePosPrevious();
+vec2i GetMouseDistanceFromCenter();
 
 void ProcessKey(bool down, KeyCode key);
 void ProcessButton(bool down, ButtonCode button);

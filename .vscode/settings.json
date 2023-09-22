@@ -7,6 +7,10 @@
         "time.h": "c",
         "event.h": "c",
         "platform.h": "c",
-        "test_manager.h": "c"
+        "test_manager.h": "c",
+        "buffer.h": "c",
+        "darray.h": "c",
+        "gr_memory.h": "c",
+        "renderer_types.h": "c"
     }
 }

@@ -15,7 +15,7 @@ typedef enum log_level
 
 void WriteLogsToFile();
 
-GRAPI void Log(log_level level, const char* message, ...);
+void Log(log_level level, const char* message, ...);
 
 
 // Always define fatal and error

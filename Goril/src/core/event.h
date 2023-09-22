@@ -42,8 +42,8 @@ bool InitializeEvent();
 
 void ShutdownEvent();
 
-GRAPI void RegisterEventListener(EventCode type, PFN_OnEvent listener);
-GRAPI void UnregisterEventListener(EventCode type, PFN_OnEvent listener);
+void RegisterEventListener(EventCode type, PFN_OnEvent listener);
+void UnregisterEventListener(EventCode type, PFN_OnEvent listener);
 
-GRAPI void InvokeEvent(EventCode type, EventData data);
+void InvokeEvent(EventCode type, EventData data);
 

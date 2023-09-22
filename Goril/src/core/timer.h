@@ -11,7 +11,7 @@ typedef struct Timer
 extern Timer g_timer;
 extern f64 g_deltaTime;
 
-void GRAPI StartOrResetTimer(Timer* timer);
+void StartOrResetTimer(Timer* timer);
 
-f64 GRAPI TimerSecondsSinceStart(Timer timer);
-f64 GRAPI TimerMilisecondsSinceStart(Timer timer);
+f64 TimerSecondsSinceStart(Timer timer);
+f64 TimerMilisecondsSinceStart(Timer timer);

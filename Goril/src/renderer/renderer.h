@@ -11,5 +11,5 @@ void RecreateSwapchain();
 bool BeginFrame();
 void EndFrame();
 
-GRAPI void UpdateGlobalUniforms(GlobalUniformObject* globalUniformObject, Texture texture);
-GRAPI void DrawIndexed(VertexBuffer vertexBuffer, IndexBuffer indexBuffer, PushConstantObject* pPushConstantValues);
+void UpdateGlobalUniforms(GlobalUniformObject* globalUniformObject, Texture texture);
+void DrawIndexed(VertexBuffer vertexBuffer, IndexBuffer indexBuffer, PushConstantObject* pPushConstantValues);

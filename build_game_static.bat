@@ -6,7 +6,7 @@ for /R %~DP0/Goril %%f in (*.c) do set FileLIST=!FileLIST! %%f
 set FileLIST=%FileLIST:~1%
 for /R %~DP0/Goril-Demo %%f in (*.c) do set FileLIST=!FileLIST! %%f
 
-set defines=-DGR_DEBUG -D__win__ -DGR_NODLL -DDEBUG -D_DEBUG
+set defines=-DGR_DEBUG -D__win__ -DDEBUG -D_DEBUG
 set includepaths=-I%~DP0/Goril/src/ -I%~DP0/Goril-Demo/src/ -I%VULKAN_SDK%/Include
 set linkpaths=-L%VULKAN_SDK%/Lib
 set links=-lvulkan-1

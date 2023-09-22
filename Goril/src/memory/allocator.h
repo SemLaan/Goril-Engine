@@ -38,13 +38,13 @@ typedef struct Allocator
 } Allocator;
 
 
-GRAPI u32 GetAllocHeaderSize();
+u32 GetAllocHeaderSize();
 
-GRAPI u64 GetBlockSize(void* block);
+u64 GetBlockSize(void* block);
 
-GRAPI void* AlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 alignment);
-GRAPI void* ReAlloc(Allocator* allocator, void* block, u64 size);
-GRAPI void Free(Allocator* allocator, void* block);
+void* AlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 alignment);
+void* ReAlloc(Allocator* allocator, void* block, u64 size);
+void Free(Allocator* allocator, void* block);
 
 static inline void* Alloc(Allocator* allocator, u64 size, mem_tag tag)
 {

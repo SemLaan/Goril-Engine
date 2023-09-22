@@ -3,10 +3,10 @@
 #include "goril_game.h"
 
 
-GRAPI bool InitializeEngine(GameConfig config);
+bool InitializeEngine(GameConfig config);
 
-GRAPI bool RunEngine(GameFunctions* gameFunctions);
+bool RunEngine(GameFunctions* gameFunctions);
 
-GRAPI void ShutdownEngine();
+void ShutdownEngine();
 
 

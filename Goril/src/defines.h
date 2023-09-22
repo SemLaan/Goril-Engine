@@ -2,14 +2,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#ifdef GR_DLL
-#define GRAPI __declspec(dllexport)
-#elif defined GR_NODLL
-#define GRAPI
-#else
-#define GRAPI __declspec(dllimport)
-#endif
-
 
 // 16 bit int types are commented out because they are rarely used and slower than 32 bit according to my stdint.h implementation
 

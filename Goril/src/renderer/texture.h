@@ -8,5 +8,5 @@
 
 
 
-Texture GRAPI CreateTexture(u32 width, u32 height, void* pixels);
-void GRAPI DestroyTexture(Texture clientTexture);
+Texture CreateTexture(u32 width, u32 height, void* pixels);
+void DestroyTexture(Texture clientTexture);

@@ -11,19 +11,19 @@
 
 
 
-GRAPI void* DarrayCreate(u32 stride, u32 capacity, Allocator* allocator, mem_tag tag);
-GRAPI void* DarrayCreateWithSize(u32 stride, u32 capacityAndCapacity, Allocator* allocator, mem_tag tag);
+void* DarrayCreate(u32 stride, u32 capacity, Allocator* allocator, mem_tag tag);
+void* DarrayCreateWithSize(u32 stride, u32 capacityAndCapacity, Allocator* allocator, mem_tag tag);
 
-GRAPI void* DarrayPushback(void* elements, void* element);
+void* DarrayPushback(void* elements, void* element);
 
-GRAPI void DarrayPop(void* elements);
+void DarrayPop(void* elements);
 
-GRAPI void DarrayPopAt(void* elements, u32 index);
+void DarrayPopAt(void* elements, u32 index);
 
-GRAPI void DarrayDestroy(void* elements);
+void DarrayDestroy(void* elements);
 
-GRAPI u32 DarrayGetSize(void* elements);
-GRAPI void DarraySetSize(void* elements, u32 size);
+u32 DarrayGetSize(void* elements);
+void DarraySetSize(void* elements, u32 size);
 
 // Only use on small arrays because performance is poor, consider a hash map
-GRAPI bool DarrayContains(void* elements, void* element);
+bool DarrayContains(void* elements, void* element);

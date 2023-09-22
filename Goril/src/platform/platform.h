@@ -9,17 +9,17 @@ bool InitializePlatform(const char* windowName);
 void ShutdownPlatform();
 
 // Exported for testing, shouldn't be used by applications
-GRAPI void PlatformProcessMessage();
+void PlatformProcessMessage();
 
 void PlatformLogString(log_level level, const char* message);
 
-GRAPI vec2i GetPlatformWindowSize();
+vec2i GetPlatformWindowSize();
 
 void SetMousePosition(vec2i position);
 void SetWindowTitle(const char* windowName);
 
-GRAPI void ToggleFullscreen();
-GRAPI void SetFullscreen(bool enabled);
+void ToggleFullscreen();
+void SetFullscreen(bool enabled);
 
 // Returns time since system boot in seconds
 f64 PlatformGetTime();

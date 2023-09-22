@@ -9,10 +9,10 @@ bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* o
 void DestroyGlobalAllocator(Allocator allocator);
 
 // ================================== Freelist allocator =================================================================================================================================================
-GRAPI Allocator CreateFreelistAllocator(size_t arenaSize, bool safetySpace);
-GRAPI void DestroyFreelistAllocator(Allocator allocator);
-GRAPI size_t FreelistGetFreeNodes(void* backendState);
+Allocator CreateFreelistAllocator(size_t arenaSize, bool safetySpace);
+void DestroyFreelistAllocator(Allocator allocator);
+size_t FreelistGetFreeNodes(void* backendState);
 
 // ==================================== Bump allocator ================================================================================================================================================
-GRAPI Allocator CreateBumpAllocator(size_t arenaSize, bool safetySpace);
-GRAPI void DestroyBumpAllocator(Allocator allocator);
+Allocator CreateBumpAllocator(size_t arenaSize, bool safetySpace);
+void DestroyBumpAllocator(Allocator allocator);
