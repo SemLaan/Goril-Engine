@@ -10,9 +10,9 @@ extern void GetGameConfigAndFunctions(GameConfig* out_config, GameFunctions* out
 int main()
 {
 	// Engine initialization
-	GameFunctions gameFunctions{};
+	GameFunctions gameFunctions = {};
 	{
-		GameConfig config{};
+		GameConfig config = {};
 		GetGameConfigAndFunctions(&config, &gameFunctions);
 
 		if (!InitializeEngine(config))

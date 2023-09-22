@@ -4,34 +4,34 @@
 #include "containers/darray.h"
 
 
-struct Vertex
+typedef struct Vertex
 {
 	vec3 position;
 	vec3 color;
 	vec2 texCoord;
-};
+} Vertex;
 
-struct VertexBuffer
+typedef struct VertexBuffer
 {
 	void* internalState;
-};
+} VertexBuffer;
 
-struct IndexBuffer
+typedef struct IndexBuffer
 {
 	void* internalState;
-};
+} IndexBuffer;
 
-struct Texture
+typedef struct Texture
 {
 	void* internalState;
-};
+} Texture;
 
-struct GlobalUniformObject
+typedef struct GlobalUniformObject
 {
 	mat4 projView;
-};
+} GlobalUniformObject;
 
-struct PushConstantObject
+typedef struct PushConstantObject
 {
 	mat4 model;
-};
+} PushConstantObject;

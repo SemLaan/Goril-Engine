@@ -1,0 +1,64 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "build engine dll",
+            "windows": {
+                "command": "${workspaceFolder}/Goril/build_dll.bat"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/bin/Debug"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "build demo exe",
+            "windows": {
+                "command": "${workspaceFolder}/Goril-Demo/build_demo.bat"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/bin/Debug"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "build static game exe",
+            "windows": {
+                "command": "${workspaceFolder}/build_game_static.bat"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/bin/Debug"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                //"isDefault": true
+            },
+        },
+        {
+            "type": "shell",
+            "label": "build tests exe",
+            "windows": {
+                "command": "${workspaceFolder}/build_tests.bat"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/bin/Debug"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        }
+    ],
+    "version": "2.0.0"
+}

@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "vulkan_win32.h": "c",
+        "logger.h": "c",
+        "string.h": "c",
+        "timer.h": "c",
+        "time.h": "c",
+        "event.h": "c",
+        "platform.h": "c",
+        "test_manager.h": "c"
+    }
+}

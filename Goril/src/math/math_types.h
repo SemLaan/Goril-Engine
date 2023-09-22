@@ -9,49 +9,23 @@ typedef struct vec2i
 
 typedef struct vec2
 {
-	union {
-		f32 x;
-		//float u;
-	};
-	union {
-		f32 y;
-		//float v;
-	};
+	f32 x;
+	f32 y;
 } vec2;
 
 typedef struct vec3
 {
-	union {
-		f32 x;
-		//f32 u;
-		//f32 r;
-	};
-	union {
-		f32 y;
-		//f32 v;
-		//f32 g;
-	};
-	union {
-		f32 z;
-		//f32 w;
-		//f32 b;
-	};
+	f32 x;
+	f32 y;
+	f32 z;
 } vec3;
 
 typedef struct vec4
 {
-	union {
-		f32 x;
-	};
-	union {
-		f32 y;
-	};
-	union {
-		f32 z;
-	};
-	union {
-		f32 w;
-	};
+	f32 x;
+	f32 y;
+	f32 z;
+	f32 w;
 } vec4;
 
 typedef struct mat2

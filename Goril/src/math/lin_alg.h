@@ -7,24 +7,33 @@
 #define PI 3.14159265358979323846f
 
 
+static vec3 new_vec3(f32 x, f32 y, f32 z)
+{
+	vec3 temp;
+	temp.x = x;
+	temp.y = y;
+	temp.z = z;
+	return temp;
+}
+
 static vec3 vec3_from_float(f32 value)
 {
-	return { value, value, value };
+	return new_vec3(value, value, value);
 }
 
 static vec3 vec3_add_vec3(vec3 v1, vec3 v2)
 {
-	return { v1.x + v2.x, v1.y + v2.y, v1.z + v2.z };
+	return new_vec3(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
 }
 
 static vec3 vec3_min_vec3(vec3 v1, vec3 v2)
 {
-	return { v1.x - v2.x, v1.y - v2.y, v1.z - v2.z };
+	return new_vec3(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
 }
 
 static vec3 vec3_div_float(vec3 vec, f32 value)
 {
-	return { vec.x / value, vec.y / value, vec.z / value };
+	return new_vec3(vec.x / value, vec.y / value, vec.z / value);
 }
 
 static f32 vec4_dot(vec4 v1, vec4 v2)
@@ -34,7 +43,7 @@ static f32 vec4_dot(vec4 v1, vec4 v2)
 
 static mat4 mat4_identity()
 {
-	mat4 mat{};
+	mat4 mat = {};
 
 	mat.values[0][0] = 1.f;
 	mat.values[1][1] = 1.f;
@@ -46,7 +55,7 @@ static mat4 mat4_identity()
 
 static mat4 mat4_scale(vec3 vec)
 {
-	mat4 mat{};
+	mat4 mat = {};
 
 	mat.values[0][0] = vec.x;
 	mat.values[1][1] = vec.y;
@@ -58,7 +67,7 @@ static mat4 mat4_scale(vec3 vec)
 
 static mat4 mat4_translate(vec3 vec)
 {
-	mat4 mat{};
+	mat4 mat = {};
 
 	mat.values[0][0] = 1.f;
 	mat.values[1][1] = 1.f;
@@ -74,7 +83,7 @@ static mat4 mat4_translate(vec3 vec)
 
 static mat4 mat4_mul_mat4(mat4 a, mat4 b)
 {
-	mat4 result{};
+	mat4 result = {};
 
 	for (u32 i = 0; i < 4; i++)
 	{
@@ -161,7 +170,7 @@ static mat4 mat4_perspective(f32 verticalFovDegrees, f32 aspectRatio, f32 near, 
 	f32 A = near / (far - near);
 	f32 B = far * A;
 
-	mat4 projection{};
+	mat4 projection = {};
 
 	projection.values[0][0] = x;
 	projection.values[1][1] = y;
@@ -173,7 +182,7 @@ static mat4 mat4_perspective(f32 verticalFovDegrees, f32 aspectRatio, f32 near, 
 	return projection;
 }
 
-static mat4 mat4_orthographic()
-{
-	GRASSERT_MSG(false, "not implemented");
-}
+//static mat4 mat4_orthographic()
+//{
+//
+//}

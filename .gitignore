@@ -8,6 +8,10 @@
 
 # Exclude build
 /build
+/bin/Debug/**
+
+# Excluding compiled shaders
+**.spv
 
 # Exclude logging files
 **.log

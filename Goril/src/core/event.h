@@ -3,7 +3,7 @@
 
 
 
-struct EventData
+typedef struct EventData
 {
 	// 128 bytes of data layed out in a union of different data types
 	union
@@ -21,9 +21,9 @@ struct EventData
 		i64 i64[2];
 		f64 f64[2];
 	};
-};
+} EventData;
 
-enum EventCode
+typedef enum EventCode
 { /// NOTE: always add new event types just before MAX_EVENTS
 	EVCODE_QUIT,
 	EVCODE_TEST,
@@ -34,7 +34,7 @@ enum EventCode
 	EVCODE_MOUSE_MOVED,
 	EVCODE_WINDOW_RESIZED,
 	MAX_EVENTS
-};
+} EventCode;
 
 typedef bool(*PFN_OnEvent)(EventCode type, EventData data);
 

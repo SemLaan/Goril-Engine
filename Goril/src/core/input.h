@@ -2,7 +2,7 @@
 #include "defines.h"
 #include "math/math_types.h"
 
-enum ButtonCode
+typedef enum ButtonCode
 {
 	BUTTON_LEFTMOUSEBTN = 0x01, //Left mouse button
 	BUTTON_RIGHTMOUSEBTN = 0x02, //Right mouse button
@@ -10,9 +10,9 @@ enum ButtonCode
 	BUTTON_MIDMOUSEBTN = 0x04, //Middle mouse button
 	//BUTTON_THUMBFORWARD = 0x05, //Thumb button back on mouse aka X1
 	//BUTTON_THUMBBACK = 0x06, //Thumb button forward on mouse aka X2
-};
+} ButtonCode;
 
-enum KeyCode
+typedef enum KeyCode
 {
 	KEY_BACKSPACE = 0x08, //Backspace key
 	KEY_TAB = 0x09, //Tab key
@@ -117,7 +117,6 @@ enum KeyCode
 	KEY_F23 = 0x86, //F23
 	KEY_F24 = 0x87, //F24
 	KEY_SPACE = 0x20, //Space bar
-#pragma region UnusedKeys
 	//0x07 : reserved
 	//0x0A - 0x0B : reserved
 	//0x0E - 0x0F : unassigned
@@ -251,8 +250,7 @@ enum KeyCode
 	//KEY_NoName = 0xFC, //No name
 	//KEY_PA1 = 0xFD, //PA1 key
 	//KEY_OEMClear = 0xFE, //OEM Clear key
-#pragma endregion
-};
+} KeyCode;
 
 bool InitializeInput();
 
