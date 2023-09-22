@@ -258,8 +258,8 @@ void ShutdownInput();
 
 void UpdateInput();
 
-GRAPI void SetMouseCentered(bool enabled);
-GRAPI void ToggleMouseCentered();
+GRAPI void InputSetMouseCentered(bool enabled);
+GRAPI void InputToggleMouseCentered();
 
 GRAPI bool GetKeyDown(KeyCode key);
 GRAPI bool GetKeyDownPrevious(KeyCode key);

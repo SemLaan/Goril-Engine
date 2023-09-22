@@ -24,6 +24,7 @@
                     "ignoreFailures": true
                 }
             ],
+            "preLaunchTask": "build static game exe"
         },
         {
             "name": "Launch tests",

@@ -7,33 +7,25 @@
 #define PI 3.14159265358979323846f
 
 
-static vec3 new_vec3(f32 x, f32 y, f32 z)
-{
-	vec3 temp;
-	temp.x = x;
-	temp.y = y;
-	temp.z = z;
-	return temp;
-}
 
 static vec3 vec3_from_float(f32 value)
 {
-	return new_vec3(value, value, value);
+	return (vec3){ value, value, value };
 }
 
 static vec3 vec3_add_vec3(vec3 v1, vec3 v2)
 {
-	return new_vec3(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
+	return (vec3){ v1.x + v2.x, v1.y + v2.y, v1.z + v2.z };
 }
 
 static vec3 vec3_min_vec3(vec3 v1, vec3 v2)
 {
-	return new_vec3(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
+	return (vec3){ v1.x - v2.x, v1.y - v2.y, v1.z - v2.z };
 }
 
 static vec3 vec3_div_float(vec3 vec, f32 value)
 {
-	return new_vec3(vec.x / value, vec.y / value, vec.z / value);
+	return (vec3){ vec.x / value, vec.y / value, vec.z / value };
 }
 
 static f32 vec4_dot(vec4 v1, vec4 v2)
@@ -182,7 +174,17 @@ static mat4 mat4_perspective(f32 verticalFovDegrees, f32 aspectRatio, f32 near, 
 	return projection;
 }
 
-//static mat4 mat4_orthographic()
-//{
-//
-//}
+static mat4 mat4_orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 near, f32 far)
+{
+	mat4 projection = {};
+
+	projection.values[0][0] = 2.f / (right - left);
+	projection.values[1][1] = 2.f / (bottom - top);
+	projection.values[2][2] = -1.f / (far - near);
+	projection.values[3][3] = 1.f;
+	projection.values[0][3] = -(right + left) / (right - left);
+	projection.values[1][3] = -(top + bottom) / (bottom - top);
+	projection.values[2][3] = -(near) / (far - near);
+
+	return projection;
+}

@@ -11,7 +11,7 @@ GameState* gamestate = nullptr;
 
 bool Init()
 {
-	gamestate = (GameState*)Alloc(GetGlobalAllocator(), sizeof(*gamestate), MEM_TAG_GAME);
+	gamestate = Alloc(GetGlobalAllocator(), sizeof(*gamestate), MEM_TAG_GAME);
 
     PrintMemoryStats();
 
@@ -54,15 +54,18 @@ bool Init()
 	gamestate->indexBuffer = CreateIndexBuffer(indices, INDEX_COUNT);
 
 	vec2i windowSize = GetPlatformWindowSize();
-	gamestate->proj = mat4_perspective(45.0f, windowSize.x / (float)windowSize.y, 0.1f, 1000.0f);
-	//gamestate->proj = mat4_identity();
+	float windowAspectRatio = windowSize.x / (float)windowSize.y;
+	i32 orthoWidth = 20;
+	gamestate->perspective = mat4_perspective(45.0f, windowAspectRatio, 0.1f, 1000.0f);
+	gamestate->orthographic = mat4_orthographic(-orthoWidth/2, orthoWidth/2, -orthoWidth/2/windowAspectRatio, orthoWidth/2/windowAspectRatio, 0.1f, 1000.0f);
+	gamestate->proj = gamestate->perspective;
 	gamestate->view = mat4_identity();
 	gamestate->camPosition = (vec3){ 0, -3, 0 };
 	gamestate->camRotation = (vec3){ 0, 0, 0 };
 
 	u32 textureWidth = 100;
 	u32 textureHeight = 100;
-	u8* texturePixels = (u8*)Alloc(GetGlobalAllocator(), textureWidth * textureHeight * TEXTURE_CHANNELS, MEM_TAG_GAME);
+	u8* texturePixels = Alloc(GetGlobalAllocator(), textureWidth * textureHeight * TEXTURE_CHANNELS, MEM_TAG_GAME);
 
 	for (u32 i = 0; i < textureWidth * textureHeight; ++i)
 	{
@@ -78,6 +81,9 @@ bool Init()
 
 	Free(GetGlobalAllocator(), texturePixels);
 
+	gamestate->mouseEnabled = false;
+	gamestate->perspectiveEnabled = true;
+
     return true;
 }
 
@@ -85,8 +91,11 @@ bool Update()
 {
 	f32 mouseMoveSpeed = 3500;
 
-	gamestate->camRotation.x -= GetMouseDistanceFromCenter().x / mouseMoveSpeed;
-	gamestate->camRotation.y += GetMouseDistanceFromCenter().y / mouseMoveSpeed;
+	if (gamestate->mouseEnabled)
+	{
+		gamestate->camRotation.x -= GetMouseDistanceFromCenter().x / mouseMoveSpeed;
+		gamestate->camRotation.y += GetMouseDistanceFromCenter().y / mouseMoveSpeed;
+	}
 	if (gamestate->camRotation.y > 1.5f)
 		gamestate->camRotation.y = 1.5f;
 	if (gamestate->camRotation.y < -1.5f)
@@ -116,10 +125,23 @@ bool Update()
 
 	mat4 translate = mat4_translate(gamestate->camPosition);
 
+
 	gamestate->view = mat4_mul_mat4(R_combined, translate);
 
 	if (GetButtonDown(BUTTON_LEFTMOUSEBTN) && !GetButtonDownPrevious(BUTTON_LEFTMOUSEBTN))
-		ToggleMouseCentered();
+	{
+		gamestate->mouseEnabled = !gamestate->mouseEnabled;
+		InputSetMouseCentered(gamestate->mouseEnabled);
+	}
+
+	if (GetButtonDown(BUTTON_RIGHTMOUSEBTN) && !GetButtonDownPrevious(BUTTON_RIGHTMOUSEBTN))
+	{
+		gamestate->perspectiveEnabled = !gamestate->perspectiveEnabled;
+		if (gamestate->perspectiveEnabled)
+			gamestate->proj = gamestate->perspective;
+		else
+			gamestate->proj = gamestate->orthographic;
+	}
 
     return true;
 }

@@ -62,12 +62,12 @@ void UpdateInput()
 	}
 }
 
-void SetMouseCentered(bool enabled)
+void InputSetMouseCentered(bool enabled)
 {
 	state->mouseCentered = enabled;
 }
 
-void ToggleMouseCentered()
+void InputToggleMouseCentered()
 {
 	state->mouseCentered = !state->mouseCentered;
 }

@@ -14,7 +14,10 @@ typedef struct GameState
 	vec3 camRotation;
 	mat4 view;
 	mat4 proj;
+	mat4 perspective;
+	mat4 orthographic;
 	bool mouseEnabled;
+	bool perspectiveEnabled;
 } GameState;
 
 extern GameState* gamestate;
