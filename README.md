@@ -2,7 +2,9 @@
 Simple C game engine for hobby projects
 
 ## Building
-To build the project run build_game_static.bat, to build the tests run build_tests.bat. \
+The vulkan sdk needs to be installed.\
+To build the project run build_game_static.bat, to build the tests run build_tests.bat.\
+You do need to have GCC installed and added to the path for the bat files to work. \
 If you're using visual studio there's also a .vscode folder so there's tasks set up for building.\
 You can also use another editor but you'll have to set it up yourself.\
 The build scripts included are also only for debug mode.
