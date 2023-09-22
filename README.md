@@ -10,7 +10,7 @@ You can also use another editor but you'll have to set it up yourself.\
 The build scripts included are also only for debug mode.
 
 ### If you want to use a different build system, here's what you need to know:
-Note that I have only compiled this code with GCC no idea if it works with other compilers.
+Note that I have only compiled this code with GCC, no idea if it works with other compilers.
 
 Building the game:\
 C standard is c17\
