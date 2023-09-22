@@ -11,6 +11,19 @@
         "buffer.h": "c",
         "darray.h": "c",
         "gr_memory.h": "c",
-        "renderer_types.h": "c"
+        "renderer_types.h": "c",
+        "immintrin.h": "c",
+        "x86gprintrin.h": "c",
+        "xmmintrin.h": "c",
+        "avx512pfintrin.h": "c",
+        "avx512erintrin.h": "c",
+        "avx512fintrin.h": "c",
+        "avx2intrin.h": "c",
+        "renderer.h": "c",
+        "defines.h": "c",
+        "vulkan_types.h": "c",
+        "vulkan_debug_messenger.h": "c",
+        "vulkan_graphics_pipeline.h": "c",
+        "texture.h": "c"
     }
 }

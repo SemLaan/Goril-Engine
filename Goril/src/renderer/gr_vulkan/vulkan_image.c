@@ -57,7 +57,7 @@ bool CreateImage(VulkanCreateImageParameters* pCreateParameters, VkImage* pImage
 	return true;
 }
 
-Texture CreateTexture(u32 width, u32 height, void* pixels)
+Texture TextureCreate(u32 width, u32 height, void* pixels)
 {
 	Texture out_texture = {};
 	out_texture.internalState = Alloc(GetGlobalAllocator(), sizeof(VulkanImage), MEM_TAG_TEXTURE);
@@ -181,7 +181,7 @@ Texture CreateTexture(u32 width, u32 height, void* pixels)
 		semaphoreSubmitInfo.deviceIndex = 0;
 
 		u64 signaledValue;
-		EndSubmitAndFreeSingleUseCommandBuffer(commandBuffer, 1, &semaphoreSubmitInfo, &signaledValue);
+		EndSubmitAndFreeSingleUseCommandBuffer(commandBuffer, 0, nullptr, 1, &semaphoreSubmitInfo, &signaledValue);
 
 		// Making sure the staging buffer and memory get deleted when their corresponding command buffer is completed
 		ResourceDestructionInfo bufferDestructionInfo = {};
@@ -296,7 +296,7 @@ static void ImageDestructor(void* resource)
 	Free(GetGlobalAllocator(), image);
 }
 
-void DestroyTexture(Texture clientTexture)
+void TextureDestroy(Texture clientTexture)
 {
 	ResourceDestructionInfo imageDestructionInfo = {};
 	imageDestructionInfo.resource = clientTexture.internalState;

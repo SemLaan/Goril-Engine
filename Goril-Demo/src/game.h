@@ -18,6 +18,7 @@ typedef struct GameState
 	mat4 orthographic;
 	bool mouseEnabled;
 	bool perspectiveEnabled;
+	f64 meshOneActive;
 } GameState;
 
 extern GameState* gamestate;

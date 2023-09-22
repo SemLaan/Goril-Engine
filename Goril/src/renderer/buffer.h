@@ -5,9 +5,9 @@
 #include "renderer_types.h"
 
 
-VertexBuffer CreateVertexBuffer(void* vertices, size_t size);
-
-void DestroyVertexBuffer(VertexBuffer clientBuffer);
+VertexBuffer VertexBufferCreate(void* vertices, size_t size);
+void VertexBufferUpdate(VertexBuffer clientBuffer, void* vertices, u64 size);
+void VertexBufferDestroy(VertexBuffer clientBuffer);
 
 /// <summary>
 /// Creates an index buffer
@@ -15,5 +15,5 @@ void DestroyVertexBuffer(VertexBuffer clientBuffer);
 /// <param name="indices">Array of indices, type needs to be u32</param>
 /// <param name="indexCount"></param>
 /// <returns></returns>
-IndexBuffer CreateIndexBuffer(u32* indices, size_t indexCount);
-void DestroyIndexBuffer(IndexBuffer clientBuffer);
+IndexBuffer IndexBufferCreate(u32* indices, size_t indexCount);
+void IndexBufferDestroy(IndexBuffer clientBuffer);

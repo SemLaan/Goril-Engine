@@ -6,7 +6,5 @@
 #define TEXTURE_CHANNELS 4
 
 
-
-
-Texture CreateTexture(u32 width, u32 height, void* pixels);
-void DestroyTexture(Texture clientTexture);
+Texture TextureCreate(u32 width, u32 height, void* pixels);
+void TextureDestroy(Texture clientTexture);

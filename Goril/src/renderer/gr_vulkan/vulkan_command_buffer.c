@@ -80,7 +80,7 @@ static void SingleUseCommandBufferDestructor(void* resource)
 	Free(GetGlobalAllocator(), commandBuffer);
 }
 
-bool EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 signalSemaphoreCount /*default: 0*/, VkSemaphoreSubmitInfo* pSemaphoreSubmitInfos /*default: null*/, u64* out_signaledValue /*default: null*/)
+bool EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 waitSemaphoreCount, VkSemaphoreSubmitInfo* pWaitSemaphoreSubmitInfos, u32 signalSemaphoreCount, VkSemaphoreSubmitInfo* pSignalSemaphoreSubmitInfos, u64* out_signaledValue)
 {
 	if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer->handle))
 	{
@@ -103,18 +103,18 @@ bool EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 si
 	semaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
 	semaphoreInfo.deviceIndex = 0;
 
-	VkSemaphoreSubmitInfo* semaphoreInfosDarray = (VkSemaphoreSubmitInfo*)DarrayCreate(sizeof(VkSemaphoreSubmitInfo), signalSemaphoreCount + 1, &g_Allocators->temporary, MEM_TAG_RENDERER_SUBSYS);
-	semaphoreInfosDarray = (VkSemaphoreSubmitInfo*)DarrayPushback(semaphoreInfosDarray, &semaphoreInfo);
+	VkSemaphoreSubmitInfo* semaphoreInfosDarray = DarrayCreate(sizeof(VkSemaphoreSubmitInfo), signalSemaphoreCount + 1, &g_Allocators->temporary, MEM_TAG_RENDERER_SUBSYS);
+	semaphoreInfosDarray = DarrayPushback(semaphoreInfosDarray, &semaphoreInfo);
 
 	for (u32 i = 0; i < signalSemaphoreCount; ++i)
-		semaphoreInfosDarray = (VkSemaphoreSubmitInfo*)DarrayPushback(semaphoreInfosDarray, &pSemaphoreSubmitInfos[i]);
+		semaphoreInfosDarray = DarrayPushback(semaphoreInfosDarray, &pSignalSemaphoreSubmitInfos[i]);
 
 	VkSubmitInfo2 submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
 	submitInfo.pNext = nullptr;
 	submitInfo.flags = 0;
-	submitInfo.waitSemaphoreInfoCount = 0;
-	submitInfo.pWaitSemaphoreInfos = nullptr;
+	submitInfo.waitSemaphoreInfoCount = waitSemaphoreCount;
+	submitInfo.pWaitSemaphoreInfos = pWaitSemaphoreSubmitInfos;
 	submitInfo.commandBufferInfoCount = 1;
 	submitInfo.pCommandBufferInfos = &commandBufferInfo;
 	submitInfo.signalSemaphoreInfoCount = DarrayGetSize(semaphoreInfosDarray);

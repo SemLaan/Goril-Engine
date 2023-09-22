@@ -17,8 +17,10 @@
 #include "vulkan_renderpass.h"
 #include "vulkan_command_buffer.h"
 #include "vulkan_sync_objects.h"
-#include "../buffer.h"
 
+//TODO: remove these
+static void Init2DRenderer();
+static void Shutdown2DRenderer();
 
 RendererState* vk_state = nullptr;
 
@@ -141,6 +143,8 @@ bool InitializeRenderer()
 
 	vk_state->requestedQueueAcquisitionOperationsDarray = (VkDependencyInfo**)DarrayCreate(sizeof(VkDependencyInfo*), 10, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); /// TODO: change allocator to renderer local allocator (when it exists)
 
+	Init2DRenderer();
+
 	return true;
 }
 
@@ -155,6 +159,8 @@ void ShutdownRenderer()
 	{
 		GRINFO("Shutting down renderer subsystem...");
 	}
+
+	Shutdown2DRenderer();
 
 	UnregisterEventListener(EVCODE_WINDOW_RESIZED, OnWindowResize);
 
@@ -385,6 +391,47 @@ void EndFrame()
 	vkQueuePresentKHR(vk_state->presentQueue, &presentInfo);
 
 	vk_state->currentFrame = (vk_state->currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+typedef struct Renderer2DState
+{
+	VertexBuffer meshBuffer;
+	VertexBuffer instancedBuffer;
+} Renderer2DState;
+
+static Renderer2DState* renderer2DState = nullptr;
+
+static void Init2DRenderer()
+{
+	renderer2DState = Alloc(GetGlobalAllocator(), sizeof(*renderer2DState), MEM_TAG_RENDERER_SUBSYS);
+
+	#define QUAD_VERT_COUNT 4
+	Vertex quadVertices[QUAD_VERT_COUNT] = 
+	{
+		{{0, 0, 0}, {0,0,0}, {0, 0}},
+		{{0, 1, 0}, {0,0,0}, {0, 1}},
+		{{1, 0, 0}, {0,0,0}, {1, 0}},
+		{{1, 1, 0}, {0,0,0}, {1, 1}},
+	};
+
+	renderer2DState->meshBuffer = VertexBufferCreate(quadVertices, sizeof(quadVertices));
+}
+
+static void Shutdown2DRenderer()
+{
+	
+	VertexBufferDestroy(renderer2DState->meshBuffer);
+
+	Free(GetGlobalAllocator(), renderer2DState);
+}
+
+void Submit2DScene(SceneRenderData2D sceneData)
+{
+	//TODO: bind textures
+	//TODO: set uniforms (textures and camera)
+	//TODO: fill instanced buffer with transforms and texture indices
+
+	DarrayDestroy(sceneData.spriteRenderInfoDarray);
 }
 
 void UpdateGlobalUniforms(GlobalUniformObject* globalUniformObject, Texture texture)

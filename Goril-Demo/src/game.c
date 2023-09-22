@@ -4,68 +4,67 @@
 #include <core/input.h>
 #include <core/event.h>
 #include <renderer/renderer.h>
+#include <renderer/texture.h>
 #include <platform/platform.h>
+#include <core/timer.h>
 
-
-GameState* gamestate = nullptr;
+GameState *gamestate = nullptr;
 
 bool Init()
 {
 	gamestate = Alloc(GetGlobalAllocator(), sizeof(*gamestate), MEM_TAG_GAME);
 
-    PrintMemoryStats();
+	PrintMemoryStats();
 
-	#define VERTEX_COUNT 8
+#define VERTEX_COUNT 8
 	Vertex vertices[VERTEX_COUNT] =
-	{
-		{{-1, -1, 1}, {1.f, 0.f, 0.f}, {0.0f, 0.0f}},
-		{{1, -1, 1}, {0.f, 1.f, 0.f}, {1.0f, 0.0f}},
-		{{-1, 1, 1}, {0.f, 0.f, 1.f}, {0.0f, 1.0f}},
-		{{1, 1, 1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f}},
-		{{-1, -1, -1}, {1.f, 1.f, 1.f}, {0.0f, 0.0f}},
-		{{1, -1, -1}, {1.f, 1.f, 1.f}, {1.0f, 0.0f}},
-		{{-1, 1, -1}, {1.f, 1.f, 1.f}, {0.0f, 1.0f}},
-		{{1, 1, -1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f}}
-	};
+		{
+			{{-1, -1, 1}, {1.f, 0.f, 0.f}, {0.0f, 0.0f}},
+			{{1, -1, 1}, {0.f, 1.f, 0.f}, {1.0f, 0.0f}},
+			{{-1, 1, 1}, {0.f, 0.f, 1.f}, {0.0f, 1.0f}},
+			{{1, 1, 1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f}},
+			{{-1, -1, -1}, {1.f, 1.f, 1.f}, {0.0f, 0.0f}},
+			{{1, -1, -1}, {1.f, 1.f, 1.f}, {1.0f, 0.0f}},
+			{{-1, 1, -1}, {1.f, 1.f, 1.f}, {0.0f, 1.0f}},
+			{{1, 1, -1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f}}};
 
-	gamestate->vertexBuffer = CreateVertexBuffer(vertices, sizeof(Vertex) * VERTEX_COUNT);
+	gamestate->vertexBuffer = VertexBufferCreate(nullptr, sizeof(vertices));
 
-	#define INDEX_COUNT (6 * 6)
+#define INDEX_COUNT (6 * 6)
 	u32 indices[INDEX_COUNT] = {
-		//Top
+		// Top
 		7, 6, 2,
 		2, 3, 7,
-		//Bottom
+		// Bottom
 		0, 4, 5,
 		5, 1, 0,
-		//Left
+		// Left
 		0, 2, 6,
 		6, 4, 0,
-		//Right
+		// Right
 		7, 3, 1,
 		1, 5, 7,
-		//Front
+		// Front
 		3, 2, 0,
 		0, 1, 3,
-		//Back
+		// Back
 		4, 6, 7,
-		7, 5, 4
-	};
-	gamestate->indexBuffer = CreateIndexBuffer(indices, INDEX_COUNT);
+		7, 5, 4};
+	gamestate->indexBuffer = IndexBufferCreate(indices, INDEX_COUNT);
 
 	vec2i windowSize = GetPlatformWindowSize();
 	float windowAspectRatio = windowSize.x / (float)windowSize.y;
 	i32 orthoWidth = 20;
 	gamestate->perspective = mat4_perspective(45.0f, windowAspectRatio, 0.1f, 1000.0f);
-	gamestate->orthographic = mat4_orthographic(-orthoWidth/2, orthoWidth/2, -orthoWidth/2/windowAspectRatio, orthoWidth/2/windowAspectRatio, 0.1f, 1000.0f);
+	gamestate->orthographic = mat4_orthographic(-orthoWidth / 2, orthoWidth / 2, -orthoWidth / 2 / windowAspectRatio, orthoWidth / 2 / windowAspectRatio, 0.1f, 1000.0f);
 	gamestate->proj = gamestate->perspective;
 	gamestate->view = mat4_identity();
-	gamestate->camPosition = (vec3){ 0, -3, 0 };
-	gamestate->camRotation = (vec3){ 0, 0, 0 };
+	gamestate->camPosition = (vec3){0, -3, 0};
+	gamestate->camRotation = (vec3){0, 0, 0};
 
 	u32 textureWidth = 100;
 	u32 textureHeight = 100;
-	u8* texturePixels = Alloc(GetGlobalAllocator(), textureWidth * textureHeight * TEXTURE_CHANNELS, MEM_TAG_GAME);
+	u8 *texturePixels = Alloc(GetGlobalAllocator(), textureWidth * textureHeight * TEXTURE_CHANNELS, MEM_TAG_GAME);
 
 	for (u32 i = 0; i < textureWidth * textureHeight; ++i)
 	{
@@ -77,14 +76,15 @@ bool Init()
 		texturePixels[pixelIndex + 3] = 255;
 	}
 
-	gamestate->texture = CreateTexture(textureWidth, textureHeight, texturePixels);
+	gamestate->texture = TextureCreate(textureWidth, textureHeight, texturePixels);
 
 	Free(GetGlobalAllocator(), texturePixels);
 
 	gamestate->mouseEnabled = false;
 	gamestate->perspectiveEnabled = true;
+	gamestate->meshOneActive = true;
 
-    return true;
+	return true;
 }
 
 bool Update()
@@ -102,10 +102,10 @@ bool Update()
 		gamestate->camRotation.y = -1.5f;
 
 	// Create the rotation matrix
-	mat4 R_combined = mat4_rotate_xyz((vec3){ gamestate->camRotation.y, gamestate->camRotation.x, gamestate->camRotation.z });
+	mat4 R_combined = mat4_rotate_xyz((vec3){gamestate->camRotation.y, gamestate->camRotation.x, gamestate->camRotation.z});
 
-	vec3 forwardVector = { -R_combined.values[0][2], -R_combined.values[1][2], -R_combined.values[2][2] };
-	vec3 rightVector = { R_combined.values[0][0], R_combined.values[1][0], R_combined.values[2][0] };
+	vec3 forwardVector = {-R_combined.values[0][2], -R_combined.values[1][2], -R_combined.values[2][2]};
+	vec3 rightVector = {R_combined.values[0][0], R_combined.values[1][0], R_combined.values[2][0]};
 
 	vec3 frameMovement = {};
 
@@ -125,7 +125,6 @@ bool Update()
 
 	mat4 translate = mat4_translate(gamestate->camPosition);
 
-
 	gamestate->view = mat4_mul_mat4(R_combined, translate);
 
 	if (GetButtonDown(BUTTON_LEFTMOUSEBTN) && !GetButtonDownPrevious(BUTTON_LEFTMOUSEBTN))
@@ -143,7 +142,41 @@ bool Update()
 			gamestate->proj = gamestate->orthographic;
 	}
 
-    return true;
+	Vertex vertices1[VERTEX_COUNT] = {
+			{{-1, -1, 1}, {1.f, 0.f, 0.f}, {0.0f, 0.0f}},
+			{{1, -1, 1}, {0.f, 1.f, 0.f}, {1.0f, 0.0f}},
+			{{-1, 1, 1}, {0.f, 0.f, 1.f}, {0.0f, 1.0f}},
+			{{1, 1, 1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f}},
+			{{-1, -1, -1}, {1.f, 1.f, 1.f}, {0.0f, 0.0f}},
+			{{1, -1, -1}, {1.f, 1.f, 1.f}, {1.0f, 0.0f}},
+			{{-1, 1, -1}, {1.f, 1.f, 1.f}, {0.0f, 1.0f}},
+			{{1, 1, -1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f}}
+		};
+
+	Vertex vertices2[VERTEX_COUNT] = {
+			{{-1, -1, 1}, {1.f, 0.f, 0.f}, {0.0f, 0.0f}},
+			{{1, -1, 1}, {0.f, 1.f, 0.f}, {1.0f, 0.0f}},
+			{{-1, 1, 1}, {0.f, 0.f, 1.f}, {0.0f, 1.0f}},
+			{{1, 1, 1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f}},
+			{{-1, -1, -1}, {1.f, 1.f, 1.f}, {0.0f, 0.0f}},
+			{{2, -1, -1}, {1.f, 1.f, 1.f}, {1.0f, 0.0f}},
+			{{-1, 1, -1}, {1.f, 1.f, 1.f}, {0.0f, 1.0f}},
+			{{1, 1, -1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f}}
+		};
+
+	gamestate->meshOneActive += g_deltaTime;
+
+	if (gamestate->meshOneActive > 5)
+	{
+		gamestate->meshOneActive = 0;
+		VertexBufferUpdate(gamestate->vertexBuffer, vertices1, sizeof(vertices1));
+	}
+	else if (gamestate->meshOneActive > 2.5f && gamestate->meshOneActive < 2.6f)
+	{
+		VertexBufferUpdate(gamestate->vertexBuffer, vertices2, sizeof(vertices2));
+	}
+
+	return true;
 }
 
 bool Render()
@@ -155,23 +188,23 @@ bool Render()
 	for (u32 i = 0; i < 3; ++i)
 	{
 		PushConstantObject pushValues = {};
-		pushValues.model = mat4_scale((vec3){ 2, 2, 2 });
-		pushValues.model = mat4_mul_mat4(pushValues.model, mat4_rotate_x((i+0.1f)/0.4f));
-		pushValues.model = mat4_mul_mat4(pushValues.model, mat4_translate((vec3){ (f32)i * 3, 0, 0 }));
+		pushValues.model = mat4_scale((vec3){2, 2, 2});
+		pushValues.model = mat4_mul_mat4(pushValues.model, mat4_rotate_x((i + 0.1f) / 0.4f));
+		pushValues.model = mat4_mul_mat4(pushValues.model, mat4_translate((vec3){(f32)i * 3, 0, 0}));
 
 		DrawIndexed(gamestate->vertexBuffer, gamestate->indexBuffer, &pushValues);
 	}
-	
-    return true;
+
+	return true;
 }
 
 bool Shutdown()
 {
-	DestroyIndexBuffer(gamestate->indexBuffer);
-	DestroyVertexBuffer(gamestate->vertexBuffer);
-	DestroyTexture(gamestate->texture);
-	
+	IndexBufferDestroy(gamestate->indexBuffer);
+	VertexBufferDestroy(gamestate->vertexBuffer);
+	TextureDestroy(gamestate->texture);
+
 	Free(GetGlobalAllocator(), gamestate);
 
-    return true;
+	return true;
 }

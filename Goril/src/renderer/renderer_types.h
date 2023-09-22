@@ -35,3 +35,15 @@ typedef struct PushConstantObject
 {
 	mat4 model;
 } PushConstantObject;
+
+typedef struct SpriteRenderInfo
+{
+	Texture texture;
+	mat4 model;
+} SpriteRenderInfo;
+
+typedef struct SceneRenderData2D
+{
+	SpriteRenderInfo* spriteRenderInfoDarray;
+	mat4 camera;
+} SceneRenderData2D;
