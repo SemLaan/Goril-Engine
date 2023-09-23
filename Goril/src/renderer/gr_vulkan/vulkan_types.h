@@ -77,6 +77,7 @@ typedef struct QueueFamilyIndices
 	u32 transferFamily;
 } QueueFamilyIndices;
 
+//TODO: refactor this mess
 typedef struct RendererState
 {
 	VkInstance instance;
@@ -110,7 +111,7 @@ typedef struct RendererState
 	VulkanSemaphore indexUploadSemaphore;
 	VulkanSemaphore imageUploadSemaphore;
 	VulkanSemaphore frameSemaphore;
-	VkDependencyInfo** requestedQueueAcquisitionOperationsDarray; /// TODO: make this part of the queuefamily
+	VkDependencyInfo** requestedQueueAcquisitionOperationsDarray;
 	u32 currentFrame;
 	u32 currentSwapchainImageIndex;
 	bool shouldRecreateSwapchain;

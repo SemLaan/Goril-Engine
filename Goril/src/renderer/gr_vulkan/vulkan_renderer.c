@@ -223,6 +223,10 @@ void RecreateSwapchain()
 	GRINFO("Vulkan Swapchain resized");
 }
 
+// TODO: change where the actual scene rendering happens
+static void Preprocess2DSceneData();
+static void Render2DScene();
+
 bool BeginFrame()
 {
 	TryDestroyResourcesPendingDestruction();
@@ -259,6 +263,9 @@ bool BeginFrame()
 		return false;
 	}
 
+	// =================================== Preprocess user scene data before recording actual commands ===========================================
+	Preprocess2DSceneData();
+
 	// ===================================== Begin command buffer recording =========================================
 	ResetAndBeginCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame]);
 	VkCommandBuffer currentCommandBuffer = vk_state->commandBuffers[vk_state->currentFrame]->handle;
@@ -272,7 +279,7 @@ bool BeginFrame()
 
 	DarraySetSize(vk_state->requestedQueueAcquisitionOperationsDarray, 0);
 
-	/// TODO: begin renderpass function
+	/// TODO: begin renderpass function and remove renderpass objects
 	VkClearValue clearColor = {};
 	clearColor.color.float32[0] = 0;
 	clearColor.color.float32[1] = 0;
@@ -311,6 +318,9 @@ bool BeginFrame()
 	vkCmdSetScissor(currentCommandBuffer, 0, 1, &scissor);
 
 	vkCmdBindDescriptorSets(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->pipelineLayout, 0, 1, &vk_state->uniformDescriptorSetsDarray[vk_state->currentFrame], 0, nullptr);
+
+	// =========================================== Render user submitted scene ================================
+	Render2DScene();
 
 	return true;
 }
@@ -395,6 +405,7 @@ void EndFrame()
 
 typedef struct Renderer2DState
 {
+	SceneRenderData2D currentRenderData;
 	VertexBuffer quadVertexBuffer;
 	VertexBuffer instancedBuffer;
 	IndexBuffer quadIndexBuffer;
@@ -438,9 +449,9 @@ static void Shutdown2DRenderer()
 	Free(GetGlobalAllocator(), renderer2DState);
 }
 
-void Submit2DScene(SceneRenderData2D sceneData)
+static void Preprocess2DSceneData()
 {
-	u32 spriteCount = DarrayGetSize(sceneData.spriteRenderInfoDarray);
+	u32 spriteCount = DarrayGetSize(renderer2DState->currentRenderData.spriteRenderInfoDarray);
 	GRASSERT(spriteCount > 0);
 
 	//TODO: bind textures
@@ -450,13 +461,25 @@ void Submit2DScene(SceneRenderData2D sceneData)
 
 	for (u32 i = 0; i < spriteCount; ++i)
 	{
-		instanceData[i].model = sceneData.spriteRenderInfoDarray[i].model;
+		instanceData[i].model = renderer2DState->currentRenderData.spriteRenderInfoDarray[i].model;
 		instanceData[i].textureIndex = 0; //TODO: fill instanced buffer with texture indices
 	}
 
 	VertexBufferUpdate(renderer2DState->instancedBuffer, instanceData, spriteCount * sizeof(*instanceData));
 
 	Free(GetGlobalAllocator(), instanceData);
+}
+
+//TODO: remove this trash by incorporating this into the 2d scene
+static GlobalUniformObject temp_GlobalUniformObject;
+static Texture temp_Texture;
+
+static void Render2DScene()
+{
+	UpdateDescriptorSets(vk_state->currentFrame, (VulkanImage*)temp_Texture.internalState); // TODO: make gfx pipelines configurable
+	MemCopy(vk_state->uniformBuffersMappedDarray[vk_state->currentFrame], &temp_GlobalUniformObject, sizeof(GlobalUniformObject));
+
+	u32 spriteCount = DarrayGetSize(renderer2DState->currentRenderData.spriteRenderInfoDarray);
 
 	VkCommandBuffer currentCommandBuffer = vk_state->commandBuffers[vk_state->currentFrame]->handle;
 
@@ -472,13 +495,18 @@ void Submit2DScene(SceneRenderData2D sceneData)
 
 	vkCmdDrawIndexed(currentCommandBuffer, indexBuffer->indexCount, spriteCount, 0, 0, 0);
 
-	DarrayDestroy(sceneData.spriteRenderInfoDarray);
+	DarrayDestroy(renderer2DState->currentRenderData.spriteRenderInfoDarray);
 }
 
-void UpdateGlobalUniforms(GlobalUniformObject* globalUniformObject, Texture texture)
+void Submit2DScene(SceneRenderData2D sceneData)
 {
-	UpdateDescriptorSets(vk_state->currentFrame, (VulkanImage*)texture.internalState); /// HACK: make gfx pipelines configurable
-	MemCopy(vk_state->uniformBuffersMappedDarray[vk_state->currentFrame], globalUniformObject, sizeof(GlobalUniformObject));
+	renderer2DState->currentRenderData = sceneData;
+}
+
+void UpdateGlobalUniforms(GlobalUniformObject globalUniformObject, Texture texture)
+{
+	temp_GlobalUniformObject = globalUniformObject;
+	temp_Texture = texture;
 }
 
 void DrawIndexed(VertexBuffer _vertexBuffer, IndexBuffer _indexBuffer, PushConstantObject* pPushConstantValues)

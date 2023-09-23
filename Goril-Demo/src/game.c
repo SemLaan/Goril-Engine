@@ -183,7 +183,7 @@ bool Render()
 {
 	GlobalUniformObject ubo = {};
 	ubo.projView = mat4_mul_mat4(gamestate->proj, gamestate->view);
-	UpdateGlobalUniforms(&ubo, gamestate->texture);
+	UpdateGlobalUniforms(ubo, gamestate->texture);
 
 	SceneRenderData2D sceneData = {};
 	sceneData.camera = ubo.projView;

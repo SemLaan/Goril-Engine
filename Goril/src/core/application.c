@@ -94,12 +94,9 @@ bool RunEngine(GameFunctions* gameFunctions)
 		if (!appSuspended)
 		{
 			gameFunctions->GameUpdate();
-			bool succesfull = BeginFrame();
-			if (succesfull)
-			{
-				gameFunctions->GameRender();
-				EndFrame();
-			}
+			gameFunctions->GameRender();
+			BeginFrame();
+			EndFrame();
 			if (GetKeyDown(KEY_ESCAPE))
 				appRunning = false;
 		}

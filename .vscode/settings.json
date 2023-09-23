@@ -26,6 +26,7 @@
         "vulkan_graphics_pipeline.h": "c",
         "texture.h": "c",
         "intrin.h": "c",
-        "allocator.h": "c"
+        "allocator.h": "c",
+        "vulkan_command_buffer.h": "c"
     }
 }
