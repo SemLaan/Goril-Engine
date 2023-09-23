@@ -227,13 +227,18 @@ void RecreateSwapchain()
 static void Preprocess2DSceneData();
 static void Render2DScene();
 
-bool BeginFrame()
+bool RenderFrame()
 {
+	// Destroy temporary resources that the GPU has finished with (e.g. staging buffers, etc.)
 	TryDestroyResourcesPendingDestruction();
 
+	// Recreating the swapchain if the window has been resized
 	if (vk_state->shouldRecreateSwapchain)
 		RecreateSwapchain();
 
+	// ================================= Waiting for rendering resources to become available ==============================================================
+	// The GPU can work on multiple frames simultaneously (i.e. multiple frames can be "in flight"), but each frame has it's own resources 
+	// that the GPU needs while it's rendering a frame. So we need to wait for one of those sets of resources to become available again (command buffers and binary semaphores).
 	VkSemaphoreWaitInfo semaphoreWaitInfo = {};
 	semaphoreWaitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
 	semaphoreWaitInfo.pNext = nullptr;
@@ -245,6 +250,7 @@ bool BeginFrame()
 
 	vkWaitSemaphores(vk_state->device, &semaphoreWaitInfo, UINT64_MAX);
 
+	// Getting the next image from the swapchain (doesn't block the CPU and only blocks the GPU if there's no image available (which only happens in certain present modes with certain buffer counts))
 	VkResult result = vkAcquireNextImageKHR(vk_state->device, vk_state->swapchain, UINT64_MAX, vk_state->imageAvailableSemaphoresDarray[vk_state->currentFrame], VK_NULL_HANDLE, &vk_state->currentSwapchainImageIndex);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
@@ -270,7 +276,7 @@ bool BeginFrame()
 	ResetAndBeginCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame]);
 	VkCommandBuffer currentCommandBuffer = vk_state->commandBuffers[vk_state->currentFrame]->handle;
 
-	// acquire ownership of all uploaded resources
+	// =============================== acquire ownership of all uploaded resources =======================================
 	for (u32 i = 0; i < DarrayGetSize(vk_state->requestedQueueAcquisitionOperationsDarray); ++i)
 	{
 		vkCmdPipelineBarrier2(currentCommandBuffer, vk_state->requestedQueueAcquisitionOperationsDarray[i]);
@@ -279,6 +285,7 @@ bool BeginFrame()
 
 	DarraySetSize(vk_state->requestedQueueAcquisitionOperationsDarray, 0);
 
+	// ==================================== Begin renderpass ==============================================
 	/// TODO: begin renderpass function and remove renderpass objects
 	VkClearValue clearColor = {};
 	clearColor.color.float32[0] = 0;
@@ -298,9 +305,7 @@ bool BeginFrame()
 
 	vkCmdBeginRenderPass(currentCommandBuffer, &renderpassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	/// TODO: bind graphics pipeline function
-	vkCmdBindPipeline(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->graphicsPipeline);
-
+	// TODO: maybe make this static? (this would mean that all pipelines would have to be recreated upon window resize, but.. who cares? better than at runtime especially since otherwise they have to be set every renderpass)
 	// Viewport and scissor
 	VkViewport viewport = {};
 	viewport.x = 0;
@@ -317,23 +322,26 @@ bool BeginFrame()
 	scissor.extent = vk_state->swapchainExtent;
 	vkCmdSetScissor(currentCommandBuffer, 0, 1, &scissor);
 
-	vkCmdBindDescriptorSets(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->pipelineLayout, 0, 1, &vk_state->uniformDescriptorSetsDarray[vk_state->currentFrame], 0, nullptr);
 
 	// =========================================== Render user submitted scene ================================
+	// TODO: binding descriptor sets and binding the pipeline should probably be a part of the Render2DScene function
+	// Binding global descriptor set
+	vkCmdBindDescriptorSets(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->pipelineLayout, 0, 1, &vk_state->uniformDescriptorSetsDarray[vk_state->currentFrame], 0, nullptr);
+
+	/// TODO: bind graphics pipeline function (and abstracting graphics pipelines in general)
+	vkCmdBindPipeline(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->graphicsPipeline);
+
 	Render2DScene();
 
-	return true;
-}
-
-void EndFrame()
-{
+	// ==================================== End renderpass =================================================
 	/// TODO: end renderpass function
 	vkCmdEndRenderPass(vk_state->commandBuffers[vk_state->currentFrame]->handle);
 
-	// ==================== End command buffer recording ==================================================
+	// ================================= End command buffer recording ==================================================
 	EndCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame]);
 
-	// Submitting command buffer
+	// =================================== Submitting command buffer ==============================================
+	// With all the synchronization that that entails...
 	#define WAIT_SEMAPHORE_COUNT 4 // 1 swapchain image acquisition, 3 resourse upload waits
 	VkSemaphoreSubmitInfo waitSemaphores[WAIT_SEMAPHORE_COUNT] = {};
 
@@ -384,23 +392,26 @@ void EndFrame()
 	signalSemaphores[1].stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
 	signalSemaphores[1].deviceIndex = 0;
 
+	// Submitting the command buffer which allows the GPU to actually start working on this frame
 	SubmitCommandBuffers(WAIT_SEMAPHORE_COUNT, waitSemaphores, SIGNAL_SEMAPHORE_COUNT, signalSemaphores, 1, vk_state->commandBuffers[vk_state->currentFrame], nullptr);
 
-	VkSwapchainKHR swapchains[] = { vk_state->swapchain };
-
+	// ============================== Telling the GPU to present this frame (after it's rendered of course, synced with a binary semaphore) =================================
 	VkPresentInfoKHR presentInfo = {};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pNext = nullptr;
 	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.pWaitSemaphores = &vk_state->renderFinishedSemaphoresDarray[vk_state->currentFrame];
 	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = swapchains;
+	presentInfo.pSwapchains = &vk_state->swapchain;
 	presentInfo.pImageIndices = &vk_state->currentSwapchainImageIndex;
 	presentInfo.pResults = nullptr;
 
+	// When using mailbox present mode, vulkan will take care of skipping the presentation of this frame if another one is already finished
 	vkQueuePresentKHR(vk_state->presentQueue, &presentInfo);
 
 	vk_state->currentFrame = (vk_state->currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+
+	return true;
 }
 
 typedef struct Renderer2DState

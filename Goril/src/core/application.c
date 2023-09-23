@@ -95,8 +95,7 @@ bool RunEngine(GameFunctions* gameFunctions)
 		{
 			gameFunctions->GameUpdate();
 			gameFunctions->GameRender();
-			BeginFrame();
-			EndFrame();
+			RenderFrame();
 			if (GetKeyDown(KEY_ESCAPE))
 				appRunning = false;
 		}
