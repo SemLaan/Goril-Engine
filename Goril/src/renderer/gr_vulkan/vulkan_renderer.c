@@ -395,8 +395,9 @@ void EndFrame()
 
 typedef struct Renderer2DState
 {
-	VertexBuffer meshBuffer;
+	VertexBuffer quadVertexBuffer;
 	VertexBuffer instancedBuffer;
+	IndexBuffer quadIndexBuffer;
 } Renderer2DState;
 
 static Renderer2DState* renderer2DState = nullptr;
@@ -414,22 +415,62 @@ static void Init2DRenderer()
 		{{1, 1, 0}, {0,0,0}, {1, 1}},
 	};
 
-	renderer2DState->meshBuffer = VertexBufferCreate(quadVertices, sizeof(quadVertices));
+	renderer2DState->quadVertexBuffer = VertexBufferCreate(quadVertices, sizeof(quadVertices));
+
+	#define QUAD_INDEX_COUNT 6
+	u32 quadIndices[QUAD_INDEX_COUNT] = 
+	{
+		0, 1, 2,
+		2, 1, 3
+	};
+
+	renderer2DState->quadIndexBuffer = IndexBufferCreate(quadIndices, QUAD_INDEX_COUNT);
+
+	renderer2DState->instancedBuffer = VertexBufferCreate(nullptr, 100 * sizeof(SpriteInstance));
 }
 
 static void Shutdown2DRenderer()
 {
-	
-	VertexBufferDestroy(renderer2DState->meshBuffer);
+	IndexBufferDestroy(renderer2DState->quadIndexBuffer);
+	VertexBufferDestroy(renderer2DState->instancedBuffer);
+	VertexBufferDestroy(renderer2DState->quadVertexBuffer);
 
 	Free(GetGlobalAllocator(), renderer2DState);
 }
 
 void Submit2DScene(SceneRenderData2D sceneData)
 {
+	u32 spriteCount = DarrayGetSize(sceneData.spriteRenderInfoDarray);
+	GRASSERT(spriteCount > 0);
+
 	//TODO: bind textures
 	//TODO: set uniforms (textures and camera)
-	//TODO: fill instanced buffer with transforms and texture indices
+
+	SpriteInstance* instanceData = Alloc(GetGlobalAllocator(), sizeof(*instanceData) * spriteCount, MEM_TAG_RENDERER_SUBSYS);
+
+	for (u32 i = 0; i < spriteCount; ++i)
+	{
+		instanceData[i].model = sceneData.spriteRenderInfoDarray[i].model;
+		instanceData[i].textureIndex = 0; //TODO: fill instanced buffer with texture indices
+	}
+
+	VertexBufferUpdate(renderer2DState->instancedBuffer, instanceData, spriteCount * sizeof(*instanceData));
+
+	Free(GetGlobalAllocator(), instanceData);
+
+	VkCommandBuffer currentCommandBuffer = vk_state->commandBuffers[vk_state->currentFrame]->handle;
+
+	VulkanVertexBuffer* quadBuffer = renderer2DState->quadVertexBuffer.internalState;
+	VulkanIndexBuffer* indexBuffer = renderer2DState->quadIndexBuffer.internalState;
+	VulkanVertexBuffer* instancedBuffer = renderer2DState->instancedBuffer.internalState;
+
+	VkBuffer vertexBuffers[2] = {quadBuffer->handle, instancedBuffer->handle};
+
+	VkDeviceSize offsets[2] = {0, 0};
+	vkCmdBindVertexBuffers(currentCommandBuffer, 0, 2, vertexBuffers, offsets);
+	vkCmdBindIndexBuffer(currentCommandBuffer, indexBuffer->handle, 0, VK_INDEX_TYPE_UINT32);
+
+	vkCmdDrawIndexed(currentCommandBuffer, indexBuffer->indexCount, spriteCount, 0, 0, 0);
 
 	DarrayDestroy(sceneData.spriteRenderInfoDarray);
 }

@@ -259,9 +259,11 @@ void VertexBufferUpdate(VertexBuffer clientBuffer, void *vertices, u64 size)
 	VkSemaphoreSubmitInfo waitSemaphoreSubmitInfo = {};
 	waitSemaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 	waitSemaphoreSubmitInfo.pNext = nullptr;
-	waitSemaphoreSubmitInfo.semaphore = vk_state->frameSemaphore.handle;
+	// TODO: Use a different semaphore that gets signaled when the gfx pipeline has consumed the vertex buffer, because now we have to wait for the entire pipeline to finish
+	// TODO: before we can upload which is unnecessary
+	waitSemaphoreSubmitInfo.semaphore = vk_state->frameSemaphore.handle; // When the vertex buffer has been consumed by the pipeline we can begin uploading
 	waitSemaphoreSubmitInfo.value = vk_state->frameSemaphore.submitValue;
-	waitSemaphoreSubmitInfo.stageMask = VK_PIPELINE_STAGE_2_COPY_BIT; // When the vertex buffer has been consumed by the pipeline we can begin uploading
+	waitSemaphoreSubmitInfo.stageMask = VK_PIPELINE_STAGE_2_COPY_BIT;
 	waitSemaphoreSubmitInfo.deviceIndex = 0;
 
 	// Copying the buffer to the GPU - this function returns before the buffer is actually copied

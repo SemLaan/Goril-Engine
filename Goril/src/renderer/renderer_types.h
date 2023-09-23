@@ -11,6 +11,12 @@ typedef struct Vertex
 	vec2 texCoord;
 } Vertex;
 
+typedef struct SpriteInstance
+{
+	mat4 model;
+	u32 textureIndex;
+} SpriteInstance;
+
 typedef struct VertexBuffer
 {
 	void* internalState;
@@ -38,8 +44,8 @@ typedef struct PushConstantObject
 
 typedef struct SpriteRenderInfo
 {
-	Texture texture;
 	mat4 model;
+	Texture texture;
 } SpriteRenderInfo;
 
 typedef struct SceneRenderData2D

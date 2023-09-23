@@ -134,12 +134,13 @@ bool CreateGraphicsPipeline()
 	dynamicStateCreateInfo.pDynamicStates = dynamicStates;
 
 	// Vertex input
-	VkVertexInputBindingDescription bindingDescription = {};
-	bindingDescription.binding = 0;
-	bindingDescription.stride = sizeof(Vertex);
-	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	VkVertexInputBindingDescription vertexBindingDescription = {};
+	vertexBindingDescription.binding = 0;
+	vertexBindingDescription.stride = sizeof(Vertex);
+	vertexBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-	VkVertexInputAttributeDescription attributeDescriptions[3] = {};
+	#define VERTEX_ATTRIBUTE_COUNT 8
+	VkVertexInputAttributeDescription attributeDescriptions[VERTEX_ATTRIBUTE_COUNT] = {};
 	attributeDescriptions[0].location = 0;
 	attributeDescriptions[0].binding = 0;
 	attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -155,13 +156,48 @@ bool CreateGraphicsPipeline()
 	attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
 	attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
 
+	// Vertex per instance input
+	VkVertexInputBindingDescription instanceBindingDescription = {};
+	instanceBindingDescription.binding = 1;
+	instanceBindingDescription.stride = sizeof(SpriteInstance);
+	instanceBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+
+	// These nex four attributes are one matrix
+	attributeDescriptions[3].location = 3;
+	attributeDescriptions[3].binding = 1;
+	attributeDescriptions[3].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	attributeDescriptions[3].offset = offsetof(SpriteInstance, model);
+	//
+	attributeDescriptions[4].location = 4;
+	attributeDescriptions[4].binding = 1;
+	attributeDescriptions[4].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	attributeDescriptions[4].offset = offsetof(SpriteInstance, model) + sizeof(f32) * 4;
+	//
+	attributeDescriptions[5].location = 5;
+	attributeDescriptions[5].binding = 1;
+	attributeDescriptions[5].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	attributeDescriptions[5].offset = offsetof(SpriteInstance, model) + sizeof(f32) * 8;
+	//
+	attributeDescriptions[6].location = 6;
+	attributeDescriptions[6].binding = 1;
+	attributeDescriptions[6].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	attributeDescriptions[6].offset = offsetof(SpriteInstance, model) + sizeof(f32) * 12;
+
+	attributeDescriptions[7].location = 7;
+	attributeDescriptions[7].binding = 1;
+	attributeDescriptions[7].format = VK_FORMAT_R32_UINT;
+	attributeDescriptions[7].offset = offsetof(SpriteInstance, textureIndex);
+
+
+	VkVertexInputBindingDescription bindingDescriptions[2] = {vertexBindingDescription, instanceBindingDescription};
+
 	VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo = {};
 	vertexInputCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertexInputCreateInfo.pNext = nullptr;
 	vertexInputCreateInfo.flags = 0;
-	vertexInputCreateInfo.vertexBindingDescriptionCount = 1;
-	vertexInputCreateInfo.pVertexBindingDescriptions = &bindingDescription;
-	vertexInputCreateInfo.vertexAttributeDescriptionCount = 3;
+	vertexInputCreateInfo.vertexBindingDescriptionCount = 2;
+	vertexInputCreateInfo.pVertexBindingDescriptions = bindingDescriptions;
+	vertexInputCreateInfo.vertexAttributeDescriptionCount = VERTEX_ATTRIBUTE_COUNT;
 	vertexInputCreateInfo.pVertexAttributeDescriptions = attributeDescriptions;
 
 	// Input assembler

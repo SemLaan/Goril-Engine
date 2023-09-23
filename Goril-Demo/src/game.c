@@ -93,19 +93,19 @@ bool Update()
 
 	if (gamestate->mouseEnabled)
 	{
-		gamestate->camRotation.x -= GetMouseDistanceFromCenter().x / mouseMoveSpeed;
-		gamestate->camRotation.y += GetMouseDistanceFromCenter().y / mouseMoveSpeed;
+		gamestate->camRotation.y -= GetMouseDistanceFromCenter().x / mouseMoveSpeed;
+		gamestate->camRotation.x += GetMouseDistanceFromCenter().y / mouseMoveSpeed;
 	}
-	if (gamestate->camRotation.y > 1.5f)
-		gamestate->camRotation.y = 1.5f;
-	if (gamestate->camRotation.y < -1.5f)
-		gamestate->camRotation.y = -1.5f;
+	if (gamestate->camRotation.x > 1.5f)
+		gamestate->camRotation.x = 1.5f;
+	if (gamestate->camRotation.x < -1.5f)
+		gamestate->camRotation.x = -1.5f;
 
 	// Create the rotation matrix
-	mat4 R_combined = mat4_rotate_xyz((vec3){gamestate->camRotation.y, gamestate->camRotation.x, gamestate->camRotation.z});
+	mat4 rotation = mat4_rotate_xyz(gamestate->camRotation);
 
-	vec3 forwardVector = {-R_combined.values[0][2], -R_combined.values[1][2], -R_combined.values[2][2]};
-	vec3 rightVector = {R_combined.values[0][0], R_combined.values[1][0], R_combined.values[2][0]};
+	vec3 forwardVector = {-rotation.values[0][2], -rotation.values[1][2], -rotation.values[2][2]};
+	vec3 rightVector = {rotation.values[0][0], rotation.values[1][0], rotation.values[2][0]};
 
 	vec3 frameMovement = {};
 
@@ -125,7 +125,7 @@ bool Update()
 
 	mat4 translate = mat4_translate(gamestate->camPosition);
 
-	gamestate->view = mat4_mul_mat4(R_combined, translate);
+	gamestate->view = mat4_mul_mat4(rotation, translate);
 
 	if (GetButtonDown(BUTTON_LEFTMOUSEBTN) && !GetButtonDownPrevious(BUTTON_LEFTMOUSEBTN))
 	{
@@ -185,6 +185,21 @@ bool Render()
 	ubo.projView = mat4_mul_mat4(gamestate->proj, gamestate->view);
 	UpdateGlobalUniforms(&ubo, gamestate->texture);
 
+	SceneRenderData2D sceneData = {};
+	sceneData.camera = ubo.projView;
+	sceneData.spriteRenderInfoDarray = DarrayCreate(sizeof(*sceneData.spriteRenderInfoDarray), 1, GetGlobalAllocator(), MEM_TAG_GAME);
+
+	SpriteRenderInfo sprite = {};
+	sprite.model = mat4_identity();
+
+	sceneData.spriteRenderInfoDarray = DarrayPushback(sceneData.spriteRenderInfoDarray, &sprite);
+	
+	sprite.model = mat4_translate((vec3){2,2,2});
+	sceneData.spriteRenderInfoDarray = DarrayPushback(sceneData.spriteRenderInfoDarray, &sprite);	
+
+	Submit2DScene(sceneData);
+
+	/*
 	for (u32 i = 0; i < 3; ++i)
 	{
 		PushConstantObject pushValues = {};
@@ -194,6 +209,7 @@ bool Render()
 
 		DrawIndexed(gamestate->vertexBuffer, gamestate->indexBuffer, &pushValues);
 	}
+	*/
 
 	return true;
 }

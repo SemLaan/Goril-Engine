@@ -25,6 +25,7 @@
         "vulkan_debug_messenger.h": "c",
         "vulkan_graphics_pipeline.h": "c",
         "texture.h": "c",
-        "intrin.h": "c"
+        "intrin.h": "c",
+        "allocator.h": "c"
     }
 }
