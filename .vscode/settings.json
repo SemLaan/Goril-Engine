@@ -27,6 +27,8 @@
         "texture.h": "c",
         "intrin.h": "c",
         "allocator.h": "c",
-        "vulkan_command_buffer.h": "c"
+        "vulkan_command_buffer.h": "c",
+        "vector_performance.h": "c",
+        "test_defines.h": "c"
     }
 }

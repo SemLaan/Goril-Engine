@@ -10,7 +10,7 @@ set defines=-DGR_DEBUG -D__win__ -DDEBUG -D_DEBUG
 set includepaths=-I%~DP0/Goril/src/ -I%~DP0/Tests/src/ -I%VULKAN_SDK%/Include
 set linkpaths=-L%VULKAN_SDK%/Lib
 set links=-lvulkan-1
-set compilerflags=-Wall -std=c17 -Wno-unused-function -g -march=native
+set compilerflags=-Wall -std=c17 -Wno-unused-function -g -march=native -msse3
 
 if not exist "%~DP0/bin/Debug" mkdir "%~DP0/bin/Debug"
 

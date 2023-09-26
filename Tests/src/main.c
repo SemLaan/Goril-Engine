@@ -8,6 +8,7 @@
 #include "core/event_tests.h"
 #include "containers/darray_test.h"
 #include "memory/allocator_tests.h"
+#include "vector_intrinsics/vector_performance.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -43,6 +44,7 @@ int main()
 	register_allocator_tests();
 	register_darray_tests();
 	register_event_tests();
+	register_vector_perf_tests();
 	// ----------------------------------------------------
 
 	// Run tests

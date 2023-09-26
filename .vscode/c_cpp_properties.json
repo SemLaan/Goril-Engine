@@ -4,7 +4,9 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/Goril/src/",
-                "${VULKAN_SDK}/include"
+                "${workspaceFolder}/Goril-Demo/src/",
+                "${VULKAN_SDK}/include",
+                "${workspaceFolder}/Tests/src/",
             ],
             "defines": [
                 "GR_DEBUG",
