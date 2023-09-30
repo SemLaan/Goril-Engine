@@ -417,6 +417,7 @@ bool RenderFrame()
 typedef struct Renderer2DState
 {
 	SceneRenderData2D currentRenderData;
+	GlobalUniformObject currentGlobalUBO;
 	VertexBuffer quadVertexBuffer;
 	VertexBuffer instancedBuffer;
 	IndexBuffer quadIndexBuffer;
@@ -462,6 +463,10 @@ static void Shutdown2DRenderer()
 
 static void Preprocess2DSceneData()
 {
+	// ========================== Preprocessing camera ================================
+	renderer2DState->currentGlobalUBO.projView = renderer2DState->currentRenderData.camera;
+
+	// =========================== preprocessing quads =================================
 	u32 spriteCount = DarrayGetSize(renderer2DState->currentRenderData.spriteRenderInfoDarray);
 	GRASSERT(spriteCount > 0);
 
@@ -479,17 +484,14 @@ static void Preprocess2DSceneData()
 	VertexBufferUpdate(renderer2DState->instancedBuffer, instanceData, spriteCount * sizeof(*instanceData));
 
 	Free(GetGlobalAllocator(), instanceData);
-}
 
-//TODO: remove this trash by incorporating this into the 2d scene
-static GlobalUniformObject temp_GlobalUniformObject;
-static Texture temp_Texture;
+	// =============================== Updating descriptor sets ==================================
+	MemCopy(vk_state->uniformBuffersMappedDarray[vk_state->currentFrame], &renderer2DState->currentGlobalUBO, sizeof(GlobalUniformObject));
+	UpdateDescriptorSets(vk_state->currentFrame, (VulkanImage*)renderer2DState->currentRenderData.spriteRenderInfoDarray[0].texture.internalState); // TODO: make gfx pipelines configurable
+}
 
 static void Render2DScene()
 {
-	UpdateDescriptorSets(vk_state->currentFrame, (VulkanImage*)temp_Texture.internalState); // TODO: make gfx pipelines configurable
-	MemCopy(vk_state->uniformBuffersMappedDarray[vk_state->currentFrame], &temp_GlobalUniformObject, sizeof(GlobalUniformObject));
-
 	u32 spriteCount = DarrayGetSize(renderer2DState->currentRenderData.spriteRenderInfoDarray);
 
 	VkCommandBuffer currentCommandBuffer = vk_state->commandBuffers[vk_state->currentFrame]->handle;
@@ -512,12 +514,6 @@ static void Render2DScene()
 void Submit2DScene(SceneRenderData2D sceneData)
 {
 	renderer2DState->currentRenderData = sceneData;
-}
-
-void UpdateGlobalUniforms(GlobalUniformObject globalUniformObject, Texture texture)
-{
-	temp_GlobalUniformObject = globalUniformObject;
-	temp_Texture = texture;
 }
 
 void DrawIndexed(VertexBuffer _vertexBuffer, IndexBuffer _indexBuffer, PushConstantObject* pPushConstantValues)

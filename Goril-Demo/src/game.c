@@ -181,16 +181,13 @@ bool Update()
 
 bool Render()
 {
-	GlobalUniformObject ubo = {};
-	ubo.projView = mat4_mul_mat4(gamestate->proj, gamestate->view);
-	UpdateGlobalUniforms(ubo, gamestate->texture);
-
 	SceneRenderData2D sceneData = {};
-	sceneData.camera = ubo.projView;
+	sceneData.camera = mat4_mul_mat4(gamestate->proj, gamestate->view);
 	sceneData.spriteRenderInfoDarray = DarrayCreate(sizeof(*sceneData.spriteRenderInfoDarray), 1, GetGlobalAllocator(), MEM_TAG_GAME);
 
 	SpriteRenderInfo sprite = {};
 	sprite.model = mat4_identity();
+	sprite.texture = gamestate->texture;
 
 	sceneData.spriteRenderInfoDarray = DarrayPushback(sceneData.spriteRenderInfoDarray, &sprite);
 	
@@ -198,18 +195,6 @@ bool Render()
 	sceneData.spriteRenderInfoDarray = DarrayPushback(sceneData.spriteRenderInfoDarray, &sprite);	
 
 	Submit2DScene(sceneData);
-
-	/*
-	for (u32 i = 0; i < 3; ++i)
-	{
-		PushConstantObject pushValues = {};
-		pushValues.model = mat4_scale((vec3){2, 2, 2});
-		pushValues.model = mat4_mul_mat4(pushValues.model, mat4_rotate_x((i + 0.1f) / 0.4f));
-		pushValues.model = mat4_mul_mat4(pushValues.model, mat4_translate((vec3){(f32)i * 3, 0, 0}));
-
-		DrawIndexed(gamestate->vertexBuffer, gamestate->indexBuffer, &pushValues);
-	}
-	*/
 
 	return true;
 }

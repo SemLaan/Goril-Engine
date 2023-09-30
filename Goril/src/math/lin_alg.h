@@ -6,7 +6,7 @@
 
 #define PI 3.14159265358979323846f
 
-
+// TODO: explicitly tell the compiler to inline all of this stuff
 
 static vec3 vec3_from_float(f32 value)
 {

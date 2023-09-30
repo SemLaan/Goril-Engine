@@ -191,7 +191,6 @@ static bool vectorized_float_calculations_16()
 
     for (int testRuns = 0; testRuns < TEST_RUN_COUNT * 10000; ++testRuns)
     {
-
         c_vec = _mm512_mul_ps(a_vec, b_vec);
     }
 
