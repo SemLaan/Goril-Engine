@@ -29,6 +29,11 @@
         "allocator.h": "c",
         "vulkan_command_buffer.h": "c",
         "vector_performance.h": "c",
-        "test_defines.h": "c"
+        "test_defines.h": "c",
+        "allocator_backends.h": "c",
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "utility": "c"
     }
 }
