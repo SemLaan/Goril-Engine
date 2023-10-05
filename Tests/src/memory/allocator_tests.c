@@ -139,6 +139,61 @@ static bool freelist_allocator_alignment_test()
 }
 
 
+
+typedef struct PoolTester
+{
+	u32 a;
+	u64 b;
+} PoolTester;
+
+#include <stdlib.h>
+static bool pool_allocator_test()
+{
+	const u32 poolElementCount = 100;
+
+	PoolTester** testElements = malloc(sizeof(*testElements) * poolElementCount);
+
+	Allocator allocator = CreatePoolAllocator(sizeof(PoolTester), poolElementCount);
+
+	for (u32 i = 0; i < poolElementCount; ++i)
+	{
+		testElements[i] = Alloc(&allocator, sizeof(PoolTester), MEM_TAG_TEST);
+		testElements[i]->a = i;
+		testElements[i]->b = i * 2;
+	}
+
+	for (u32 i = 0; i < poolElementCount; ++i)
+	{
+		if (testElements[i]->a != i || testElements[i]->b != i * 2)
+			return false;
+	}
+
+	testElements[50]->a = 1;
+	testElements[50]->b = 1;
+
+	if (testElements[49]->b != 49 * 2)
+		return false;
+	if (testElements[51]->a != 51)
+		return false;
+	
+	Free(&allocator, testElements[50]);
+
+	testElements[70] = Alloc(&allocator, sizeof(PoolTester), MEM_TAG_TEST);
+
+	testElements[70]->a = 15675;
+	testElements[70]->b = 15745;
+
+	if (testElements[49]->b != 49 * 2)
+		return false;
+	if (testElements[51]->a != 51)
+		return false;
+
+	DestroyPoolAllocator(allocator);
+
+	return true;
+}
+
+
 void register_allocator_tests()
 {
 	register_test(bump_allocator_test, "Allocators: Bump allocator");
@@ -146,4 +201,5 @@ void register_allocator_tests()
 	register_test(freelist_allocator_test, "Allocators: Freelist allocator");
 	register_test(freelist_allocator_realloc_test, "Allocators: Freelist allocator realloc");
 	register_test(freelist_allocator_alignment_test, "Allocators: Freelist alignment");
+	register_test(pool_allocator_test, "Allocators: pool allocator");
 }

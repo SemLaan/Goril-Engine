@@ -663,8 +663,8 @@ u32 BitCount(u32 u)
 // This is used for finding the first free block in the pool quickly
 u32 First0Bit(u32 i)
 {
-	i=~i;
-	return BitCount((i&(-i))-1);
+	i = ~i;
+	return BitCount((i & (-i)) - 1);
 }
 
 static void* PoolAlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 alignment)
@@ -684,6 +684,7 @@ static void* PoolAlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 a
 		u32 firstZeroBit = First0Bit(state->controlBlocks[i]);
 		firstFreeBlock = (i * 32/*amount of bits in 32 bit int*/) + firstZeroBit;
 		state->controlBlocks[i] |= 1 << firstZeroBit;
+		break;
 	}
 
 	GRASSERT_MSG(firstFreeBlock < state->poolSize, "Pool allocator ran out of blocks");
@@ -712,7 +713,7 @@ static void PoolFree(Allocator* allocator, void* block)
 
 	// Setting the bit that manages the freed block to zero
 	// Inverting the bits in the bitblock, then setting the bit to one, then inverting the block again
-	state->controlBlocks[controlBlockIndex] = ~((1 << bitAddress) & (~state->controlBlocks[controlBlockIndex]));
+	state->controlBlocks[controlBlockIndex] = ~((1 << bitAddress) | (~state->controlBlocks[controlBlockIndex]));
 }
 
 // =====================================================================================================================================================================================================
