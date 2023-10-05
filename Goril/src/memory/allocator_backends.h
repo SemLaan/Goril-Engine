@@ -16,3 +16,9 @@ size_t FreelistGetFreeNodes(void* backendState);
 // ==================================== Bump allocator ================================================================================================================================================
 Allocator CreateBumpAllocator(size_t arenaSize, bool safetySpace);
 void DestroyBumpAllocator(Allocator allocator);
+
+// ===================================== Pool allocator =============================================================================================================================================
+// Size of blocks this allocator returns, and amount of blocks in this allocator.
+// all blocks created by this allocator are aligned on allocSize (provided it is a power of two)
+Allocator CreatePoolAllocator(u32 blockSize, u32 poolSize);
+void DestroyPoolAllocator(Allocator allocator);

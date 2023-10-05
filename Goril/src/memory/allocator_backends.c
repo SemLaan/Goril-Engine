@@ -585,6 +585,134 @@ static void BumpPrimitiveFree(void* backendState, void* block, size_t size)
         state->bumpPointer = state->arenaStart;
     }
 }
+
+// =====================================================================================================================================================================================================
+// ===================================== Pool allocator =============================================================================================================================================
+// =====================================================================================================================================================================================================
+typedef struct PoolAllocatorState
+{
+    void* poolStart;		// Pointer to the start of the memory that is managed by this allocator
+    u32* controlBlocks;		// Pointer to the bitblocks that keep track of which blocks are free and which aren't
+    u32 blockSize;			// Size of each block
+    u32 poolSize;			// Amount of blocks in the pool
+	u32 controlBlockCount;	// Amount of bitblocks in controlBlocks (each bitblock is a u32 that kan keep track of 32 blocks in the pool)
+} PoolAllocatorState;
+
+static void* PoolAlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 alignment);
+static void* PoolReAlloc(Allocator* allocator, void* block, u64 size);
+static void PoolFree(Allocator* allocator, void* block);
+
+Allocator CreatePoolAllocator(u32 blockSize, u32 poolSize)
+{
+    // Calculating required memory (client size + state size)
+    u32 stateSize = sizeof(PoolAllocatorState);
+    u32 blockTrackerSize = 4 * ceil((f32)poolSize / 32.f);
+    u32 arenaSize = (blockSize * poolSize) + /*for alignment purposes*/ (blockSize - 1);
+    u32 requiredMemory = arenaSize + stateSize + blockTrackerSize;
+
+    // Allocating memory for state and arena and zeroing state memory
+    void* arenaBlock = Alloc(GetGlobalAllocator(), requiredMemory, MEM_TAG_SUB_ARENA);
+    memset(arenaBlock, 0, stateSize + blockTrackerSize);
+#ifndef GR_DIST
+    AllocInfo(stateSize + blockTrackerSize, MEM_TAG_ALLOCATOR_STATE);
+#endif // !GR_DIST
+
+    // Getting pointers to the internal components of the allocator
+    PoolAllocatorState* state = (PoolAllocatorState*)arenaBlock;
+    state->controlBlocks = (u32*)((u8*)arenaBlock + stateSize);
+    state->poolStart = (void*)((u64)((state->controlBlocks + blockTrackerSize) + blockSize - 1) & ~((u64)blockSize - 1));
+
+    // Configuring allocator state
+    state->blockSize = blockSize;
+    state->poolSize = poolSize;
+	state->controlBlockCount = ceil((f32)poolSize / 32.f);
+
+    // Linking the allocator object to the freelist functions
+    Allocator allocator = {};
+    allocator.BackendAlloc = PoolAlignedAlloc;
+    allocator.BackendReAlloc = PoolReAlloc;
+    allocator.BackendFree = PoolFree;
+    allocator.backendState = state;
+
+    return allocator;
+}
+
+void DestroyPoolAllocator(Allocator allocator)
+{
+    PoolAllocatorState* state = (PoolAllocatorState*)allocator.backendState;
+#ifndef GR_DIST
+    u32 stateSize = sizeof(PoolAllocatorState);
+    u32 blockTrackerSize = 4 * state->controlBlockCount;
+    FreeInfo(stateSize + blockTrackerSize, MEM_TAG_ALLOCATOR_STATE);
+#endif // !GR_DIST
+
+    // Frees the entire arena including state
+    Free(GetGlobalAllocator(), state);
+}
+
+// From: http://tekpool.wordpress.com/category/bit-count/
+u32 BitCount(u32 u)
+{
+	u32 uCount;
+
+	uCount = u - ((u >> 1) & 033333333333) - ((u >> 2) & 011111111111);
+	
+	return ((uCount + (uCount >> 3)) & 030707070707) % 63;
+}
+
+// This is used for finding the first free block in the pool quickly
+u32 First0Bit(u32 i)
+{
+	i=~i;
+	return BitCount((i&(-i))-1);
+}
+
+static void* PoolAlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 alignment)
+{
+	PoolAllocatorState* state = (PoolAllocatorState*)allocator->backendState;
+
+	GRASSERT_DEBUG(alignment == MIN_ALIGNMENT);
+	GRASSERT_DEBUG(size == state->blockSize);
+
+	u32 firstFreeBlock = UINT32_MAX;
+
+	for (u32 i = 0; i < state->controlBlockCount; ++i)
+	{
+		if (state->controlBlocks[i] == UINT32_MAX)
+			continue;
+		
+		u32 firstZeroBit = First0Bit(state->controlBlocks[i]);
+		firstFreeBlock = (i * 32/*amount of bits in 32 bit int*/) + firstZeroBit;
+		state->controlBlocks[i] |= 1 << firstZeroBit;
+	}
+
+	GRASSERT_MSG(firstFreeBlock < state->poolSize, "Pool allocator ran out of blocks");
+
+	return (u8*)state->poolStart + (state->blockSize * firstFreeBlock);
+}
+
+static void* PoolReAlloc(Allocator* allocator, void* block, u64 size)
+{
+	GRASSERT_MSG(false, "Error, shit programmer detected!");
+	return nullptr;
+}
+
+static void PoolFree(Allocator* allocator, void* block)
+{
+	PoolAllocatorState* state = (PoolAllocatorState*)allocator->backendState;
+
+	u64 blockAddress = (u64)block;
+	u64 poolStartAddress = (u64)state->poolStart;
+
+	u64 relativeAddress = blockAddress - poolStartAddress;
+	u64 poolBlockAddress = relativeAddress / state->blockSize;
+
+	u32 controlBlockIndex = floor((f32)poolBlockAddress / 32.f);
+	u32 bitAddress = poolBlockAddress % 32;
+
+	// Setting the bit that manages the freed block to zero
+	// Inverting the bits in the bitblock, then setting the bit to one, then inverting the block again
+	state->controlBlocks[controlBlockIndex] = ~((1 << bitAddress) & (~state->controlBlocks[controlBlockIndex]));
 }
 
 // =====================================================================================================================================================================================================
