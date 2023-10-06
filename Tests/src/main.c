@@ -6,7 +6,7 @@
 
 #include "core/memory_tests.h"
 #include "core/event_tests.h"
-#include "containers/darray_test.h"
+#include "containers/container_tests.h"
 #include "memory/allocator_tests.h"
 #include "vector_intrinsics/vector_performance.h"
 #include <stdio.h>
@@ -42,7 +42,7 @@ int main()
 	// ----------------- register all tests ----------------
 	register_memory_tests();
 	register_allocator_tests();
-	register_darray_tests();
+	register_container_tests();
 	register_event_tests();
 	register_vector_perf_tests();
 	// ----------------------------------------------------

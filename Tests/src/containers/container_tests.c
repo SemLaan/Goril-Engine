@@ -1,4 +1,4 @@
-#include "darray_test.h"
+#include "container_tests.h"
 
 #include "test_defines.h"
 #include "../test_manager.h"
@@ -89,7 +89,7 @@ static bool darray_contains_test()
 }
 
 
-void register_darray_tests()
+void register_container_tests()
 {
 	register_test(darray_pushback_test, "Darray: pushback");
 	register_test(darray_pop_test, "Darray: pop");
