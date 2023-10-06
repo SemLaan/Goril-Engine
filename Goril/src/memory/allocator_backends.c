@@ -589,11 +589,13 @@ static void BumpPrimitiveFree(void* backendState, void* block, size_t size)
 // =====================================================================================================================================================================================================
 // ===================================== Pool allocator =============================================================================================================================================
 // =====================================================================================================================================================================================================
-// TODO: add memory debugging stuff to pool allocator
 typedef struct PoolAllocatorState
 {
     void* poolStart;		// Pointer to the start of the memory that is managed by this allocator
     u32* controlBlocks;		// Pointer to the bitblocks that keep track of which blocks are free and which aren't
+#ifndef GR_DIST
+    mem_tag* memtagsArray; // Array for keeping track which tag each block belongs to
+#endif
     u32 blockSize;			// Size of each block
     u32 poolSize;			// Amount of blocks in the pool
 	u32 controlBlockCount;	// Amount of bitblocks in controlBlocks (each bitblock is a u32 that kan keep track of 32 blocks in the pool)
@@ -614,9 +616,6 @@ Allocator CreatePoolAllocator(u32 blockSize, u32 poolSize)
     // Allocating memory for state and arena and zeroing state memory
     void* arenaBlock = Alloc(GetGlobalAllocator(), requiredMemory, MEM_TAG_SUB_ARENA);
     memset(arenaBlock, 0, stateSize + blockTrackerSize);
-#ifndef GR_DIST
-    AllocInfo(stateSize + blockTrackerSize, MEM_TAG_ALLOCATOR_STATE);
-#endif // !GR_DIST
 
     // Getting pointers to the internal components of the allocator
     PoolAllocatorState* state = (PoolAllocatorState*)arenaBlock;
@@ -635,6 +634,12 @@ Allocator CreatePoolAllocator(u32 blockSize, u32 poolSize)
     allocator.BackendFree = PoolFree;
     allocator.backendState = state;
 
+#ifndef GR_DIST
+    AllocInfo(stateSize + blockTrackerSize, MEM_TAG_ALLOCATOR_STATE);
+    state->memtagsArray = Alloc(GetGlobalAllocator(), sizeof(mem_tag) * poolSize, MEM_TAG_HASHMAP);
+    memset(state->memtagsArray, 0, sizeof(mem_tag) * poolSize);
+#endif // !GR_DIST
+
     return allocator;
 }
 
@@ -645,6 +650,7 @@ void DestroyPoolAllocator(Allocator allocator)
     u32 stateSize = sizeof(PoolAllocatorState);
     u32 blockTrackerSize = 4 * state->controlBlockCount;
     FreeInfo(stateSize + blockTrackerSize, MEM_TAG_ALLOCATOR_STATE);
+    Free(GetGlobalAllocator(), state->memtagsArray);
 #endif // !GR_DIST
 
     // Frees the entire arena including state
@@ -690,6 +696,11 @@ static void* PoolAlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 a
 
 	GRASSERT_MSG(firstFreeBlock < state->poolSize, "Pool allocator ran out of blocks");
 
+#ifndef GR_DIST
+    state->memtagsArray[firstFreeBlock] = tag;
+    AllocInfo(size, tag);
+#endif
+
 	return (u8*)state->poolStart + (state->blockSize * firstFreeBlock);
 }
 
@@ -715,6 +726,10 @@ static void PoolFree(Allocator* allocator, void* block)
 	// Setting the bit that manages the freed block to zero
 	// Inverting the bits in the bitblock, then setting the bit to one, then inverting the block again
 	state->controlBlocks[controlBlockIndex] = ~((1 << bitAddress) | (~state->controlBlocks[controlBlockIndex]));
+
+#ifndef GR_DIST
+    FreeInfo(state->blockSize, state->memtagsArray[poolBlockAddress]);
+#endif
 }
 
 // =====================================================================================================================================================================================================
