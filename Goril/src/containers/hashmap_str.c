@@ -1,25 +1,25 @@
-#include "hashmap.h"
+#include "hashmap_str.h"
 
 #include <string.h>
 #include "core/asserts.h"
 
-Hashmap* MapCreate(Allocator* allocator, mem_tag memtag, u32 backingArrayElementCount, u32 maxCollisions, u32 maxKeyLength, HashFunction hashFunction)
+HashmapStr* MapStrCreate(Allocator* allocator, mem_tag memtag, u32 backingArrayElementCount, u32 maxCollisions, u32 maxKeyLength, HashFunctionStr hashFunction)
 {
-    Hashmap* hashmap = Alloc(allocator, sizeof(*hashmap) + backingArrayElementCount * sizeof(MapEntry), memtag);
-    hashmap->backingArray = (MapEntry*)(hashmap + 1);
+    HashmapStr* hashmap = Alloc(allocator, sizeof(*hashmap) + backingArrayElementCount * sizeof(MapEntryStr), memtag);
+    hashmap->backingArray = (MapEntryStr*)(hashmap + 1);
     hashmap->backingArrayElementCount = backingArrayElementCount;
     hashmap->hashFunction = hashFunction;
-    hashmap->linkedEntryPool = CreatePoolAllocator(sizeof(MapEntry), maxCollisions);
+    hashmap->linkedEntryPool = CreatePoolAllocator(sizeof(MapEntryStr), maxCollisions);
     hashmap->keyPool = CreatePoolAllocator(maxKeyLength, maxCollisions + backingArrayElementCount);
     hashmap->allocator = allocator;
     hashmap->maxKeyLength = maxKeyLength;
 
-    memset(hashmap->backingArray, 0, sizeof(MapEntry) * backingArrayElementCount);
+    memset(hashmap->backingArray, 0, sizeof(MapEntryStr) * backingArrayElementCount);
 
     return hashmap;
 }
 
-void MapDestroy(Hashmap* hashmap)
+void MapStrDestroy(HashmapStr* hashmap)
 {
     DestroyPoolAllocator(hashmap->linkedEntryPool);
     DestroyPoolAllocator(hashmap->keyPool);
@@ -27,13 +27,13 @@ void MapDestroy(Hashmap* hashmap)
     Free(hashmap->allocator, hashmap);
 }
 
-void MapInsert(Hashmap* hashmap, const char* key, u32 keyLength, void* value)
+void MapStrInsert(HashmapStr* hashmap, const char* key, u32 keyLength, void* value)
 {
     u32 hash = hashmap->hashFunction(key, keyLength) % hashmap->backingArrayElementCount;
 
     // TODO: when in debug build check if the entry is already in the map
 
-    MapEntry* currentEntry = &hashmap->backingArray[hash];
+    MapEntryStr* currentEntry = &hashmap->backingArray[hash];
 
     while (nullptr != currentEntry->key)
     {
@@ -43,8 +43,8 @@ void MapInsert(Hashmap* hashmap, const char* key, u32 keyLength, void* value)
         }
         else
         {
-            currentEntry->next = Alloc(&hashmap->linkedEntryPool, sizeof(MapEntry), MEM_TAG_HASHMAP);
-            memset(currentEntry->next, 0, sizeof(MapEntry));
+            currentEntry->next = Alloc(&hashmap->linkedEntryPool, sizeof(MapEntryStr), MEM_TAG_HASHMAP);
+            memset(currentEntry->next, 0, sizeof(MapEntryStr));
             currentEntry = currentEntry->next;
         }
     }

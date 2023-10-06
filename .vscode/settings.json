@@ -35,6 +35,6 @@
         "string_view": "c",
         "initializer_list": "c",
         "utility": "c",
-        "hashmap.h": "c"
+        "hashmap.h": "c",
     }
 }
