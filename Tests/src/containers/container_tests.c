@@ -3,6 +3,7 @@
 #include "test_defines.h"
 #include "../test_manager.h"
 #include <containers/darray.h>
+#include <containers/hashmap_u64.h>
 
 
 typedef struct Beef
@@ -88,10 +89,63 @@ static bool darray_contains_test()
 	return true;
 }
 
+static u32 TestHashFunc(u64 key)
+{
+	// Making sure 10 is a collision with 5
+	if (key == 10)
+		return 5;
+	else
+		return (u32)key;
+}
+
+#include "stdlib.h"
+static bool hashmapU64_test()
+{
+	#define testElementCount 20
+
+	HashmapU64* hashmap = MapU64Create(GetGlobalAllocator(), MEM_TAG_TEST, 100, 20, TestHashFunc);
+
+	u32* testValues = Alloc(GetGlobalAllocator(), sizeof(*testValues) * testElementCount, MEM_TAG_TEST);
+
+	for (u32 i = 0; i < testElementCount; ++i)
+	{
+		testValues[i] = i;
+	}
+
+	for (u64 i = 0; i < testElementCount; ++i)
+	{
+		MapU64Insert(hashmap, i, &testValues[i]);
+	}
+
+	for (u64 i = 0; i < testElementCount; ++i)
+	{
+		u32* value = MapU64Lookup(hashmap, i);
+		expect_should_be(i, *value);
+	}
+
+	MapU64Delete(hashmap, (u64)4);
+	MapU64Delete(hashmap, (u64)10);
+
+	for (u64 i = 0; i < testElementCount; ++i)
+	{
+		if (i == 4 || i == 10)
+			continue;
+		u32* value = MapU64Lookup(hashmap, i);
+		expect_should_be(i, *value);
+	}
+
+	Free(GetGlobalAllocator(), testValues);
+
+	MapU64Destroy(hashmap);
+
+	return true;
+}
+
 
 void register_container_tests()
 {
 	register_test(darray_pushback_test, "Darray: pushback");
 	register_test(darray_pop_test, "Darray: pop");
 	register_test(darray_contains_test, "Darray: contains");
+	register_test(hashmapU64_test, "Hashmap u64");
 }

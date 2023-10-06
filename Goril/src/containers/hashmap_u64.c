@@ -111,6 +111,7 @@ void* MapU64Delete(HashmapU64* hashmap, u64 key)
         }
         else
         {
+            previousEntry = currentEntry;
             currentEntry = currentEntry->next;
         }
     }
