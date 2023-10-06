@@ -20,6 +20,7 @@ static const char* memTagToText[MAX_MEMORY_TAGS] = {
 	"VERTEX BUFFER      ",
 	"INDEX BUFFER       ",
 	"TEXTURE            ",
+	"HASHMAP            ",
 };
 #endif // !GR_DIST
 
@@ -122,7 +123,7 @@ Allocator* GetGlobalAllocator()
 	return &state->globalAllocator;
 }
 
-void MemCopy(void* destination, void* source, size_t size)
+void MemCopy(void* destination, const void* source, size_t size)
 {
 	// Checking if destination and source overlap
 	if ((u8*)destination + size > (u8*)source && (u8*)destination < (u8*)source + size)

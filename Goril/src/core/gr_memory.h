@@ -18,7 +18,7 @@ void ShutdownMemory();
 Allocator* GetGlobalAllocator();
 
 // Copies memory from source to destination, also works if source and destination overlap
-void MemCopy(void* destination, void* source, size_t size);
+void MemCopy(void* destination, const void* source, size_t size);
 
 const u64 GetMemoryUsage();
 
