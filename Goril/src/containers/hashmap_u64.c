@@ -29,7 +29,8 @@ void MapU64Insert(HashmapU64* hashmap, u64 key, void* value)
 {
     u32 hash = hashmap->hashFunction(key) % hashmap->backingArrayElementCount;
 
-    // TODO: when in debug build check if the entry is already in the map
+    // Checking if the key isn't already in the map
+    GRASSERT_DEBUG(MapU64Lookup(hashmap, key) == nullptr);
 
     MapEntryU64* currentEntry = &hashmap->backingArray[hash];
 
@@ -65,6 +66,7 @@ void* MapU64Lookup(HashmapU64* hashmap, u64 key)
         }
         else if (currentEntry->next == nullptr)
         {
+            //GRDEBUG("HashmapU64: Tried to find item that doesn't exist, key: %llu", key);
             return nullptr;
         }
         else
@@ -85,7 +87,7 @@ void* MapU64Delete(HashmapU64* hashmap, u64 key)
     {
         if (currentEntry->key == key)
         {
-            u64 returnValue = currentEntry->value;
+            void* returnValue = currentEntry->value;
             // If there's no previous entry, meaning that current entry is in the backing array
             if (previousEntry == nullptr && currentEntry->next != nullptr)
             {

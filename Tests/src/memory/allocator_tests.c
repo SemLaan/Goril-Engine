@@ -164,17 +164,14 @@ static bool pool_allocator_test()
 
 	for (u32 i = 0; i < poolElementCount; ++i)
 	{
-		if (testElements[i]->a != i || testElements[i]->b != i * 2)
-			return false;
+		expect_to_be_false(testElements[i]->a != i || testElements[i]->b != i * 2);
 	}
 
 	testElements[50]->a = 1;
 	testElements[50]->b = 1;
 
-	if (testElements[49]->b != 49 * 2)
-		return false;
-	if (testElements[51]->a != 51)
-		return false;
+	expect_to_be_false(testElements[49]->b != 49 * 2);
+	expect_to_be_false(testElements[51]->a != 51);
 	
 	Free(&allocator, testElements[50]);
 
@@ -183,10 +180,16 @@ static bool pool_allocator_test()
 	testElements[70]->a = 15675;
 	testElements[70]->b = 15745;
 
-	if (testElements[49]->b != 49 * 2)
-		return false;
-	if (testElements[51]->a != 51)
-		return false;
+	expect_to_be_false(testElements[49]->b != 49 * 2);
+	expect_to_be_false(testElements[51]->a != 51);
+
+	for (u32 i = 0; i < poolElementCount; ++i)
+	{
+		if (i != 50)
+			Free(&allocator, testElements[i]);
+	}
+
+	free(testElements);
 
 	DestroyPoolAllocator(allocator);
 

@@ -620,7 +620,7 @@ Allocator CreatePoolAllocator(u32 blockSize, u32 poolSize)
     // Getting pointers to the internal components of the allocator
     PoolAllocatorState* state = (PoolAllocatorState*)arenaBlock;
     state->controlBlocks = (u32*)((u8*)arenaBlock + stateSize);
-    state->poolStart = (void*)((u64)((state->controlBlocks + blockTrackerSize) + blockSize - 1) & ~((u64)blockSize - 1));
+    state->poolStart = (void*)((u64)(((u8*)state->controlBlocks + blockTrackerSize) + blockSize - 1) & ~((u64)blockSize - 1));
 
     // Configuring allocator state
     state->blockSize = blockSize;
