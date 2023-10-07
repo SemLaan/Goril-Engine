@@ -35,6 +35,10 @@
         "vulkan_queues.h": "c",
         "vulkan_sync_objects.h": "c",
         "mem.h": "c",
-        "meminc.h": "c"
+        "meminc.h": "c",
+        "asserts.h": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "utility": "c"
     }
 }

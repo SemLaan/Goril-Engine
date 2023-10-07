@@ -58,7 +58,7 @@ bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 	}
 
 	// Creating the memory state
-	state = (MemoryState*)Alloc(&globalAllocator, sizeof(MemoryState), MEM_TAG_MEMORY_SUBSYS);
+	state = Alloc(&globalAllocator, sizeof(MemoryState), MEM_TAG_MEMORY_SUBSYS);
 	initialized = true;
 
 	state->globalAllocator = globalAllocator;
@@ -66,7 +66,7 @@ bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 #ifndef GR_DIST
 	state->allocated = 0;
 	state->deferredMemory = 0;
-	state->memorySubsystemStateSize = sizeof(MemoryState) + globalAllocatorStateSize + GetAllocHeaderSize();
+	state->memorySubsystemStateSize = sizeof(MemoryState) + globalAllocatorStateSize + GetFreelistAllocHeaderSize();
 	state->netAllocationCount = 0;
 	for (u32 i = 0; i < MAX_MEMORY_TAGS; i++)
 	{
@@ -78,7 +78,7 @@ bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 #endif // !GR_DIST
 
 	g_Allocators = (GlobalAllocators*)Alloc(&globalAllocator, sizeof(GlobalAllocators), MEM_TAG_MEMORY_SUBSYS);
-	g_Allocators->temporary = CreateBumpAllocator(KiB * 5, true); /// TODO: make configurable
+	g_Allocators->temporary = CreateBumpAllocator(KiB * 5); /// TODO: make configurable
 
 	return true;
 }
@@ -182,7 +182,7 @@ void PrintMemoryStats()
 }
 
 #ifndef GR_DIST // These functions only get compiled if it's not a distribution build
-void AllocInfo(size_t size, mem_tag tag)
+void AllocInfo(size_t size, MemTag tag)
 {
 	if (!initialized)
 		return;
@@ -203,7 +203,7 @@ void ReAllocInfo(i64 sizeChange)
 	state->allocated += sizeChange;
 }
 
-void FreeInfo(size_t size, mem_tag tag)
+void FreeInfo(size_t size, MemTag tag)
 {
 	if (!initialized)
 		return;

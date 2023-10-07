@@ -8,7 +8,8 @@
 
 static bool bump_allocator_test()
 {
-	size_t arena_size = 12 + GetAllocHeaderSize() * 2 + MIN_ALIGNMENT * 2;
+	// TODO: remove the alloc header size once bump allocator doesn't use it anymore
+	size_t arena_size = 12 + GetFreelistAllocHeaderSize() * 2 + MIN_ALIGNMENT * 2;
 
 	Allocator allocator = CreateBumpAllocator(arena_size, false);
 
@@ -27,7 +28,7 @@ static bool bump_allocator_test()
 
 static bool bump_allocator_realloc_test()
 {
-	size_t arena_size = 1000 + GetAllocHeaderSize() + MIN_ALIGNMENT;
+	size_t arena_size = 1000 + GetFreelistAllocHeaderSize() + MIN_ALIGNMENT;
 
 	Allocator allocator = CreateBumpAllocator(arena_size, false);
 
@@ -46,7 +47,7 @@ static bool bump_allocator_realloc_test()
 
 static bool freelist_allocator_test()
 {
-	size_t arena_size = 1000 + GetAllocHeaderSize() + MIN_ALIGNMENT;
+	size_t arena_size = 1000 + GetFreelistAllocHeaderSize() + MIN_ALIGNMENT;
 
 	Allocator allocator = CreateFreelistAllocator(arena_size, false);
 
@@ -80,7 +81,7 @@ static bool freelist_allocator_test()
 
 static bool freelist_allocator_realloc_test()
 {
-	size_t arena_size = 1000 + GetAllocHeaderSize() + MIN_ALIGNMENT;
+	size_t arena_size = 1000 + GetFreelistAllocHeaderSize() + MIN_ALIGNMENT;
 
 	Allocator allocator = CreateFreelistAllocator(arena_size, false);
 
@@ -117,7 +118,7 @@ static bool freelist_allocator_realloc_test()
 
 static bool freelist_allocator_alignment_test()
 {
-	size_t arena_size = 1000 + GetAllocHeaderSize() + MIN_ALIGNMENT;
+	size_t arena_size = 1000 + GetFreelistAllocHeaderSize() + MIN_ALIGNMENT;
 
 	Allocator allocator = CreateFreelistAllocator(arena_size, false);
 
