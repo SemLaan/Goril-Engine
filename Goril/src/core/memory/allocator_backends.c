@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include "gr_memory.h"
+#include "mem_utils.h"
 
 #define FREELIST_NODE_FACTOR 10
 
