@@ -6,7 +6,7 @@
 // This is here for malloc, this is the only place it's called
 #include <stdlib.h>
 
-#include "gr_memory.h"
+#include "memory_subsys.h"
 #include "mem_utils.h"
 
 // Space added to allocators

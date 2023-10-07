@@ -2,7 +2,7 @@
 
 #include "core/logger.h"
 #include "core/asserts.h"
-#include "core/memory/gr_memory.h"
+#include "core/meminc.h"
 #include "core/event.h"
 #include "containers/darray.h"
 

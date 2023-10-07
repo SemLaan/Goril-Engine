@@ -1,4 +1,4 @@
-#include "gr_memory.h"
+#include "memory_subsys.h"
 
 #include "../logger.h"
 #include "../asserts.h"

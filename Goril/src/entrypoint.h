@@ -3,7 +3,7 @@
 #include "core/application.h"
 #include "core/logger.h"
 #include "core/asserts.h"
-#include "core/memory/gr_memory.h"
+#include "core/meminc.h"
 
 extern void GetGameConfigAndFunctions(GameConfig* out_config, GameFunctions* out_gameFunctions);
 

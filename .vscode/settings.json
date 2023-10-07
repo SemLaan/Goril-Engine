@@ -39,6 +39,7 @@
         "asserts.h": "c",
         "string_view": "c",
         "initializer_list": "c",
-        "utility": "c"
+        "utility": "c",
+        "memory_subsys.h": "c"
     }
 }
