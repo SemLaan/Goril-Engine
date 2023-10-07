@@ -1,7 +1,7 @@
 #include "gr_memory.h"
 
-#include "logger.h"
-#include "asserts.h"
+#include "../logger.h"
+#include "../asserts.h"
 #include <string.h>
 
 #ifndef GR_DIST

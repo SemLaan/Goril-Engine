@@ -2,7 +2,7 @@
 
 #include "logger.h"
 #include "platform/platform.h"
-#include "gr_memory.h"
+#include "memory/gr_memory.h"
 #include "event.h"
 #include "input.h"
 #include "renderer/renderer.h"

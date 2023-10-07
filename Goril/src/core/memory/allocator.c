@@ -1,6 +1,6 @@
 #include "allocator.h"
 #include <core/asserts.h>
-#include <core/gr_memory.h>
+#include <core/memory/allocator_backends.h>
 
 // TODO: remove this because it is now in allocator backends
 typedef struct AllocHeader

@@ -1,7 +1,7 @@
 #include "input.h"
 
 #include "core/asserts.h"
-#include "core/gr_memory.h"
+#include "core/meminc.h"
 #include "core/event.h"
 #include "platform/platform.h"
 

@@ -1,9 +1,9 @@
 #include "allocator_tests.h"
-#include <memory/allocator_backends.h>
+#include <core/memory/allocator_backends.h>
 
 #include "test_defines.h"
 #include "../test_manager.h"
-#include <core/gr_memory.h>
+#include <core/memory/gr_memory.h>
 
 
 static bool bump_allocator_test()

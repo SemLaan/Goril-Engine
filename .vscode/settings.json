@@ -32,5 +32,9 @@
         "test_defines.h": "c",
         "allocator_backends.h": "c",
         "array": "c",
+        "vulkan_queues.h": "c",
+        "vulkan_sync_objects.h": "c",
+        "mem.h": "c",
+        "meminc.h": "c"
     }
 }

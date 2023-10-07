@@ -1,7 +1,7 @@
 #pragma once
 
 #include "defines.h"
-#include "core/gr_memory.h"
+#include "core/meminc.h"
 
 
 typedef u32 (*HashFunctionU64)(u64 key);

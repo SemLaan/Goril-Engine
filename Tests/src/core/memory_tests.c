@@ -2,7 +2,7 @@
 
 #include "test_defines.h"
 #include "../test_manager.h"
-#include <core/gr_memory.h>
+#include <core/memory/gr_memory.h>
 
 
 static bool alloc_and_dealloc_test()

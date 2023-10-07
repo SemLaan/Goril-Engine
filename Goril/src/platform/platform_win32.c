@@ -12,7 +12,7 @@
 #include <vulkan/vulkan_win32.h>
 #include "core/logger.h"
 #include "core/asserts.h"
-#include "core/gr_memory.h"
+#include "core/memory/gr_memory.h"
 #include "core/event.h"
 #include "core/input.h"
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "defines.h"
-#include "core/gr_memory.h"
+#include "core/meminc.h"
 
 
 // This makes sure arrays are cache line aligned on most consumer hardware

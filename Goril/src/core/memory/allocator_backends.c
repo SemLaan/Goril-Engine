@@ -6,7 +6,7 @@
 // This is here for malloc, this is the only place it's called
 #include <stdlib.h>
 
-#include "core/gr_memory.h"
+#include "gr_memory.h"
 
 #define FREELIST_NODE_FACTOR 10
 

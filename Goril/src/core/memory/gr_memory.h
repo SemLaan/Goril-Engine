@@ -1,8 +1,7 @@
 #pragma once
 #include "defines.h"
-#include "memory/allocator.h"
-#include "memory/allocator_backends.h"
-
+#include "allocator.h"
+#include "allocator_backends.h"
 
 typedef struct GlobalAllocators
 {

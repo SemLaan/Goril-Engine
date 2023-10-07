@@ -2,7 +2,7 @@
 
 #include "platform/platform.h"
 #include "asserts.h"
-#include "gr_memory.h"
+#include "meminc.h"
 // needed for string formatting and variadic args
 #include <stdio.h>
 #include <stdarg.h>
