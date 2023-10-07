@@ -15,7 +15,7 @@ void ShutdownMemory();
 
 Allocator* GetGlobalAllocator();
 
-
+/*
 const u64 GetMemoryUsage();
 
 const u64 GetNetAllocations();
@@ -30,3 +30,4 @@ void ReAllocInfo(i64 sizeChange);
 
 void FreeInfo(size_t size, MemTag tag);
 #endif // !GR_DIST
+*/

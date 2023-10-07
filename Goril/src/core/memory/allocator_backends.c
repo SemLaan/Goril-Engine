@@ -19,9 +19,6 @@ typedef struct AllocHeader
     void* start;
     u32 size; // Size of the client allocation
     u32 alignment;
-#ifndef GR_DIST
-    MemTag tag; // Only for debugging, gets optimized out of dist builds
-#endif
 } AllocHeader;
 
 // =====================================================================================================================================================================================================
@@ -47,7 +44,7 @@ typedef struct FreelistState
 
 // These functions use other functions to do allocations and prepare the blocks for use
 // (adding a header and aligning the block)
-static void* FreelistAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag tag);
+static void* FreelistAlignedAlloc(Allocator* allocator, u64 size, u32 alignment);
 static void* FreelistReAlloc(Allocator* allocator, void* block, u64 size);
 static void FreelistFree(Allocator* allocator, void* block);
 
@@ -71,9 +68,6 @@ Allocator CreateFreelistAllocator(size_t arenaSize)
     // Allocating memory for state and arena and zeroing state memory
     void* arenaBlock = Alloc(GetGlobalAllocator(), requiredMemory, MEM_TAG_SUB_ARENA);
     ZeroMem(arenaBlock, stateSize);
-#ifndef GR_DIST
-    AllocInfo(stateSize, MEM_TAG_ALLOCATOR_STATE);
-#endif // !GR_DIST
 
     // Getting pointers to the internal components of the allocator
     FreelistState* state = (FreelistState*)arenaBlock;
@@ -105,9 +99,6 @@ Allocator CreateFreelistAllocator(size_t arenaSize)
 void DestroyFreelistAllocator(Allocator allocator)
 {
     FreelistState* state = (FreelistState*)allocator.backendState;
-#ifndef GR_DIST
-    FreeInfo(sizeof(FreelistState) + state->nodeCount * sizeof(FreelistNode), MEM_TAG_ALLOCATOR_STATE);
-#endif // !GR_DIST
 
     // Frees the entire arena including state
     Free(GetGlobalAllocator(), state);
@@ -152,15 +143,12 @@ static void ReturnNodeToPool(FreelistNode* node)
     node->size = 0;
 }
 
-static void* FreelistAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag tag)
+static void* FreelistAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
 {
 	// Checking if the alignment is greater than min alignment and is a power of two
     GRASSERT_DEBUG((alignment >= MIN_ALIGNMENT) && ((alignment & (alignment - 1)) == 0));
 
     u32 requiredSize = (u32)size + sizeof(AllocHeader) + alignment - 1;
-#ifndef GR_DIST
-    AllocInfo(requiredSize, tag);
-#endif
 
     void* block = FreelistPrimitiveAlloc(allocator->backendState, requiredSize);
     u64 blockExcludingHeader = (u64)block + sizeof(AllocHeader);
@@ -172,9 +160,7 @@ static void* FreelistAlignedAlloc(Allocator* allocator, u64 size, u32 alignment,
     header->start = block;
     header->size = (u32)size;
     header->alignment = alignment;
-#ifndef GR_DIST
-    header->tag = tag; // Debug only
-#endif
+
     // return the block to the client
     return alignedBlock;
 }
@@ -186,10 +172,6 @@ static void* FreelistReAlloc(Allocator* allocator, void* block, u64 size)
     GRASSERT(size != header->size);
     u64 newTotalSize = size + header->alignment - 1 + sizeof(AllocHeader);
     u64 oldTotalSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
-
-#ifndef GR_DIST
-    ReAllocInfo((i64)newTotalSize - oldTotalSize);
-#endif // !GR_DIST
 
     // ================== If the realloc is smaller than the original alloc ==========================
     // ===================== Or if there is enough space after the old alloc to just extend it ========================
@@ -214,9 +196,6 @@ static void* FreelistReAlloc(Allocator* allocator, void* block, u64 size)
     newHeader->start = newBlock;
     newHeader->size = (u32)size;
     newHeader->alignment = header->alignment;
-#ifndef GR_DIST
-    newHeader->tag = header->tag;
-#endif // !GR_DIST
 
     // Free the old data
     FreelistPrimitiveFree(allocator->backendState, header->start, oldTotalSize);
@@ -229,10 +208,6 @@ static void FreelistFree(Allocator* allocator, void* block)
 	// Going slightly before the block and grabbing the alloc header that is stored there for debug info
     AllocHeader* header = (AllocHeader*)block - 1;
     u64 totalFreeSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
-
-#ifndef GR_DIST
-    FreeInfo(totalFreeSize, header->tag);
-#endif
 
     FreelistPrimitiveFree(allocator->backendState, header->start, totalFreeSize);
 }
@@ -415,7 +390,7 @@ typedef struct BumpAllocatorState
 
 // These functions use other functions to do allocations and prepare the blocks for use
 // (adding a header and aligning the block)
-static void* BumpAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag tag);
+static void* BumpAlignedAlloc(Allocator* allocator, u64 size, u32 alignment);
 static void* BumpReAlloc(Allocator* allocator, void* block, u64 size);
 static void BumpFree(Allocator* allocator, void* block);
 
@@ -435,9 +410,6 @@ Allocator CreateBumpAllocator(size_t arenaSize)
     // Allocating memory for state and arena and zeroing state memory
     void* arenaBlock = Alloc(GetGlobalAllocator(), requiredMemory, MEM_TAG_SUB_ARENA);
     ZeroMem(arenaBlock, stateSize);
-#ifndef GR_DIST
-    AllocInfo(stateSize, MEM_TAG_ALLOCATOR_STATE);
-#endif // !GR_DIST
 
     // Getting pointers to the internal components of the allocator
     BumpAllocatorState* state = (BumpAllocatorState*)arenaBlock;
@@ -462,23 +434,17 @@ Allocator CreateBumpAllocator(size_t arenaSize)
 void DestroyBumpAllocator(Allocator allocator)
 {
     BumpAllocatorState* state = (BumpAllocatorState*)allocator.backendState;
-#ifndef GR_DIST
-    FreeInfo(sizeof(BumpAllocatorState), MEM_TAG_ALLOCATOR_STATE);
-#endif // !GR_DIST
 
     // Frees the entire arena including state
     Free(GetGlobalAllocator(), state);
 }
 
-static void* BumpAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag tag)
+static void* BumpAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
 {
 	// Checking if the alignment is greater than min alignment and is a power of two
     GRASSERT_DEBUG((alignment >= MIN_ALIGNMENT) && ((alignment & (alignment - 1)) == 0));
 
     u32 requiredSize = (u32)size + sizeof(AllocHeader) + alignment - 1;
-#ifndef GR_DIST
-    AllocInfo(requiredSize, tag);
-#endif
 
     void* block = BumpPrimitiveAlloc(allocator->backendState, requiredSize);
     u64 blockExcludingHeader = (u64)block + sizeof(AllocHeader);
@@ -490,9 +456,7 @@ static void* BumpAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, Mem
     header->start = block;
     header->size = (u32)size;
     header->alignment = alignment;
-#ifndef GR_DIST
-    header->tag = tag; // Debug only
-#endif
+
     // return the block to the client
     return alignedBlock;
 }
@@ -504,10 +468,6 @@ static void* BumpReAlloc(Allocator* allocator, void* block, u64 size)
     GRASSERT(size != header->size);
     u64 newTotalSize = size + header->alignment - 1 + sizeof(AllocHeader);
     u64 oldTotalSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
-
-#ifndef GR_DIST
-    ReAllocInfo((i64)newTotalSize - oldTotalSize);
-#endif // !GR_DIST
 
     // ================== If the realloc is smaller than the original alloc ==========================
     // ===================== Or if there is enough space after the old alloc to just extend it ========================
@@ -532,9 +492,6 @@ static void* BumpReAlloc(Allocator* allocator, void* block, u64 size)
     newHeader->start = newBlock;
     newHeader->size = (u32)size;
     newHeader->alignment = header->alignment;
-#ifndef GR_DIST
-    newHeader->tag = header->tag;
-#endif // !GR_DIST
 
     // Free the old data
     BumpPrimitiveFree(allocator->backendState, header->start, oldTotalSize);
@@ -547,10 +504,6 @@ static void BumpFree(Allocator* allocator, void* block)
 	// Going slightly before the block and grabbing the alloc header that is stored there for debug info
     AllocHeader* header = (AllocHeader*)block - 1;
     u64 totalFreeSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
-
-#ifndef GR_DIST
-    FreeInfo(totalFreeSize, header->tag);
-#endif
 
     BumpPrimitiveFree(allocator->backendState, header->start, totalFreeSize);
 }
@@ -602,15 +555,12 @@ typedef struct PoolAllocatorState
 {
     void* poolStart;		// Pointer to the start of the memory that is managed by this allocator
     u32* controlBlocks;		// Pointer to the bitblocks that keep track of which blocks are free and which aren't
-#ifndef GR_DIST
-    MemTag* memtagsArray; // Array for keeping track which tag each block belongs to
-#endif
     u32 blockSize;			// Size of each block
     u32 poolSize;			// Amount of blocks in the pool
 	u32 controlBlockCount;	// Amount of bitblocks in controlBlocks (each bitblock is a u32 that kan keep track of 32 blocks in the pool)
 } PoolAllocatorState;
 
-static void* PoolAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag tag);
+static void* PoolAlignedAlloc(Allocator* allocator, u64 size, u32 alignment);
 static void* PoolReAlloc(Allocator* allocator, void* block, u64 size);
 static void PoolFree(Allocator* allocator, void* block);
 
@@ -643,24 +593,12 @@ Allocator CreatePoolAllocator(u32 blockSize, u32 poolSize)
     allocator.BackendFree = PoolFree;
     allocator.backendState = state;
 
-#ifndef GR_DIST
-    AllocInfo(stateSize + blockTrackerSize, MEM_TAG_ALLOCATOR_STATE);
-    state->memtagsArray = Alloc(GetGlobalAllocator(), sizeof(MemTag) * poolSize, MEM_TAG_HASHMAP);
-    ZeroMem(state->memtagsArray, sizeof(MemTag) * poolSize);
-#endif // !GR_DIST
-
     return allocator;
 }
 
 void DestroyPoolAllocator(Allocator allocator)
 {
     PoolAllocatorState* state = (PoolAllocatorState*)allocator.backendState;
-#ifndef GR_DIST
-    u32 stateSize = sizeof(PoolAllocatorState);
-    u32 blockTrackerSize = 4 * state->controlBlockCount;
-    FreeInfo(stateSize + blockTrackerSize, MEM_TAG_ALLOCATOR_STATE);
-    Free(GetGlobalAllocator(), state->memtagsArray);
-#endif // !GR_DIST
 
     // Frees the entire arena including state
     Free(GetGlobalAllocator(), state);
@@ -683,7 +621,7 @@ u32 First0Bit(u32 i)
 	return BitCount((i & (-i)) - 1);
 }
 
-static void* PoolAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag tag)
+static void* PoolAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
 {
 	PoolAllocatorState* state = (PoolAllocatorState*)allocator->backendState;
 
@@ -704,11 +642,6 @@ static void* PoolAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, Mem
 	}
 
 	GRASSERT_MSG(firstFreeBlock < state->poolSize, "Pool allocator ran out of blocks");
-
-#ifndef GR_DIST
-    state->memtagsArray[firstFreeBlock] = tag;
-    AllocInfo(size, tag);
-#endif
 
 	return (u8*)state->poolStart + (state->blockSize * firstFreeBlock);
 }
@@ -735,10 +668,6 @@ static void PoolFree(Allocator* allocator, void* block)
 	// Setting the bit that manages the freed block to zero
 	// Inverting the bits in the bitblock, then setting the bit to one, then inverting the block again
 	state->controlBlocks[controlBlockIndex] = ~((1 << bitAddress) | (~state->controlBlocks[controlBlockIndex]));
-
-#ifndef GR_DIST
-    FreeInfo(state->blockSize, state->memtagsArray[poolBlockAddress]);
-#endif
 }
 
 // =====================================================================================================================================================================================================

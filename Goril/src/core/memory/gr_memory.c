@@ -4,6 +4,7 @@
 #include "../asserts.h"
 #include <string.h>
 
+/*
 #ifndef GR_DIST
 static const char* memTagToText[MAX_MEMORY_TAGS] = {
 	"ALLOCATOR STATE    ",
@@ -23,11 +24,14 @@ static const char* memTagToText[MAX_MEMORY_TAGS] = {
 	"HASHMAP            ",
 };
 #endif // !GR_DIST
+*/
+
 
 typedef struct MemoryState
 {
 	Allocator globalAllocator;
 	size_t arenaSize;
+/*
 #ifndef GR_DIST
 	size_t memorySubsystemStateSize;
 	size_t allocated;
@@ -35,6 +39,8 @@ typedef struct MemoryState
 	u64 netAllocationCount;
 	u32 perTagAllocCount[MAX_MEMORY_TAGS];
 #endif // !GR_DIST
+*/
+
 } MemoryState;
 
 static MemoryState* state = nullptr;
@@ -63,6 +69,7 @@ bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 
 	state->globalAllocator = globalAllocator;
 	state->arenaSize = requiredMemory + globalAllocatorStateSize;
+/*
 #ifndef GR_DIST
 	state->allocated = 0;
 	state->deferredMemory = 0;
@@ -76,7 +83,7 @@ bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 	AllocInfo(state->memorySubsystemStateSize, MEM_TAG_MEMORY_SUBSYS);
 	AllocInfo(0, MEM_TAG_ALLOCATOR_STATE);
 #endif // !GR_DIST
-
+*/
 	g_Allocators = (GlobalAllocators*)Alloc(&globalAllocator, sizeof(GlobalAllocators), MEM_TAG_MEMORY_SUBSYS);
 	g_Allocators->temporary = CreateBumpAllocator(KiB * 5); /// TODO: make configurable
 
@@ -101,6 +108,7 @@ void ShutdownMemory()
 		Free(GetGlobalAllocator(), g_Allocators);
 	}
 
+/*
 #ifndef GR_DIST
 	// Removing all the allocation info from the state to print memory stats one last time for debugging 
 	// This way the programmer can check if everything else in the application was freed by seeing if it prints 0 net allocations
@@ -108,6 +116,7 @@ void ShutdownMemory()
 	FreeInfo(0, MEM_TAG_ALLOCATOR_STATE);
 	PrintMemoryStats();
 #endif // !GR_DIST
+*/
 
 	initialized = false;
 
@@ -123,6 +132,7 @@ Allocator* GetGlobalAllocator()
 	return &state->globalAllocator;
 }
 
+/*
 #ifndef GR_DIST
 const u64 GetMemoryUsage()
 {
@@ -217,3 +227,4 @@ void FreeInfo(size_t size, MemTag tag)
 	state->perTagAllocCount[tag]--;
 }
 #endif // !GR_DIST
+*/

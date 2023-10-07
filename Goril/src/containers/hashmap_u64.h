@@ -27,7 +27,7 @@ typedef struct HashmapU64
 // note that the hashmap stores pointers to objects, so those pointers can not be invalidated
 // or the hashmap has outdated pointers
 // backingArrayElementCount: amount of elements in the backing array
-HashmapU64* MapU64Create(Allocator* allocator, mem_tag memtag, u32 backingArrayElementCount, u32 maxCollisions, HashFunctionU64 hashFunction);
+HashmapU64* MapU64Create(Allocator* allocator, MemTag memtag, u32 backingArrayElementCount, u32 maxCollisions, HashFunctionU64 hashFunction);
 
 // Destroys everything about the map, except the objects
 void MapU64Destroy(HashmapU64* hashmap);

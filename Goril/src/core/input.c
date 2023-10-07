@@ -27,7 +27,7 @@ bool InitializeInput()
 	GRASSERT_DEBUG(state == nullptr); // If this fails it means init was called twice
 	GRINFO("Initializing input subsystem...");
 
-	state = (InputState*)Alloc(GetGlobalAllocator(), sizeof(InputState), MEM_TAG_INPUT_SUBSYS);
+	state = Alloc(GetGlobalAllocator(), sizeof(InputState), MEM_TAG_INPUT_SUBSYS);
 	ZeroMem(state, sizeof(InputState));
 
 	return true;

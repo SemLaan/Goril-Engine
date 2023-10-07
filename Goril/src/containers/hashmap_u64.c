@@ -3,7 +3,7 @@
 #include "core/asserts.h"
 
 
-HashmapU64* MapU64Create(Allocator* allocator, mem_tag memtag, u32 backingArrayElementCount, u32 maxCollisions, HashFunctionU64 hashFunction)
+HashmapU64* MapU64Create(Allocator* allocator, MemTag memtag, u32 backingArrayElementCount, u32 maxCollisions, HashFunctionU64 hashFunction)
 {
     HashmapU64* hashmap = Alloc(allocator, sizeof(*hashmap) + backingArrayElementCount * sizeof(MapEntryU64), memtag);
     hashmap->backingArray = (MapEntryU64*)(hashmap + 1);

@@ -2,7 +2,7 @@
 #include <core/application.h>
 #include "test_defines.h"
 #include <platform/platform.h>
-#include <core/input.h>
+#include <core/event.h>
 
 #include "core/memory_tests.h"
 #include "core/event_tests.h"
@@ -12,15 +12,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static bool running = true;
+
+bool QuitListener(EventCode code, EventData data)
+{
+	running = false;
+	return false;
+}
+
 int main()
 {
 	// -------------- Init engine ------------------------
 	GameConfig config = {};
-	config.windowWidth = 0;
-	config.windowHeight = 0;
+	config.windowWidth = 1;
+	config.windowHeight = 1;
 	config.windowTitle = "Testing window";
 	config.game_instance_memory_requirement = RESERVED_GAME_MEMORY;
 	InitializeEngine(config);
+
+	RegisterEventListener(EVCODE_QUIT, QuitListener);
+	RegisterEventListener(EVCODE_KEY_DOWN, QuitListener);
 
 	// Testing logging functions
 	GRFATAL("Testing log functions: %s", "succesfull");
@@ -59,11 +70,9 @@ int main()
 		GRINFO("=============== All tests succesfull ==============");
 	}
 
-	while (true)
+	while (running)
 	{
 		PlatformProcessMessage();
-		if (GetKeyDown(KEY_ESCAPE))
-			break;
 	}
 
 	// Shutdown

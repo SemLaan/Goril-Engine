@@ -14,7 +14,7 @@ bool Init()
 {
 	gamestate = Alloc(GetGlobalAllocator(), sizeof(*gamestate), MEM_TAG_GAME);
 
-	PrintMemoryStats();
+	// TODO: PrintMemoryStats();
 
 #define VERTEX_COUNT 8
 	Vertex vertices[VERTEX_COUNT] =
