@@ -6,8 +6,8 @@ typedef struct GameConfig
 {
 	u64 game_instance_memory_requirement;
 	const char* windowTitle;
-	u32 width;
-	u32 height;
+	u32 windowWidth;
+	u32 windowHeight;
 } GameConfig;
 
 typedef bool (*PFN_Init)();

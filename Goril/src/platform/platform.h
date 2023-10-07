@@ -4,7 +4,7 @@
 #include "math/math_types.h"
 
 
-bool InitializePlatform(const char* windowName);
+bool InitializePlatform(const char* windowName, u32 windowWidth, u32 windowHeight);
 
 void ShutdownPlatform();
 

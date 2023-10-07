@@ -43,7 +43,7 @@ bool InitializeEngine(GameConfig config)
 		GRFATAL("Input system failed to initialize");
 		return false;
 	}
-	if (!InitializePlatform(config.windowTitle))
+	if (!InitializePlatform(config.windowTitle, config.windowWidth, config.windowHeight))
 	{
 		GRFATAL("Platform failed to initialize");
 		return false;

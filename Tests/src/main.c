@@ -16,8 +16,8 @@ int main()
 {
 	// -------------- Init engine ------------------------
 	GameConfig config = {};
-	config.width = 0;
-	config.height = 0;
+	config.windowWidth = 0;
+	config.windowHeight = 0;
 	config.windowTitle = "Testing window";
 	config.game_instance_memory_requirement = RESERVED_GAME_MEMORY;
 	InitializeEngine(config);

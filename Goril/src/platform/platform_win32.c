@@ -16,7 +16,7 @@
 #include "core/event.h"
 #include "core/input.h"
 
-
+// TODO: change all windows functions to their "A" version
 
 typedef struct PlatformState
 {
@@ -37,7 +37,7 @@ static PlatformState* state = nullptr;
 // Forward declaring window callbacks
 static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-bool InitializePlatform(const char* windowName) // TODO: take in window width, height and use it
+bool InitializePlatform(const char* windowName, u32 windowWidth, u32 windowHeight) // TODO: take in window width, height and use it
 {
 	GRASSERT_DEBUG(state == nullptr); // If this fails init platform was called twice
 	GRINFO("Initializing platform subsystem...");
@@ -70,10 +70,13 @@ bool InitializePlatform(const char* windowName) // TODO: take in window width, h
 	state->windowStyle = WS_OVERLAPPEDWINDOW;
 	state->windowExStyle = WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW;
 
-	state->hwnd = CreateWindowEx(
+    RECT realWindowSize = { 0, 0, windowWidth, windowHeight};
+    AdjustWindowRectEx(&realWindowSize, state->windowStyle, 0, state->windowExStyle);
+
+	state->hwnd = CreateWindowExA(
 		state->windowExStyle, className, windowName,
 		state->windowStyle,
-		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		600, 300, realWindowSize.right - realWindowSize.left, realWindowSize.bottom - realWindowSize.top,
 		NULL, NULL, GetModuleHandle(NULL), NULL
 	);
 
