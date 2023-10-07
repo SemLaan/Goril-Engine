@@ -4,27 +4,6 @@
 #include "../asserts.h"
 #include <string.h>
 
-/*
-#ifndef GR_DIST
-static const char* memTagToText[MAX_MEMORY_TAGS] = {
-	"ALLOCATOR STATE    ",
-	"SUB ARENA          ",
-	"MEMORY SUBSYS      ",
-	"LOGGING SUBSYS     ",
-	"PLATFORM SUBSYS    ",
-	"EVENT SUBSYS       ",
-	"RENDERER SUBSYS    ",
-	"INPUT SUBSYS       ",
-	"GAME               ",
-	"TEST               ",
-	"DARRAY             ",
-	"VERTEX BUFFER      ",
-	"INDEX BUFFER       ",
-	"TEXTURE            ",
-	"HASHMAP            ",
-};
-#endif // !GR_DIST
-*/
 
 
 typedef struct MemoryState

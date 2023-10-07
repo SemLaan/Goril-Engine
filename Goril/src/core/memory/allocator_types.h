@@ -3,7 +3,6 @@
 #include "defines.h"
 
 
-// Forward declaring mem_tag enum
 typedef enum MemTag
 {
 	MEM_TAG_ALLOCATOR_STATE,

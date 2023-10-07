@@ -3,7 +3,7 @@
 
 #include "test_defines.h"
 #include "../test_manager.h"
-#include <core/memory/gr_memory.h>
+#include <core/meminc.h>
 
 
 static bool bump_allocator_test()

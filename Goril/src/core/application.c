@@ -3,6 +3,7 @@
 #include "logger.h"
 #include "platform/platform.h"
 #include "memory/memory_subsys.h"
+#include "memory/memory_debug_tools.h"
 #include "event.h"
 #include "input.h"
 #include "renderer/renderer.h"
@@ -27,6 +28,7 @@ bool InitializeEngine(GameConfig config)
 	size_t engineMemoryRequirement = MiB;
 	size_t subsysAllocatorRequirement = KiB * 5;
 
+	START_MEMORY_DEBUG_SUBSYS();
 	// Initialize subsystems
 	if (!InitializeMemory(config.game_instance_memory_requirement + engineMemoryRequirement, subsysAllocatorRequirement))
 	{
@@ -120,6 +122,7 @@ void ShutdownEngine()
 	ShutdownInput();
 	ShutdownEvent();
 	ShutdownMemory();
+	SHUTDOWN_MEMORY_DEBUG_SUBSYS();
 
 	WriteLogsToFile();
 }
