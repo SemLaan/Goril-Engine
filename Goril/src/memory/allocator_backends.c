@@ -1,9 +1,10 @@
 #include "allocator_backends.h"
 
 #include <core/asserts.h>
+// TODO: remove this, since im pretty sure it's only used for ceil and floor
 #include <math.h>
+// This is here for malloc, this is the only place it's called
 #include <stdlib.h>
-#include <string.h>
 
 #include "core/gr_memory.h"
 
@@ -65,7 +66,7 @@ Allocator CreateFreelistAllocator(size_t arenaSize, bool safetySpace /*default: 
 
     // Allocating memory for state and arena and zeroing state memory
     void* arenaBlock = Alloc(GetGlobalAllocator(), requiredMemory, MEM_TAG_SUB_ARENA);
-    memset(arenaBlock, 0, stateSize);
+    ZeroMem(arenaBlock, stateSize);
 #ifndef GR_DIST
     AllocInfo(stateSize, MEM_TAG_ALLOCATOR_STATE);
 #endif // !GR_DIST
@@ -425,7 +426,7 @@ Allocator CreateBumpAllocator(size_t arenaSize, bool safetySpace /*default: true
 
     // Allocating memory for state and arena and zeroing state memory
     void* arenaBlock = Alloc(GetGlobalAllocator(), requiredMemory, MEM_TAG_SUB_ARENA);
-    memset(arenaBlock, 0, stateSize);
+    ZeroMem(arenaBlock, stateSize);
 #ifndef GR_DIST
     AllocInfo(stateSize, MEM_TAG_ALLOCATOR_STATE);
 #endif // !GR_DIST
@@ -615,7 +616,7 @@ Allocator CreatePoolAllocator(u32 blockSize, u32 poolSize)
 
     // Allocating memory for state and arena and zeroing state memory
     void* arenaBlock = Alloc(GetGlobalAllocator(), requiredMemory, MEM_TAG_SUB_ARENA);
-    memset(arenaBlock, 0, stateSize + blockTrackerSize);
+    ZeroMem(arenaBlock, stateSize + blockTrackerSize);
 
     // Getting pointers to the internal components of the allocator
     PoolAllocatorState* state = (PoolAllocatorState*)arenaBlock;
@@ -637,7 +638,7 @@ Allocator CreatePoolAllocator(u32 blockSize, u32 poolSize)
 #ifndef GR_DIST
     AllocInfo(stateSize + blockTrackerSize, MEM_TAG_ALLOCATOR_STATE);
     state->memtagsArray = Alloc(GetGlobalAllocator(), sizeof(mem_tag) * poolSize, MEM_TAG_HASHMAP);
-    memset(state->memtagsArray, 0, sizeof(mem_tag) * poolSize);
+    ZeroMem(state->memtagsArray, sizeof(mem_tag) * poolSize);
 #endif // !GR_DIST
 
     return allocator;
@@ -754,7 +755,7 @@ bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* o
         return false;
     }
 
-    memset(arenaBlock, 0, stateSize);
+    ZeroMem(arenaBlock, stateSize);
 
     // Getting pointers to the internal components of the allocator
     FreelistState* state = (FreelistState*)arenaBlock;

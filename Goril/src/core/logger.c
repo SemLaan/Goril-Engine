@@ -3,6 +3,7 @@
 #include "platform/platform.h"
 #include "asserts.h"
 #include "gr_memory.h"
+// needed for string formatting and variadic args
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -56,7 +57,10 @@ void Log(log_level level, const char* message, ...)
 	if (file == nullptr)
 		file = fopen("console.log", "w+");
 	fprintf(file, final_message);
+
+	// Actually printing to console and platform specific console
 	PlatformLogString(level, final_message);
+	printf(final_message);
 
 	if (result >= MAX_USER_LOG_CHARS || result < 0)
 		PlatformLogString(LOG_LEVEL_FATAL, "\nLogging failed, too many characters or formatting error");

@@ -1,7 +1,6 @@
 #include "darray.h"
 
 #include "core/asserts.h"
-#include <string.h>
 
 // NOTE: Darray size NEEDS to be smaller than DARRAY_MIN_ALIGNMENT
 typedef struct Darray
@@ -60,7 +59,7 @@ void* DarrayPushback(void* elements, void* element)
 		state->memoryBlock = temp;
 	}
 
-	memcpy((u8*)elements + (state->stride * state->size), element, (size_t)state->stride);
+	MemCopy((u8*)elements + (state->stride * state->size), element, (size_t)state->stride);
 	state->size++;
 	return elements;
 }
@@ -105,7 +104,7 @@ bool DarrayContains(void* elements, void* element)
 
 	for (u32 i = 0; i < state->size; i++)
 	{
-		if (0 == memcmp((u8*)elements + (i * state->stride), element, state->stride))
+		if (CompareMemory((u8*)elements + (i * state->stride), element, state->stride))
 			return true;
 	}
 

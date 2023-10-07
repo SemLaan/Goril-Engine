@@ -1,7 +1,6 @@
 #include "hashmap_u64.h"
 
 #include "core/asserts.h"
-#include <string.h>
 
 
 HashmapU64* MapU64Create(Allocator* allocator, mem_tag memtag, u32 backingArrayElementCount, u32 maxCollisions, HashFunctionU64 hashFunction)
@@ -13,7 +12,7 @@ HashmapU64* MapU64Create(Allocator* allocator, mem_tag memtag, u32 backingArrayE
     hashmap->linkedEntryPool = CreatePoolAllocator(sizeof(MapEntryU64), maxCollisions);
     hashmap->allocator = allocator;
 
-    memset(hashmap->backingArray, 0, sizeof(MapEntryU64) * backingArrayElementCount);
+    ZeroMem(hashmap->backingArray, sizeof(MapEntryU64) * backingArrayElementCount);
 
     return hashmap;
 }
@@ -43,7 +42,7 @@ void MapU64Insert(HashmapU64* hashmap, u64 key, void* value)
         else
         {
             currentEntry->next = Alloc(&hashmap->linkedEntryPool, sizeof(MapEntryU64), MEM_TAG_HASHMAP);
-            memset(currentEntry->next, 0, sizeof(MapEntryU64));
+            ZeroMem(currentEntry->next, sizeof(MapEntryU64));
             currentEntry = currentEntry->next;
         }
     }
@@ -95,7 +94,7 @@ void* MapU64Delete(HashmapU64* hashmap, u64 key)
             }
             else if (previousEntry == nullptr) // First entry and there is no next entry (next is nullptr)
             {
-                memset(currentEntry, 0, sizeof(*currentEntry));
+                ZeroMem(currentEntry, sizeof(*currentEntry));
             }
             else // if there is a previous entry, meaning current entry is in a linked list and NOT in the backing array
             {

@@ -3,7 +3,6 @@
 #include "core/gr_memory.h"
 #include "core/asserts.h"
 
-#include <string.h>
 
 typedef struct EventState
 {
@@ -17,7 +16,7 @@ bool InitializeEvent()
 	GRASSERT_DEBUG(state == nullptr); // If this triggers init got called twice
 	GRINFO("Initializing event subsystem...");
 	state = Alloc(GetGlobalAllocator(), sizeof(EventState), MEM_TAG_EVENT_SUBSYS);
-	memset(state, 0, sizeof(EventState));
+	ZeroMem(state, sizeof(EventState));
 
 	return true;
 }

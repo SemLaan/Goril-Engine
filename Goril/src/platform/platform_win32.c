@@ -15,7 +15,6 @@
 #include "core/gr_memory.h"
 #include "core/event.h"
 #include "core/input.h"
-#include <stdio.h>
 
 
 
@@ -144,7 +143,6 @@ void PlatformLogString(log_level level, const char* message)
 	}
 	SetConsoleTextAttribute(hConsole, logLevelColors[level]);
 	OutputDebugStringA(message);
-	printf(message);
 }
 
 vec2i GetPlatformWindowSize()

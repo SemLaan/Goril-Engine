@@ -139,6 +139,16 @@ void MemCopy(void* destination, const void* source, size_t size)
 	}
 }
 
+void ZeroMem(void* block, u64 size)
+{
+	memset(block, 0, size);
+}
+
+bool CompareMemory(void* a, void* b, u64 size)
+{
+	return 0 == memcmp(a, b, size);
+}
+
 #ifndef GR_DIST
 const u64 GetMemoryUsage()
 {

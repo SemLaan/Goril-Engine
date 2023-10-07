@@ -4,7 +4,6 @@
 #include "core/gr_memory.h"
 #include "core/event.h"
 #include "platform/platform.h"
-#include <string.h>
 
 
 typedef struct InputState
@@ -29,7 +28,7 @@ bool InitializeInput()
 	GRINFO("Initializing input subsystem...");
 
 	state = (InputState*)Alloc(GetGlobalAllocator(), sizeof(InputState), MEM_TAG_INPUT_SUBSYS);
-	memset(state, 0, sizeof(InputState));
+	ZeroMem(state, sizeof(InputState));
 
 	return true;
 }

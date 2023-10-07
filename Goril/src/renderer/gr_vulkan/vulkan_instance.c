@@ -2,6 +2,7 @@
 
 #include "vulkan_debug_messenger.h"
 #include "core/logger.h"
+// TODO: make a custom string thing with strncmp replacement so string.h doesn't have to be included
 #include <string.h>
 
 bool CreateVulkanInstance(void** requiredExtensionsDarray, void** requiredLayersDarray)

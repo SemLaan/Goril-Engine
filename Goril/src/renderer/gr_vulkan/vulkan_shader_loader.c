@@ -1,6 +1,7 @@
 #include "vulkan_shader_loader.h"
 
 #include "core/logger.h"
+// TODO: make file io system so stdio doesn't have to be used
 #include <stdio.h>
 
 

@@ -1,6 +1,5 @@
 #include "hashmap_str.h"
 
-#include <string.h>
 #include "core/asserts.h"
 
 HashmapStr* MapStrCreate(Allocator* allocator, mem_tag memtag, u32 backingArrayElementCount, u32 maxCollisions, u32 maxKeyLength, HashFunctionStr hashFunction)
@@ -14,7 +13,7 @@ HashmapStr* MapStrCreate(Allocator* allocator, mem_tag memtag, u32 backingArrayE
     hashmap->allocator = allocator;
     hashmap->maxKeyLength = maxKeyLength;
 
-    memset(hashmap->backingArray, 0, sizeof(MapEntryStr) * backingArrayElementCount);
+    ZeroMem(hashmap->backingArray, sizeof(MapEntryStr) * backingArrayElementCount);
 
     return hashmap;
 }
@@ -44,7 +43,7 @@ void MapStrInsert(HashmapStr* hashmap, const char* key, u32 keyLength, void* val
         else
         {
             currentEntry->next = Alloc(&hashmap->linkedEntryPool, sizeof(MapEntryStr), MEM_TAG_HASHMAP);
-            memset(currentEntry->next, 0, sizeof(MapEntryStr));
+            ZeroMem(currentEntry->next, sizeof(MapEntryStr));
             currentEntry = currentEntry->next;
         }
     }

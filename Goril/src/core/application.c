@@ -7,6 +7,7 @@
 #include "input.h"
 #include "renderer/renderer.h"
 #include "timer.h"
+// TODO: remove this, currently it is being used for string formatting the window title
 #include <stdio.h>
 
 static bool appRunning = false;

@@ -2,11 +2,11 @@
 #include "math_types.h"
 
 #include "core/asserts.h"
+// TODO: make it so this doesn't have to be included everywhere, because it is big and it's only needed for trig funcs
 #include <math.h>
 
 #define PI 3.14159265358979323846f
 
-// TODO: explicitly tell the compiler to inline all of this stuff
 
 static vec3 vec3_from_float(f32 value)
 {

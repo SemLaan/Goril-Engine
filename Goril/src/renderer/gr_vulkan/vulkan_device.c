@@ -1,6 +1,7 @@
 #include "vulkan_device.h"
 
 #include "core/logger.h"
+// TODO: make a custom string thing with strncmp replacement so string.h doesn't have to be included
 #include <string.h>
 
 SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
