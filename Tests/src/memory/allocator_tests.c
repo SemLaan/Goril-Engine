@@ -11,7 +11,7 @@ static bool bump_allocator_test()
 	// TODO: remove the alloc header size once bump allocator doesn't use it anymore
 	size_t arena_size = 12 + GetFreelistAllocHeaderSize() * 2 + MIN_ALIGNMENT * 2;
 
-	Allocator allocator = CreateBumpAllocator(arena_size);
+	Allocator allocator = CreateBumpAllocator(GetGlobalAllocator(), arena_size);
 
 	void* temp = Alloc(&allocator, 8, MEM_TAG_TEST);
 	void* temp2 = Alloc(&allocator, 4, MEM_TAG_TEST);
@@ -21,7 +21,7 @@ static bool bump_allocator_test()
 	void* temp3 = Alloc(&allocator, 12, MEM_TAG_TEST);
 	Free(&allocator, temp3);
 
-	DestroyBumpAllocator(allocator);
+	DestroyBumpAllocator(GetGlobalAllocator(), allocator);
 
 	return true;
 }
@@ -30,7 +30,7 @@ static bool bump_allocator_realloc_test()
 {
 	size_t arena_size = 1000 + GetFreelistAllocHeaderSize() + MIN_ALIGNMENT;
 
-	Allocator allocator = CreateBumpAllocator(arena_size);
+	Allocator allocator = CreateBumpAllocator(GetGlobalAllocator(), arena_size);
 
 	void* temp = Alloc(&allocator, 700, MEM_TAG_TEST);
 	temp = Realloc(&allocator, temp, 800);
@@ -39,7 +39,7 @@ static bool bump_allocator_realloc_test()
 	void* temp4 = Alloc(&allocator, 1000, MEM_TAG_TEST);
 	Free(&allocator, temp4);
 
-	DestroyBumpAllocator(allocator);
+	DestroyBumpAllocator(GetGlobalAllocator(), allocator);
 
 	return true;
 }
@@ -49,7 +49,7 @@ static bool freelist_allocator_test()
 {
 	size_t arena_size = 1000 + GetFreelistAllocHeaderSize() + MIN_ALIGNMENT;
 
-	Allocator allocator = CreateFreelistAllocator(arena_size);
+	Allocator allocator = CreateFreelistAllocator(GetGlobalAllocator(), arena_size);
 
 	// Testing full allocation and deallocation
 	void* temp = Alloc(&allocator, 1000, MEM_TAG_TEST);
@@ -74,7 +74,7 @@ static bool freelist_allocator_test()
 	temp = Alloc(&allocator, 1000, MEM_TAG_TEST);
 	Free(&allocator, temp);
 
-	DestroyFreelistAllocator(allocator);
+	DestroyFreelistAllocator(GetGlobalAllocator(), allocator);
 
 	return true;
 }
@@ -83,7 +83,7 @@ static bool freelist_allocator_realloc_test()
 {
 	size_t arena_size = 1000 + GetFreelistAllocHeaderSize() + MIN_ALIGNMENT;
 
-	Allocator allocator = CreateFreelistAllocator(arena_size);
+	Allocator allocator = CreateFreelistAllocator(GetGlobalAllocator(), arena_size);
 
 	void* temp = Alloc(&allocator, 700, MEM_TAG_TEST);
 	temp = Realloc(&allocator, temp, 800);
@@ -111,7 +111,7 @@ static bool freelist_allocator_realloc_test()
 	Free(&allocator, temp5);
 	Free(&allocator, temp6);
 
-	DestroyFreelistAllocator(allocator);
+	DestroyFreelistAllocator(GetGlobalAllocator(), allocator);
 
 	return true;
 }
@@ -120,7 +120,7 @@ static bool freelist_allocator_alignment_test()
 {
 	size_t arena_size = 1000 + GetFreelistAllocHeaderSize() + MIN_ALIGNMENT;
 
-	Allocator allocator = CreateFreelistAllocator(arena_size);
+	Allocator allocator = CreateFreelistAllocator(GetGlobalAllocator(), arena_size);
 
 	void* temp = AlignedAlloc(&allocator, 200, 8, MEM_TAG_TEST);
 	expect_should_be(0, (u64)temp & 7);
@@ -134,7 +134,7 @@ static bool freelist_allocator_alignment_test()
 	void* temp4 = Alloc(&allocator, 1000, MEM_TAG_TEST);
 	Free(&allocator, temp4);
 
-	DestroyFreelistAllocator(allocator);
+	DestroyFreelistAllocator(GetGlobalAllocator(), allocator);
 
 	return true;
 }
@@ -154,7 +154,7 @@ static bool pool_allocator_test()
 
 	PoolTester** testElements = malloc(sizeof(*testElements) * poolElementCount);
 
-	Allocator allocator = CreatePoolAllocator(sizeof(PoolTester), poolElementCount);
+	Allocator allocator = CreatePoolAllocator(GetGlobalAllocator(), sizeof(PoolTester), poolElementCount);
 
 	for (u32 i = 0; i < poolElementCount; ++i)
 	{
@@ -192,7 +192,7 @@ static bool pool_allocator_test()
 
 	free(testElements);
 
-	DestroyPoolAllocator(allocator);
+	DestroyPoolAllocator(GetGlobalAllocator(), allocator);
 
 	return true;
 }

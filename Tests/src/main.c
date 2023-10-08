@@ -34,12 +34,12 @@ int main()
 	RegisterEventListener(EVCODE_KEY_DOWN, QuitListener);
 
 	// Testing logging functions
-	GRFATAL("Testing log functions: %s", "succesfull");
-	GRERROR("Testing log functions: %s", "succesfull");
-	GRWARN("Testing log functions: %s", "succesfull");
-	GRINFO("Testing log functions: %s", "succesfull");
-	GRDEBUG("Testing log functions: %s", "succesfull");
-	GRTRACE("Testing log functions: %s", "succesfull");
+	//GRFATAL("Testing log functions: %s", "succesfull");
+	//GRERROR("Testing log functions: %s", "succesfull");
+	//GRWARN("Testing log functions: %s", "succesfull");
+	//GRINFO("Testing log functions: %s", "succesfull");
+	//GRDEBUG("Testing log functions: %s", "succesfull");
+	//GRTRACE("Testing log functions: %s", "succesfull");
 
 	// Initing test manager
 	if (!initialize_test_manager())
