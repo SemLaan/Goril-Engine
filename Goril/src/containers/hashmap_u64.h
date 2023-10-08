@@ -6,6 +6,9 @@
 
 typedef u32 (*HashFunctionU64)(u64 key);
 
+// https://gist.github.com/badboy/6267743#64-bit-to-32-bit-hash-functions
+u32 Hash6432Shift(u64 key);
+
 
 typedef struct MapEntryU64
 {

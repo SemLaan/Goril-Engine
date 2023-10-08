@@ -3,6 +3,21 @@
 #include "core/asserts.h"
 
 
+// ====================================== Hash functions
+// https://gist.github.com/badboy/6267743#64-bit-to-32-bit-hash-functions
+u32 Hash6432Shift(u64 key)
+{
+  key = (~key) + (key << 18); // key = (key << 18) - key - 1;
+  key = key ^ (key >> 31);
+  key = key * 21; // key = (key + (key << 2)) + (key << 4);
+  key = key ^ (key >> 11);
+  key = key + (key << 6);
+  key = key ^ (key >> 22);
+  return (u32)key;
+}
+
+
+// ====================================== Hash map
 HashmapU64* MapU64Create(Allocator* allocator, MemTag memtag, u32 backingArrayElementCount, u32 maxCollisions, HashFunctionU64 hashFunction)
 {
     HashmapU64* hashmap = Alloc(allocator, sizeof(*hashmap) + backingArrayElementCount * sizeof(MapEntryU64), memtag);
