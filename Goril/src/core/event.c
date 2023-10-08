@@ -1,6 +1,6 @@
 #include "event.h"
 #include "containers/darray.h"
-#include "core/memory/gr_memory.h"
+#include "core/memory/memory_subsys.h"
 #include "core/asserts.h"
 
 

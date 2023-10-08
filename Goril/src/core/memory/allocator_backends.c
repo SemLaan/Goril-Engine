@@ -1,4 +1,4 @@
-#include "allocator_backends.h"
+#include "allocator_frontends.h"
 
 #include <core/asserts.h>
 // TODO: remove this, since im pretty sure it's only used for ceil and floor
@@ -6,25 +6,25 @@
 // This is here for malloc, this is the only place it's called
 #include <stdlib.h>
 
-#include "gr_memory.h"
 #include "mem_utils.h"
 
-#define FREELIST_NODE_FACTOR 10
+// Space added to allocators
+#define ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE KiB
 
+// TODO: rename to freelist allocheader
 // All non-pool allocators store this in front of the user block
 typedef struct AllocHeader
 {
     void* start;
     u32 size; // Size of the client allocation
     u32 alignment;
-#ifndef GR_DIST
-    mem_tag tag; // Only for debugging, gets optimized out of dist builds
-#endif
 } AllocHeader;
 
 // =====================================================================================================================================================================================================
 // ================================== Freelist allocator ===============================================================================================================================================
 // =====================================================================================================================================================================================================
+#define FREELIST_NODE_FACTOR 10
+
 typedef struct FreelistNode
 {
     void* address;
@@ -43,7 +43,7 @@ typedef struct FreelistState
 
 // These functions use other functions to do allocations and prepare the blocks for use
 // (adding a header and aligning the block)
-static void* FreelistAlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 alignment);
+static void* FreelistAlignedAlloc(Allocator* allocator, u64 size, u32 alignment);
 static void* FreelistReAlloc(Allocator* allocator, void* block, u64 size);
 static void FreelistFree(Allocator* allocator, void* block);
 
@@ -52,10 +52,9 @@ static void* FreelistPrimitiveAlloc(void* backendState, size_t size);
 static bool FreelistPrimitiveTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize);
 static void FreelistPrimitiveFree(void* backendState, void* block, size_t size);
 
-Allocator CreateFreelistAllocator(size_t arenaSize, bool safetySpace /*default: true*/)
+Allocator CreateFreelistAllocator(Allocator* parentAllocator, size_t arenaSize)
 {
-    if (safetySpace)
-        arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
+    arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
 
     // Calculating the required nodes for an arena of the given size
     // Make one node for every "freelist node factor" nodes that fit in the arena
@@ -66,11 +65,8 @@ Allocator CreateFreelistAllocator(size_t arenaSize, bool safetySpace /*default: 
     size_t requiredMemory = arenaSize + stateSize;
 
     // Allocating memory for state and arena and zeroing state memory
-    void* arenaBlock = Alloc(GetGlobalAllocator(), requiredMemory, MEM_TAG_SUB_ARENA);
+    void* arenaBlock = Alloc(parentAllocator, requiredMemory, MEM_TAG_SUB_ARENA);
     ZeroMem(arenaBlock, stateSize);
-#ifndef GR_DIST
-    AllocInfo(stateSize, MEM_TAG_ALLOCATOR_STATE);
-#endif // !GR_DIST
 
     // Getting pointers to the internal components of the allocator
     FreelistState* state = (FreelistState*)arenaBlock;
@@ -92,22 +88,20 @@ Allocator CreateFreelistAllocator(size_t arenaSize, bool safetySpace /*default: 
     // Linking the allocator object to the freelist functions
     Allocator allocator = {};
     allocator.BackendAlloc = FreelistAlignedAlloc;
-    allocator.BackendReAlloc = FreelistReAlloc;
+    allocator.BackendRealloc = FreelistReAlloc;
     allocator.BackendFree = FreelistFree;
     allocator.backendState = state;
+    allocator.parentAllocator = parentAllocator;
 
     return allocator;
 }
 
-void DestroyFreelistAllocator(Allocator allocator)
+void DestroyFreelistAllocator(Allocator* parentAllocator, Allocator allocator)
 {
     FreelistState* state = (FreelistState*)allocator.backendState;
-#ifndef GR_DIST
-    FreeInfo(sizeof(FreelistState) + state->nodeCount * sizeof(FreelistNode), MEM_TAG_ALLOCATOR_STATE);
-#endif // !GR_DIST
 
     // Frees the entire arena including state
-    Free(GetGlobalAllocator(), state);
+    Free(parentAllocator, state);
 }
 
 size_t FreelistGetFreeNodes(void* backendState)
@@ -123,6 +117,11 @@ size_t FreelistGetFreeNodes(void* backendState)
     }
 
     return count;
+}
+
+u32 GetFreelistAllocHeaderSize()
+{
+    return sizeof(AllocHeader);
 }
 
 static FreelistNode* GetNodeFromPool(FreelistState* state)
@@ -144,15 +143,12 @@ static void ReturnNodeToPool(FreelistNode* node)
     node->size = 0;
 }
 
-static void* FreelistAlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 alignment)
+static void* FreelistAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
 {
 	// Checking if the alignment is greater than min alignment and is a power of two
     GRASSERT_DEBUG((alignment >= MIN_ALIGNMENT) && ((alignment & (alignment - 1)) == 0));
 
     u32 requiredSize = (u32)size + sizeof(AllocHeader) + alignment - 1;
-#ifndef GR_DIST
-    AllocInfo(requiredSize, tag);
-#endif
 
     void* block = FreelistPrimitiveAlloc(allocator->backendState, requiredSize);
     u64 blockExcludingHeader = (u64)block + sizeof(AllocHeader);
@@ -164,9 +160,7 @@ static void* FreelistAlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u
     header->start = block;
     header->size = (u32)size;
     header->alignment = alignment;
-#ifndef GR_DIST
-    header->tag = tag; // Debug only
-#endif
+
     // return the block to the client
     return alignedBlock;
 }
@@ -178,10 +172,6 @@ static void* FreelistReAlloc(Allocator* allocator, void* block, u64 size)
     GRASSERT(size != header->size);
     u64 newTotalSize = size + header->alignment - 1 + sizeof(AllocHeader);
     u64 oldTotalSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
-
-#ifndef GR_DIST
-    ReAllocInfo((i64)newTotalSize - oldTotalSize);
-#endif // !GR_DIST
 
     // ================== If the realloc is smaller than the original alloc ==========================
     // ===================== Or if there is enough space after the old alloc to just extend it ========================
@@ -206,9 +196,6 @@ static void* FreelistReAlloc(Allocator* allocator, void* block, u64 size)
     newHeader->start = newBlock;
     newHeader->size = (u32)size;
     newHeader->alignment = header->alignment;
-#ifndef GR_DIST
-    newHeader->tag = header->tag;
-#endif // !GR_DIST
 
     // Free the old data
     FreelistPrimitiveFree(allocator->backendState, header->start, oldTotalSize);
@@ -221,10 +208,6 @@ static void FreelistFree(Allocator* allocator, void* block)
 	// Going slightly before the block and grabbing the alloc header that is stored there for debug info
     AllocHeader* header = (AllocHeader*)block - 1;
     u64 totalFreeSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
-
-#ifndef GR_DIST
-    FreeInfo(totalFreeSize, header->tag);
-#endif
 
     FreelistPrimitiveFree(allocator->backendState, header->start, totalFreeSize);
 }
@@ -407,7 +390,7 @@ typedef struct BumpAllocatorState
 
 // These functions use other functions to do allocations and prepare the blocks for use
 // (adding a header and aligning the block)
-static void* BumpAlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 alignment);
+static void* BumpAlignedAlloc(Allocator* allocator, u64 size, u32 alignment);
 static void* BumpReAlloc(Allocator* allocator, void* block, u64 size);
 static void BumpFree(Allocator* allocator, void* block);
 
@@ -416,21 +399,17 @@ static void* BumpPrimitiveAlloc(void* backendState, size_t size);
 static bool BumpPrimitiveTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize);
 static void BumpPrimitiveFree(void* backendState, void* block, size_t size);
 
-Allocator CreateBumpAllocator(size_t arenaSize, bool safetySpace /*default: true*/)
+Allocator CreateBumpAllocator(Allocator* parentAllocator, size_t arenaSize)
 {
-    if (safetySpace)
-        arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
+    arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
 
     // Calculating required memory (client size + state size)
     size_t stateSize = sizeof(BumpAllocatorState);
     size_t requiredMemory = arenaSize + stateSize;
 
     // Allocating memory for state and arena and zeroing state memory
-    void* arenaBlock = Alloc(GetGlobalAllocator(), requiredMemory, MEM_TAG_SUB_ARENA);
+    void* arenaBlock = Alloc(parentAllocator, requiredMemory, MEM_TAG_SUB_ARENA);
     ZeroMem(arenaBlock, stateSize);
-#ifndef GR_DIST
-    AllocInfo(stateSize, MEM_TAG_ALLOCATOR_STATE);
-#endif // !GR_DIST
 
     // Getting pointers to the internal components of the allocator
     BumpAllocatorState* state = (BumpAllocatorState*)arenaBlock;
@@ -445,33 +424,28 @@ Allocator CreateBumpAllocator(size_t arenaSize, bool safetySpace /*default: true
     // Linking the allocator object to the freelist functions
     Allocator allocator = {};
     allocator.BackendAlloc = BumpAlignedAlloc;
-    allocator.BackendReAlloc = BumpReAlloc;
+    allocator.BackendRealloc = BumpReAlloc;
     allocator.BackendFree = BumpFree;
     allocator.backendState = state;
+    allocator.parentAllocator = parentAllocator;
 
     return allocator;
 }
 
-void DestroyBumpAllocator(Allocator allocator)
+void DestroyBumpAllocator(Allocator* parentAllocator, Allocator allocator)
 {
     BumpAllocatorState* state = (BumpAllocatorState*)allocator.backendState;
-#ifndef GR_DIST
-    FreeInfo(sizeof(BumpAllocatorState), MEM_TAG_ALLOCATOR_STATE);
-#endif // !GR_DIST
 
     // Frees the entire arena including state
-    Free(GetGlobalAllocator(), state);
+    Free(parentAllocator, state);
 }
 
-static void* BumpAlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 alignment)
+static void* BumpAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
 {
 	// Checking if the alignment is greater than min alignment and is a power of two
     GRASSERT_DEBUG((alignment >= MIN_ALIGNMENT) && ((alignment & (alignment - 1)) == 0));
 
     u32 requiredSize = (u32)size + sizeof(AllocHeader) + alignment - 1;
-#ifndef GR_DIST
-    AllocInfo(requiredSize, tag);
-#endif
 
     void* block = BumpPrimitiveAlloc(allocator->backendState, requiredSize);
     u64 blockExcludingHeader = (u64)block + sizeof(AllocHeader);
@@ -483,9 +457,7 @@ static void* BumpAlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 a
     header->start = block;
     header->size = (u32)size;
     header->alignment = alignment;
-#ifndef GR_DIST
-    header->tag = tag; // Debug only
-#endif
+
     // return the block to the client
     return alignedBlock;
 }
@@ -497,10 +469,6 @@ static void* BumpReAlloc(Allocator* allocator, void* block, u64 size)
     GRASSERT(size != header->size);
     u64 newTotalSize = size + header->alignment - 1 + sizeof(AllocHeader);
     u64 oldTotalSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
-
-#ifndef GR_DIST
-    ReAllocInfo((i64)newTotalSize - oldTotalSize);
-#endif // !GR_DIST
 
     // ================== If the realloc is smaller than the original alloc ==========================
     // ===================== Or if there is enough space after the old alloc to just extend it ========================
@@ -525,9 +493,6 @@ static void* BumpReAlloc(Allocator* allocator, void* block, u64 size)
     newHeader->start = newBlock;
     newHeader->size = (u32)size;
     newHeader->alignment = header->alignment;
-#ifndef GR_DIST
-    newHeader->tag = header->tag;
-#endif // !GR_DIST
 
     // Free the old data
     BumpPrimitiveFree(allocator->backendState, header->start, oldTotalSize);
@@ -540,10 +505,6 @@ static void BumpFree(Allocator* allocator, void* block)
 	// Going slightly before the block and grabbing the alloc header that is stored there for debug info
     AllocHeader* header = (AllocHeader*)block - 1;
     u64 totalFreeSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
-
-#ifndef GR_DIST
-    FreeInfo(totalFreeSize, header->tag);
-#endif
 
     BumpPrimitiveFree(allocator->backendState, header->start, totalFreeSize);
 }
@@ -595,19 +556,16 @@ typedef struct PoolAllocatorState
 {
     void* poolStart;		// Pointer to the start of the memory that is managed by this allocator
     u32* controlBlocks;		// Pointer to the bitblocks that keep track of which blocks are free and which aren't
-#ifndef GR_DIST
-    mem_tag* memtagsArray; // Array for keeping track which tag each block belongs to
-#endif
     u32 blockSize;			// Size of each block
     u32 poolSize;			// Amount of blocks in the pool
 	u32 controlBlockCount;	// Amount of bitblocks in controlBlocks (each bitblock is a u32 that kan keep track of 32 blocks in the pool)
 } PoolAllocatorState;
 
-static void* PoolAlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 alignment);
+static void* PoolAlignedAlloc(Allocator* allocator, u64 size, u32 alignment);
 static void* PoolReAlloc(Allocator* allocator, void* block, u64 size);
 static void PoolFree(Allocator* allocator, void* block);
 
-Allocator CreatePoolAllocator(u32 blockSize, u32 poolSize)
+Allocator CreatePoolAllocator(Allocator* parentAllocator, u32 blockSize, u32 poolSize)
 {
     // Calculating required memory (client size + state size)
     u32 stateSize = sizeof(PoolAllocatorState);
@@ -616,7 +574,7 @@ Allocator CreatePoolAllocator(u32 blockSize, u32 poolSize)
     u32 requiredMemory = arenaSize + stateSize + blockTrackerSize;
 
     // Allocating memory for state and arena and zeroing state memory
-    void* arenaBlock = Alloc(GetGlobalAllocator(), requiredMemory, MEM_TAG_SUB_ARENA);
+    void* arenaBlock = Alloc(parentAllocator, requiredMemory, MEM_TAG_SUB_ARENA);
     ZeroMem(arenaBlock, stateSize + blockTrackerSize);
 
     // Getting pointers to the internal components of the allocator
@@ -632,31 +590,20 @@ Allocator CreatePoolAllocator(u32 blockSize, u32 poolSize)
     // Linking the allocator object to the freelist functions
     Allocator allocator = {};
     allocator.BackendAlloc = PoolAlignedAlloc;
-    allocator.BackendReAlloc = PoolReAlloc;
+    allocator.BackendRealloc = PoolReAlloc;
     allocator.BackendFree = PoolFree;
     allocator.backendState = state;
-
-#ifndef GR_DIST
-    AllocInfo(stateSize + blockTrackerSize, MEM_TAG_ALLOCATOR_STATE);
-    state->memtagsArray = Alloc(GetGlobalAllocator(), sizeof(mem_tag) * poolSize, MEM_TAG_HASHMAP);
-    ZeroMem(state->memtagsArray, sizeof(mem_tag) * poolSize);
-#endif // !GR_DIST
+    allocator.parentAllocator = parentAllocator;
 
     return allocator;
 }
 
-void DestroyPoolAllocator(Allocator allocator)
+void DestroyPoolAllocator(Allocator* parentAllocator, Allocator allocator)
 {
     PoolAllocatorState* state = (PoolAllocatorState*)allocator.backendState;
-#ifndef GR_DIST
-    u32 stateSize = sizeof(PoolAllocatorState);
-    u32 blockTrackerSize = 4 * state->controlBlockCount;
-    FreeInfo(stateSize + blockTrackerSize, MEM_TAG_ALLOCATOR_STATE);
-    Free(GetGlobalAllocator(), state->memtagsArray);
-#endif // !GR_DIST
 
     // Frees the entire arena including state
-    Free(GetGlobalAllocator(), state);
+    Free(parentAllocator, state);
 }
 
 // From: http://tekpool.wordpress.com/category/bit-count/
@@ -676,7 +623,7 @@ u32 First0Bit(u32 i)
 	return BitCount((i & (-i)) - 1);
 }
 
-static void* PoolAlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 alignment)
+static void* PoolAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
 {
 	PoolAllocatorState* state = (PoolAllocatorState*)allocator->backendState;
 
@@ -697,11 +644,6 @@ static void* PoolAlignedAlloc(Allocator* allocator, u64 size, mem_tag tag, u32 a
 	}
 
 	GRASSERT_MSG(firstFreeBlock < state->poolSize, "Pool allocator ran out of blocks");
-
-#ifndef GR_DIST
-    state->memtagsArray[firstFreeBlock] = tag;
-    AllocInfo(size, tag);
-#endif
 
 	return (u8*)state->poolStart + (state->blockSize * firstFreeBlock);
 }
@@ -728,16 +670,12 @@ static void PoolFree(Allocator* allocator, void* block)
 	// Setting the bit that manages the freed block to zero
 	// Inverting the bits in the bitblock, then setting the bit to one, then inverting the block again
 	state->controlBlocks[controlBlockIndex] = ~((1 << bitAddress) | (~state->controlBlocks[controlBlockIndex]));
-
-#ifndef GR_DIST
-    FreeInfo(state->blockSize, state->memtagsArray[poolBlockAddress]);
-#endif
 }
 
 // =====================================================================================================================================================================================================
 // ================================== Global allocator creation =====================================================================
 // =====================================================================================================================================================================================================
-bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* out_stateSize)
+bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* out_stateSize, u64* out_arenaStart)
 {
     // Calculating the required nodes for an arena of the given size
     // Make one node for every "freelist node factor" nodes that fit in the arena
@@ -745,7 +683,8 @@ bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* o
 
     // Calculating required memory (client size + state size)
     size_t stateSize = sizeof(FreelistState) + nodeCount * sizeof(FreelistNode);
-    *out_stateSize = stateSize;
+    if (out_stateSize)
+        *out_stateSize = stateSize;
     size_t requiredMemory = arenaSize + stateSize;
 
     // Allocating memory for state and arena and zeroing state memory
@@ -763,6 +702,9 @@ bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* o
     FreelistNode* nodePool = (FreelistNode*)((u8*)arenaBlock + sizeof(FreelistState));
     void* arenaStart = (u8*)arenaBlock + stateSize;
 
+    if (out_arenaStart)
+        *out_arenaStart = (u64)arenaStart;
+
     // Configuring allocator state
     state->arenaStart = arenaStart;
     state->arenaSize = arenaSize;
@@ -777,9 +719,10 @@ bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* o
 
     // Linking the allocator object to the freelist functions
     out_allocator->BackendAlloc = FreelistAlignedAlloc;
-    out_allocator->BackendReAlloc = FreelistReAlloc;
+    out_allocator->BackendRealloc = FreelistReAlloc;
     out_allocator->BackendFree = FreelistFree;
     out_allocator->backendState = state;
+    out_allocator->parentAllocator = nullptr;
 
     return true;
 }

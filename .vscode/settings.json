@@ -30,11 +30,18 @@
         "vulkan_command_buffer.h": "c",
         "vector_performance.h": "c",
         "test_defines.h": "c",
-        "allocator_backends.h": "c",
         "array": "c",
         "vulkan_queues.h": "c",
         "vulkan_sync_objects.h": "c",
         "mem.h": "c",
-        "meminc.h": "c"
+        "meminc.h": "c",
+        "asserts.h": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "utility": "c",
+        "memory_subsys.h": "c",
+        "hashmap_u64.h": "c",
+        "allocator_frontends.h": "c",
+        "memory_debug_tools.h": "c"
     }
 }

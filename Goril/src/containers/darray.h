@@ -11,8 +11,8 @@
 
 
 // Creates a dynamic array
-void* DarrayCreate(u32 stride, u32 capacity, Allocator* allocator, mem_tag tag);
-void* DarrayCreateWithSize(u32 stride, u32 capacityAndCapacity, Allocator* allocator, mem_tag tag);
+void* DarrayCreate(u32 stride, u32 capacity, Allocator* allocator, MemTag tag);
+void* DarrayCreateWithSize(u32 stride, u32 capacityAndCapacity, Allocator* allocator, MemTag tag);
 
 // Note that this invalidates the old elements pointer so be carefull when using the darray in 2 places
 // the pointer might become invalidated

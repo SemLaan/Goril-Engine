@@ -6,6 +6,9 @@
 
 typedef u32 (*HashFunctionU64)(u64 key);
 
+// https://gist.github.com/badboy/6267743#64-bit-to-32-bit-hash-functions
+u32 Hash6432Shift(u64 key);
+
 
 typedef struct MapEntryU64
 {
@@ -27,7 +30,7 @@ typedef struct HashmapU64
 // note that the hashmap stores pointers to objects, so those pointers can not be invalidated
 // or the hashmap has outdated pointers
 // backingArrayElementCount: amount of elements in the backing array
-HashmapU64* MapU64Create(Allocator* allocator, mem_tag memtag, u32 backingArrayElementCount, u32 maxCollisions, HashFunctionU64 hashFunction);
+HashmapU64* MapU64Create(Allocator* allocator, MemTag memtag, u32 backingArrayElementCount, u32 maxCollisions, HashFunctionU64 hashFunction);
 
 // Destroys everything about the map, except the objects
 void MapU64Destroy(HashmapU64* hashmap);

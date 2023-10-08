@@ -1,7 +1,7 @@
 #pragma once
 #include "defines.h"
 #include "containers/darray.h"
-#include "core/memory/gr_memory.h"
+#include "core/meminc.h"
 #include "renderer_types.h"
 
 

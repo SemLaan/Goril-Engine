@@ -1,5 +1,5 @@
 #include "game.h"
-#include <core/memory/gr_memory.h>
+#include <core/meminc.h>
 #include <core/logger.h>
 #include <core/input.h>
 #include <core/event.h>
@@ -14,7 +14,7 @@ bool Init()
 {
 	gamestate = Alloc(GetGlobalAllocator(), sizeof(*gamestate), MEM_TAG_GAME);
 
-	PrintMemoryStats();
+	PRINT_MEMORY_STATS();
 
 #define VERTEX_COUNT 8
 	Vertex vertices[VERTEX_COUNT] =

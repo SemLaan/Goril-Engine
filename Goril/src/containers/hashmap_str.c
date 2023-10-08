@@ -2,14 +2,14 @@
 
 #include "core/asserts.h"
 
-HashmapStr* MapStrCreate(Allocator* allocator, mem_tag memtag, u32 backingArrayElementCount, u32 maxCollisions, u32 maxKeyLength, HashFunctionStr hashFunction)
+HashmapStr* MapStrCreate(Allocator* allocator, MemTag memtag, u32 backingArrayElementCount, u32 maxCollisions, u32 maxKeyLength, HashFunctionStr hashFunction)
 {
     HashmapStr* hashmap = Alloc(allocator, sizeof(*hashmap) + backingArrayElementCount * sizeof(MapEntryStr), memtag);
     hashmap->backingArray = (MapEntryStr*)(hashmap + 1);
     hashmap->backingArrayElementCount = backingArrayElementCount;
     hashmap->hashFunction = hashFunction;
-    hashmap->linkedEntryPool = CreatePoolAllocator(sizeof(MapEntryStr), maxCollisions);
-    hashmap->keyPool = CreatePoolAllocator(maxKeyLength, maxCollisions + backingArrayElementCount);
+    hashmap->linkedEntryPool = CreatePoolAllocator(allocator, sizeof(MapEntryStr), maxCollisions);
+    hashmap->keyPool = CreatePoolAllocator(allocator, maxKeyLength, maxCollisions + backingArrayElementCount);
     hashmap->allocator = allocator;
     hashmap->maxKeyLength = maxKeyLength;
 
@@ -20,8 +20,8 @@ HashmapStr* MapStrCreate(Allocator* allocator, mem_tag memtag, u32 backingArrayE
 
 void MapStrDestroy(HashmapStr* hashmap)
 {
-    DestroyPoolAllocator(hashmap->linkedEntryPool);
-    DestroyPoolAllocator(hashmap->keyPool);
+    DestroyPoolAllocator(hashmap->allocator, hashmap->linkedEntryPool);
+    DestroyPoolAllocator(hashmap->allocator, hashmap->keyPool);
 
     Free(hashmap->allocator, hashmap);
 }

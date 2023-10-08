@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 
-bool ReadFile(const char* filename, mem_tag tag, char** out_data, u64* out_fileSize)
+bool ReadFile(const char* filename, MemTag tag, char** out_data, u64* out_fileSize)
 {
 	FILE* file = fopen(filename, "rb");
 
@@ -18,7 +18,7 @@ bool ReadFile(const char* filename, mem_tag tag, char** out_data, u64* out_fileS
 	fseek(file, 0L, SEEK_END);
 
 	*out_fileSize = ftell(file);
-	*out_data = (char*)AlignedAlloc(GetGlobalAllocator(), *out_fileSize, tag, 64);
+	*out_data = (char*)AlignedAlloc(GetGlobalAllocator(), *out_fileSize, 64, tag);
 
 	rewind(file);
 	fread(*out_data, 1, *out_fileSize, file);

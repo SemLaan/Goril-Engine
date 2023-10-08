@@ -29,7 +29,7 @@ typedef struct HashmapStr
 // note that the hashmap stores pointers to objects, so those pointers can not be invalidated
 // or the hashmap has outdated pointers
 // backingArrayElementCount: amount of elements in the backing array
-HashmapStr* MapStrCreate(Allocator* allocator, mem_tag memtag, u32 backingArrayElementCount, u32 maxCollisions, u32 maxKeyLength, HashFunctionStr hashFunction);
+HashmapStr* MapStrCreate(Allocator* allocator, MemTag memtag, u32 backingArrayElementCount, u32 maxCollisions, u32 maxKeyLength, HashFunctionStr hashFunction);
 
 // Destroys everything about the map, except the objects
 void MapStrDestroy(HashmapStr* hashmap);
