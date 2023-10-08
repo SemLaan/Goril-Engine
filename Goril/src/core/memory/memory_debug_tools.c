@@ -182,6 +182,7 @@ void* DebugRealloc(Allocator* allocator, void* block, u64 newSize, const char* f
         if (oldAllocInfo == nullptr)
         {
             GRFATAL("Tried to realloc memory block that doesn't exists!, File: %s:%u", file, line);
+            GRFATAL("Address that was attempted to be reallocated: 0x%08x", (u64)block);
             GRASSERT(false);
         }
         state->totalUserAllocated -= (oldAllocInfo->allocSize - newSize);
@@ -216,6 +217,7 @@ void DebugFree(Allocator* allocator, void* block, const char* file, u32 line)
         if (allocInfo == nullptr)
         {
             GRFATAL("Tried to free memory block that doesn't exists!, File: %s:%u", file, line);
+            GRFATAL("Address that was attempted to be freed: 0x%08x", (u64)block);
             GRASSERT(false);
         }
         state->totalUserAllocationCount--;
