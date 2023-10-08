@@ -30,22 +30,23 @@
 #endif
 
 // ================================== Global allocators (not an allocator type) =================================================================================================================================================
+// These allocators call malloc instead of getting their memory from a parent allocator, but they're just freelist allocators
 bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* out_stateSize);
 void DestroyGlobalAllocator(Allocator allocator);
 
 // ================================== Freelist allocator =================================================================================================================================================
-Allocator CreateFreelistAllocator(size_t arenaSize);
-void DestroyFreelistAllocator(Allocator allocator);
+Allocator CreateFreelistAllocator(Allocator* parentAllocator, size_t arenaSize);
+void DestroyFreelistAllocator(Allocator* parentAllocator, Allocator allocator);
 size_t FreelistGetFreeNodes(void* backendState);
 u32 GetFreelistAllocHeaderSize();
 
 // ==================================== Bump allocator ================================================================================================================================================
-Allocator CreateBumpAllocator(size_t arenaSize);
-void DestroyBumpAllocator(Allocator allocator);
+Allocator CreateBumpAllocator(Allocator* parentAllocator, size_t arenaSize);
+void DestroyBumpAllocator(Allocator* parentAllocator, Allocator allocator);
 
 
 // ===================================== Pool allocator =============================================================================================================================================
 // Size of blocks this allocator returns, and amount of blocks in this allocator.
 // all blocks created by this allocator are aligned on allocSize (provided it is a power of two)
-Allocator CreatePoolAllocator(u32 blockSize, u32 poolSize);
-void DestroyPoolAllocator(Allocator allocator);
+Allocator CreatePoolAllocator(Allocator* parentAllocator, u32 blockSize, u32 poolSize);
+void DestroyPoolAllocator(Allocator* parentAllocator, Allocator allocator);

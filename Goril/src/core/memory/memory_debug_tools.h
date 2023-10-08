@@ -6,6 +6,7 @@
 #define START_MEMORY_DEBUG_SUBSYS()
 #define SHUTDOWN_MEMORY_DEBUG_SUBSYS()
 
+#define PRINT_MEMORY_STATS()
 
 #endif
 
@@ -15,11 +16,15 @@
 
 #include "allocator_types.h"
 
-void StartMemoryDebugSubsys();
-void ShutdownMemoryDebugSubsys();
+void _StartMemoryDebugSubsys();
+void _ShutdownMemoryDebugSubsys();
 
-#define START_MEMORY_DEBUG_SUBSYS() StartMemoryDebugSubsys()
-#define SHUTDOWN_MEMORY_DEBUG_SUBSYS() ShutdownMemoryDebugSubsys()
+void _PrintMemoryStats();
+
+#define START_MEMORY_DEBUG_SUBSYS() _StartMemoryDebugSubsys()
+#define SHUTDOWN_MEMORY_DEBUG_SUBSYS() _ShutdownMemoryDebugSubsys()
+
+#define PRINT_MEMORY_STATS() _PrintMemoryStats()
 
 void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment);
 void* DebugRealloc(Allocator* allocator, void* block, u64 newSize);

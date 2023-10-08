@@ -64,7 +64,7 @@ bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 #endif // !GR_DIST
 */
 	g_Allocators = (GlobalAllocators*)Alloc(&globalAllocator, sizeof(GlobalAllocators), MEM_TAG_MEMORY_SUBSYS);
-	g_Allocators->temporary = CreateBumpAllocator(KiB * 5); /// TODO: make configurable
+	g_Allocators->temporary = CreateBumpAllocator(&globalAllocator, KiB * 5); /// TODO: make configurable
 
 	return true;
 }
@@ -83,7 +83,7 @@ void ShutdownMemory()
 
 	if (g_Allocators)
 	{
-		DestroyBumpAllocator(g_Allocators->temporary);
+		DestroyBumpAllocator(GetGlobalAllocator(), g_Allocators->temporary);
 		Free(GetGlobalAllocator(), g_Allocators);
 	}
 

@@ -30,7 +30,6 @@
         "vulkan_command_buffer.h": "c",
         "vector_performance.h": "c",
         "test_defines.h": "c",
-        "allocator_backends.h": "c",
         "array": "c",
         "vulkan_queues.h": "c",
         "vulkan_sync_objects.h": "c",
@@ -40,6 +39,7 @@
         "string_view": "c",
         "initializer_list": "c",
         "utility": "c",
-        "memory_subsys.h": "c"
+        "memory_subsys.h": "c",
+        "hashmap_u64.h": "c"
     }
 }

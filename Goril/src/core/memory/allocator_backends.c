@@ -6,7 +6,6 @@
 // This is here for malloc, this is the only place it's called
 #include <stdlib.h>
 
-#include "memory_subsys.h"
 #include "mem_utils.h"
 
 // Space added to allocators
@@ -53,7 +52,7 @@ static void* FreelistPrimitiveAlloc(void* backendState, size_t size);
 static bool FreelistPrimitiveTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize);
 static void FreelistPrimitiveFree(void* backendState, void* block, size_t size);
 
-Allocator CreateFreelistAllocator(size_t arenaSize)
+Allocator CreateFreelistAllocator(Allocator* parentAllocator, size_t arenaSize)
 {
     arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
 
@@ -66,7 +65,7 @@ Allocator CreateFreelistAllocator(size_t arenaSize)
     size_t requiredMemory = arenaSize + stateSize;
 
     // Allocating memory for state and arena and zeroing state memory
-    void* arenaBlock = Alloc(GetGlobalAllocator(), requiredMemory, MEM_TAG_SUB_ARENA);
+    void* arenaBlock = Alloc(parentAllocator, requiredMemory, MEM_TAG_SUB_ARENA);
     ZeroMem(arenaBlock, stateSize);
 
     // Getting pointers to the internal components of the allocator
@@ -96,12 +95,12 @@ Allocator CreateFreelistAllocator(size_t arenaSize)
     return allocator;
 }
 
-void DestroyFreelistAllocator(Allocator allocator)
+void DestroyFreelistAllocator(Allocator* parentAllocator, Allocator allocator)
 {
     FreelistState* state = (FreelistState*)allocator.backendState;
 
     // Frees the entire arena including state
-    Free(GetGlobalAllocator(), state);
+    Free(parentAllocator, state);
 }
 
 size_t FreelistGetFreeNodes(void* backendState)
@@ -399,7 +398,7 @@ static void* BumpPrimitiveAlloc(void* backendState, size_t size);
 static bool BumpPrimitiveTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize);
 static void BumpPrimitiveFree(void* backendState, void* block, size_t size);
 
-Allocator CreateBumpAllocator(size_t arenaSize)
+Allocator CreateBumpAllocator(Allocator* parentAllocator, size_t arenaSize)
 {
     arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
 
@@ -408,7 +407,7 @@ Allocator CreateBumpAllocator(size_t arenaSize)
     size_t requiredMemory = arenaSize + stateSize;
 
     // Allocating memory for state and arena and zeroing state memory
-    void* arenaBlock = Alloc(GetGlobalAllocator(), requiredMemory, MEM_TAG_SUB_ARENA);
+    void* arenaBlock = Alloc(parentAllocator, requiredMemory, MEM_TAG_SUB_ARENA);
     ZeroMem(arenaBlock, stateSize);
 
     // Getting pointers to the internal components of the allocator
@@ -431,12 +430,12 @@ Allocator CreateBumpAllocator(size_t arenaSize)
     return allocator;
 }
 
-void DestroyBumpAllocator(Allocator allocator)
+void DestroyBumpAllocator(Allocator* parentAllocator, Allocator allocator)
 {
     BumpAllocatorState* state = (BumpAllocatorState*)allocator.backendState;
 
     // Frees the entire arena including state
-    Free(GetGlobalAllocator(), state);
+    Free(parentAllocator, state);
 }
 
 static void* BumpAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
@@ -564,7 +563,7 @@ static void* PoolAlignedAlloc(Allocator* allocator, u64 size, u32 alignment);
 static void* PoolReAlloc(Allocator* allocator, void* block, u64 size);
 static void PoolFree(Allocator* allocator, void* block);
 
-Allocator CreatePoolAllocator(u32 blockSize, u32 poolSize)
+Allocator CreatePoolAllocator(Allocator* parentAllocator, u32 blockSize, u32 poolSize)
 {
     // Calculating required memory (client size + state size)
     u32 stateSize = sizeof(PoolAllocatorState);
@@ -573,7 +572,7 @@ Allocator CreatePoolAllocator(u32 blockSize, u32 poolSize)
     u32 requiredMemory = arenaSize + stateSize + blockTrackerSize;
 
     // Allocating memory for state and arena and zeroing state memory
-    void* arenaBlock = Alloc(GetGlobalAllocator(), requiredMemory, MEM_TAG_SUB_ARENA);
+    void* arenaBlock = Alloc(parentAllocator, requiredMemory, MEM_TAG_SUB_ARENA);
     ZeroMem(arenaBlock, stateSize + blockTrackerSize);
 
     // Getting pointers to the internal components of the allocator
@@ -596,12 +595,12 @@ Allocator CreatePoolAllocator(u32 blockSize, u32 poolSize)
     return allocator;
 }
 
-void DestroyPoolAllocator(Allocator allocator)
+void DestroyPoolAllocator(Allocator* parentAllocator, Allocator allocator)
 {
     PoolAllocatorState* state = (PoolAllocatorState*)allocator.backendState;
 
     // Frees the entire arena including state
-    Free(GetGlobalAllocator(), state);
+    Free(parentAllocator, state);
 }
 
 // From: http://tekpool.wordpress.com/category/bit-count/

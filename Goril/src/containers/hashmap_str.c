@@ -8,8 +8,8 @@ HashmapStr* MapStrCreate(Allocator* allocator, MemTag memtag, u32 backingArrayEl
     hashmap->backingArray = (MapEntryStr*)(hashmap + 1);
     hashmap->backingArrayElementCount = backingArrayElementCount;
     hashmap->hashFunction = hashFunction;
-    hashmap->linkedEntryPool = CreatePoolAllocator(sizeof(MapEntryStr), maxCollisions);
-    hashmap->keyPool = CreatePoolAllocator(maxKeyLength, maxCollisions + backingArrayElementCount);
+    hashmap->linkedEntryPool = CreatePoolAllocator(allocator, sizeof(MapEntryStr), maxCollisions);
+    hashmap->keyPool = CreatePoolAllocator(allocator, maxKeyLength, maxCollisions + backingArrayElementCount);
     hashmap->allocator = allocator;
     hashmap->maxKeyLength = maxKeyLength;
 
@@ -20,8 +20,8 @@ HashmapStr* MapStrCreate(Allocator* allocator, MemTag memtag, u32 backingArrayEl
 
 void MapStrDestroy(HashmapStr* hashmap)
 {
-    DestroyPoolAllocator(hashmap->linkedEntryPool);
-    DestroyPoolAllocator(hashmap->keyPool);
+    DestroyPoolAllocator(hashmap->allocator, hashmap->linkedEntryPool);
+    DestroyPoolAllocator(hashmap->allocator, hashmap->keyPool);
 
     Free(hashmap->allocator, hashmap);
 }

@@ -9,7 +9,7 @@ HashmapU64* MapU64Create(Allocator* allocator, MemTag memtag, u32 backingArrayEl
     hashmap->backingArray = (MapEntryU64*)(hashmap + 1);
     hashmap->backingArrayElementCount = backingArrayElementCount;
     hashmap->hashFunction = hashFunction;
-    hashmap->linkedEntryPool = CreatePoolAllocator(sizeof(MapEntryU64), maxCollisions);
+    hashmap->linkedEntryPool = CreatePoolAllocator(allocator, sizeof(MapEntryU64), maxCollisions);
     hashmap->allocator = allocator;
 
     ZeroMem(hashmap->backingArray, sizeof(MapEntryU64) * backingArrayElementCount);
@@ -19,7 +19,7 @@ HashmapU64* MapU64Create(Allocator* allocator, MemTag memtag, u32 backingArrayEl
 
 void MapU64Destroy(HashmapU64* hashmap)
 {
-    DestroyPoolAllocator(hashmap->linkedEntryPool);
+    DestroyPoolAllocator(hashmap->allocator, hashmap->linkedEntryPool);
 
     Free(hashmap->allocator, hashmap);
 }
