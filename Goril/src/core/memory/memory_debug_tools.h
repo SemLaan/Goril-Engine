@@ -26,9 +26,9 @@ void _PrintMemoryStats();
 
 #define PRINT_MEMORY_STATS() _PrintMemoryStats()
 
-void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag memtag);
-void* DebugRealloc(Allocator* allocator, void* block, u64 newSize);
-void DebugFree(Allocator* allocator, void* block);
+void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag memtag, const char* file, u32 line);
+void* DebugRealloc(Allocator* allocator, void* block, u64 newSize, const char* file, u32 line);
+void DebugFree(Allocator* allocator, void* block, const char* file, u32 line);
 
 
 #endif

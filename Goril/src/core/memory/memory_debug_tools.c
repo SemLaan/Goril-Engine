@@ -6,6 +6,7 @@
 #include "core/asserts.h"
 #include "core/logger.h"
 #include "containers/hashmap_u64.h"
+#include "containers/darray.h"
 
 static const char* memTagToText[MAX_MEMORY_TAGS] = {
 	"ALLOCATOR STATE    ",
@@ -29,6 +30,8 @@ static const char* memTagToText[MAX_MEMORY_TAGS] = {
 
 typedef struct AllocInfo
 {
+    const char* file;
+    u32 line;
     MemTag tag;
     u32 allocSize;
 } AllocInfo;
@@ -117,11 +120,22 @@ void _PrintMemoryStats()
 	{
 		GRINFO("	%s: %u", memTagToText[i], state->perTagAllocationCount[i]);
 	}
+
+    AllocInfo** allocInfoDarray = (AllocInfo**)MapU64GetValueDarray(state->allocationsMap, &memoryDebugAllocator);
+
+    GRINFO("All active allocations:");
+    for (u32 i = 0; i < DarrayGetSize(allocInfoDarray); ++i)
+    {
+        AllocInfo* item = allocInfoDarray[i];
+        GRINFO("Size: %u, File: %s, Line: %u", item->allocSize, item->file, item->line);
+    }
+
+    DarrayDestroy(allocInfoDarray);
 }
 
 
 // ============================================= Debug alloc, realloc and free hook-ins =====================================
-void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag memtag)
+void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag memtag, const char* file, u32 line)
 {
     Allocator* rootAllocator = allocator;
     while (rootAllocator->parentAllocator)
@@ -146,12 +160,14 @@ void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag me
         AllocInfo* allocInfo = Alloc(&state->allocInfoPool, sizeof(AllocInfo), MEM_TAG_MEMORY_DEBUG);
         allocInfo->allocSize = size;
         allocInfo->tag = memtag;
+        allocInfo->file = file;
+        allocInfo->line = line;
         MapU64Insert(state->allocationsMap, (u64)allocation, allocInfo);
         return allocation;
     }
 }
 
-void* DebugRealloc(Allocator* allocator, void* block, u64 newSize)
+void* DebugRealloc(Allocator* allocator, void* block, u64 newSize, const char* file, u32 line)
 {
     u64 blockAddress = (u64)block;
 
@@ -171,6 +187,8 @@ void* DebugRealloc(Allocator* allocator, void* block, u64 newSize)
         AllocInfo* newAllocInfo = Alloc(&state->allocInfoPool, sizeof(AllocInfo), MEM_TAG_MEMORY_DEBUG);
         newAllocInfo->allocSize = newSize;
         newAllocInfo->tag = oldAllocInfo->tag;
+        newAllocInfo->file = oldAllocInfo->file;
+        newAllocInfo->line = oldAllocInfo->line;
         MapU64Insert(state->allocationsMap, (u64)reallocation, newAllocInfo);
         
         Free(&state->allocInfoPool, oldAllocInfo);
@@ -179,7 +197,7 @@ void* DebugRealloc(Allocator* allocator, void* block, u64 newSize)
     }
 }
 
-void DebugFree(Allocator* allocator, void* block)
+void DebugFree(Allocator* allocator, void* block, const char* file, u32 line)
 {
     u64 blockAddress = (u64)block;
     // If debug allocation

@@ -19,13 +19,13 @@
 #else // if not gr dist
 
 // void* Alloc(Allocator* allocator, u64 size, MemTag memtag);
-#define Alloc(allocator, size, memtag) DebugAlignedAlloc((allocator), (size), MIN_ALIGNMENT, (memtag))
+#define Alloc(allocator, size, memtag) DebugAlignedAlloc((allocator), (size), MIN_ALIGNMENT, (memtag), __FILE__, __LINE__)
 // void* AlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag memtag);
-#define AlignedAlloc(allocator, size, alignment, memtag) DebugAlignedAlloc((allocator), (size), (alignment), (memtag))
+#define AlignedAlloc(allocator, size, alignment, memtag) DebugAlignedAlloc((allocator), (size), (alignment), (memtag), __FILE__, __LINE__)
 // void* Realloc(Allocator* allocator, void* block, u64 newSize);
-#define Realloc(allocator, block, newSize) DebugRealloc((allocator), (block), (newSize))
+#define Realloc(allocator, block, newSize) DebugRealloc((allocator), (block), (newSize), __FILE__, __LINE__)
 // void Free(Allocator* allocator, void* block);
-#define Free(allocator, block) DebugFree((allocator), (block))
+#define Free(allocator, block) DebugFree((allocator), (block), __FILE__, __LINE__)
 
 #endif
 
