@@ -41,7 +41,7 @@ void MapU64Insert(HashmapU64* hashmap, u64 key, void* value);
 // Returns a void pointer to the found object or nullptr if the object wasn't found
 void* MapU64Lookup(HashmapU64* hashmap, u64 key);
 
-// Returns the deleted element
+// Returns the deleted element, returns nullptr when the object isn't found
 void* MapU64Delete(HashmapU64* hashmap, u64 key);
 
 // Returns a Darray made with the given allocator, this darray needs to be destroyed by the client of this function

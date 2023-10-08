@@ -127,7 +127,7 @@ void _PrintMemoryStats()
     for (u32 i = 0; i < DarrayGetSize(allocInfoDarray); ++i)
     {
         AllocInfo* item = allocInfoDarray[i];
-        GRINFO("Size: %u, File: %s, Line: %u", item->allocSize, item->file, item->line);
+        GRINFO("Size: %u, File: %s:%u", item->allocSize, item->file, item->line);
     }
 
     DarrayDestroy(allocInfoDarray);
@@ -179,6 +179,11 @@ void* DebugRealloc(Allocator* allocator, void* block, u64 newSize, const char* f
     else // if normal allocation
     {
         AllocInfo* oldAllocInfo = MapU64Delete(state->allocationsMap, (u64)block);
+        if (oldAllocInfo == nullptr)
+        {
+            GRFATAL("Tried to realloc memory block that doesn't exists!, File: %s:%u", file, line);
+            GRASSERT(false);
+        }
         state->totalUserAllocated -= (oldAllocInfo->allocSize - newSize);
         state->perTagAllocated[oldAllocInfo->tag] -= (oldAllocInfo->allocSize - newSize);
 
@@ -208,6 +213,11 @@ void DebugFree(Allocator* allocator, void* block, const char* file, u32 line)
     else // if normal allocation
     {
         AllocInfo* allocInfo = MapU64Delete(state->allocationsMap, (u64)block);
+        if (allocInfo == nullptr)
+        {
+            GRFATAL("Tried to free memory block that doesn't exists!, File: %s:%u", file, line);
+            GRASSERT(false);
+        }
         state->totalUserAllocationCount--;
         state->totalUserAllocated -= allocInfo->allocSize;
         state->perTagAllocated[allocInfo->tag] -= allocInfo->allocSize;
