@@ -39,4 +39,5 @@ typedef struct Allocator
 	PFN_BackendRealloc BackendRealloc;
 	PFN_BackendFree BackendFree;
 	void* backendState;
+    Allocator* parentAllocator;
 } Allocator;

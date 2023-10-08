@@ -91,6 +91,7 @@ Allocator CreateFreelistAllocator(Allocator* parentAllocator, size_t arenaSize)
     allocator.BackendRealloc = FreelistReAlloc;
     allocator.BackendFree = FreelistFree;
     allocator.backendState = state;
+    allocator.parentAllocator = parentAllocator;
 
     return allocator;
 }
@@ -426,6 +427,7 @@ Allocator CreateBumpAllocator(Allocator* parentAllocator, size_t arenaSize)
     allocator.BackendRealloc = BumpReAlloc;
     allocator.BackendFree = BumpFree;
     allocator.backendState = state;
+    allocator.parentAllocator = parentAllocator;
 
     return allocator;
 }
@@ -591,6 +593,7 @@ Allocator CreatePoolAllocator(Allocator* parentAllocator, u32 blockSize, u32 poo
     allocator.BackendRealloc = PoolReAlloc;
     allocator.BackendFree = PoolFree;
     allocator.backendState = state;
+    allocator.parentAllocator = parentAllocator;
 
     return allocator;
 }
@@ -719,6 +722,7 @@ bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* o
     out_allocator->BackendRealloc = FreelistReAlloc;
     out_allocator->BackendFree = FreelistFree;
     out_allocator->backendState = state;
+    out_allocator->parentAllocator = nullptr;
 
     return true;
 }

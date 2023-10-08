@@ -40,6 +40,8 @@
         "initializer_list": "c",
         "utility": "c",
         "memory_subsys.h": "c",
-        "hashmap_u64.h": "c"
+        "hashmap_u64.h": "c",
+        "allocator_frontends.h": "c",
+        "memory_debug_tools.h": "c"
     }
 }
