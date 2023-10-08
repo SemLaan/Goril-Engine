@@ -43,3 +43,6 @@ void* MapU64Lookup(HashmapU64* hashmap, u64 key);
 
 // Returns the deleted element
 void* MapU64Delete(HashmapU64* hashmap, u64 key);
+
+// Returns a Darray made with the given allocator, this darray needs to be destroyed by the client of this function
+void** MapU64GetValueDarray(HashmapU64* hashmap, Allocator* allocator);

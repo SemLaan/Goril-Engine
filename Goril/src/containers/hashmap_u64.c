@@ -1,7 +1,7 @@
 #include "hashmap_u64.h"
 
 #include "core/asserts.h"
-
+#include "darray.h"
 
 // ====================================== Hash functions
 // https://gist.github.com/badboy/6267743#64-bit-to-32-bit-hash-functions
@@ -129,5 +129,31 @@ void* MapU64Delete(HashmapU64* hashmap, u64 key)
             currentEntry = currentEntry->next;
         }
     }
+}
+
+void** MapU64GetValueDarray(HashmapU64* hashmap, Allocator* allocator)
+{
+    // Assume we have at least a few elements in the hashmap, so starting the darray from zero would cause a lot of unnecessary resizes at the start
+    #define ARBITRARY_DARRAY_START_CAPACITY 50
+
+    void** valuesDarray = DarrayCreate(sizeof(*valuesDarray), ARBITRARY_DARRAY_START_CAPACITY, allocator, MEM_TAG_HASHMAP);
+
+    for (u32 i = 0; i < hashmap->backingArrayElementCount; ++i)
+    {
+        MapEntryU64* item = hashmap->backingArray + i;
+        
+        if (item->value)
+        {
+            valuesDarray = DarrayPushback(valuesDarray, &item->value);
+
+            while (item->next)
+            {
+                item = item->next;
+                valuesDarray = DarrayPushback(valuesDarray, &item->value);
+            }
+        }
+    }
+
+    return valuesDarray;
 }
 
