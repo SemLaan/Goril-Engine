@@ -31,7 +31,7 @@
 
 // ================================== Global allocators (not an allocator type) =================================================================================================================================================
 // These allocators call malloc instead of getting their memory from a parent allocator, but they're just freelist allocators
-bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* out_stateSize);
+bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* out_stateSize, u64* out_arenaStart);
 void DestroyGlobalAllocator(Allocator allocator);
 
 // ================================== Freelist allocator =================================================================================================================================================

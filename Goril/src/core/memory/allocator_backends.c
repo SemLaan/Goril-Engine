@@ -672,7 +672,7 @@ static void PoolFree(Allocator* allocator, void* block)
 // =====================================================================================================================================================================================================
 // ================================== Global allocator creation =====================================================================
 // =====================================================================================================================================================================================================
-bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* out_stateSize)
+bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* out_stateSize, u64* out_arenaStart)
 {
     // Calculating the required nodes for an arena of the given size
     // Make one node for every "freelist node factor" nodes that fit in the arena
@@ -680,7 +680,8 @@ bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* o
 
     // Calculating required memory (client size + state size)
     size_t stateSize = sizeof(FreelistState) + nodeCount * sizeof(FreelistNode);
-    *out_stateSize = stateSize;
+    if (out_stateSize)
+        *out_stateSize = stateSize;
     size_t requiredMemory = arenaSize + stateSize;
 
     // Allocating memory for state and arena and zeroing state memory
@@ -697,6 +698,9 @@ bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* o
     FreelistState* state = (FreelistState*)arenaBlock;
     FreelistNode* nodePool = (FreelistNode*)((u8*)arenaBlock + sizeof(FreelistState));
     void* arenaStart = (u8*)arenaBlock + stateSize;
+
+    if (out_arenaStart)
+        *out_arenaStart = (u64)arenaStart;
 
     // Configuring allocator state
     state->arenaStart = arenaStart;

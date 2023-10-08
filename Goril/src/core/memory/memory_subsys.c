@@ -36,7 +36,7 @@ bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 	// Creating the global allocator and allocating all application memory
 	Allocator globalAllocator;
 	size_t globalAllocatorStateSize;
-	if (!CreateGlobalAllocator(requiredMemory, &globalAllocator, &globalAllocatorStateSize))
+	if (!CreateGlobalAllocator(requiredMemory, &globalAllocator, &globalAllocatorStateSize, nullptr))
 	{
 		GRFATAL("Creating global allocator failed");
 		return false;
