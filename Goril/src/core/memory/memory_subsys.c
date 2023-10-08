@@ -87,9 +87,7 @@ void PrintMemoryStats()
 {
 #ifndef GR_DIST
 
-	GRINFO("Printing memory stats:");
-	const char* scaleString;
-	u64 scale;
+	
 	scaleString = GetMemoryScaleString(state->deferredMemory, &scale);
 	GRINFO("Memory deferred to local allocators: %.2f%s", (f32)state->deferredMemory / scale, scaleString);
 	scaleString = GetMemoryScaleString(state->arenaSize, &scale);
