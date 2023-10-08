@@ -42,6 +42,8 @@ typedef struct MemoryDebugState
     Allocator allocInfoPool;
     u64 totalUserAllocated;
     u64 totalUserAllocationCount;
+    u32 perTagAllocationCount[MAX_MEMORY_TAGS];
+    u32 perTagAllocated[MAX_MEMORY_TAGS];
 } MemoryDebugState;
 
 
@@ -60,6 +62,7 @@ void _StartMemoryDebugSubsys()
 		GRASSERT_MSG(false, "Creating memory debug allocator failed");
 
     state = Alloc(&memoryDebugAllocator, sizeof(*state), MEM_TAG_MEMORY_DEBUG);
+    ZeroMem(state, sizeof(*state));
     state->allocationsMap = MapU64Create(&memoryDebugAllocator, MEM_TAG_MEMORY_DEBUG, 2000, 100, Hash6432Shift);
     state->allocInfoPool = CreatePoolAllocator(&memoryDebugAllocator, sizeof(AllocInfo), 2100);
     state->totalUserAllocated = 0;
@@ -108,11 +111,17 @@ void _PrintMemoryStats()
     scaleString = GetMemoryScaleString(state->totalUserAllocated, &scale);
     GRINFO("Total user allocation count: %llu", state->totalUserAllocationCount);
     GRINFO("Total user allocated: %.2f%s", (f32)state->totalUserAllocated / (f32)scale, scaleString);
+
+    GRINFO("Allocations by tag:");
+	for (u32 i = 0; i < MAX_MEMORY_TAGS; ++i)
+	{
+		GRINFO("	%s: %u", memTagToText[i], state->perTagAllocationCount[i]);
+	}
 }
 
 
 // ============================================= Debug alloc, realloc and free hook-ins =====================================
-void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
+void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag memtag)
 {
     Allocator* rootAllocator = allocator;
     while (rootAllocator->parentAllocator)
@@ -129,12 +138,14 @@ void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
     {
         state->totalUserAllocated += size;
         state->totalUserAllocationCount++;
+        state->perTagAllocated[memtag] += size;
+        state->perTagAllocationCount[memtag]++;
 
         void* allocation = allocator->BackendAlloc(allocator, size, alignment);
 
         AllocInfo* allocInfo = Alloc(&state->allocInfoPool, sizeof(AllocInfo), MEM_TAG_MEMORY_DEBUG);
         allocInfo->allocSize = size;
-        //TODO: allocinfo memtag
+        allocInfo->tag = memtag;
         MapU64Insert(state->allocationsMap, (u64)allocation, allocInfo);
         return allocation;
     }
@@ -152,17 +163,17 @@ void* DebugRealloc(Allocator* allocator, void* block, u64 newSize)
     else // if normal allocation
     {
         AllocInfo* oldAllocInfo = MapU64Delete(state->allocationsMap, (u64)block);
-        state->totalUserAllocated -= oldAllocInfo->allocSize;
-        state->totalUserAllocated += newSize;
-        //TODO: do something with memtag
-        Free(&state->allocInfoPool, oldAllocInfo);
+        state->totalUserAllocated -= (oldAllocInfo->allocSize - newSize);
+        state->perTagAllocated[oldAllocInfo->tag] -= (oldAllocInfo->allocSize - newSize);
 
         void* reallocation = allocator->BackendRealloc(allocator, block, newSize);
 
         AllocInfo* newAllocInfo = Alloc(&state->allocInfoPool, sizeof(AllocInfo), MEM_TAG_MEMORY_DEBUG);
         newAllocInfo->allocSize = newSize;
-        //TODO: allocinfo memtag
+        newAllocInfo->tag = oldAllocInfo->tag;
         MapU64Insert(state->allocationsMap, (u64)reallocation, newAllocInfo);
+        
+        Free(&state->allocInfoPool, oldAllocInfo);
 
         return reallocation;
     }
@@ -178,11 +189,11 @@ void DebugFree(Allocator* allocator, void* block)
     }
     else // if normal allocation
     {
-        state->totalUserAllocationCount--;
-        //GRDEBUG("%llu", state->totalUserAllocationCount);
         AllocInfo* allocInfo = MapU64Delete(state->allocationsMap, (u64)block);
+        state->totalUserAllocationCount--;
         state->totalUserAllocated -= allocInfo->allocSize;
-        //TODO: do something with memtag
+        state->perTagAllocated[allocInfo->tag] -= allocInfo->allocSize;
+        state->perTagAllocationCount[allocInfo->tag]--;
         allocator->BackendFree(allocator, block);
         Free(&state->allocInfoPool, allocInfo);
     }

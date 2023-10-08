@@ -95,11 +95,7 @@ void PrintMemoryStats()
 	GRINFO("Percent allocated: %.2f%%", 100 * (f32)state->allocated / (f32)state->arenaSize);
 	GRINFO("Total allocations: %llu", state->netAllocationCount);
 	GRINFO("Fragmentation (amount of separate free blocks): %llu", FreelistGetFreeNodes(GetGlobalAllocator()->backendState));
-	GRINFO("Allocations by tag:");
-	for (u32 i = 0; i < MAX_MEMORY_TAGS; ++i)
-	{
-		GRINFO("	%s: %u", memTagToText[i], state->perTagAllocCount[i]);
-	}
+	
 #endif // !GR_DIST
 }
 
