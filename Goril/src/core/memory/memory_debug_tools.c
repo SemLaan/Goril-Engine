@@ -133,10 +133,22 @@ void _PrintMemoryStats()
     DarrayDestroy(allocInfoDarray);
 }
 
+// ================================= Provides allocaters with unique id's ====================================
+static u32 nextAllocatorId = 0;
+
+// This never returns zero, it just starts counting from one
+u32 _GetUniqueAllocatorId()
+{
+    nextAllocatorId++;
+    return nextAllocatorId;
+}
+
 
 // ============================================= Debug alloc, realloc and free hook-ins =====================================
 void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag memtag, const char* file, u32 line)
 {
+    GRASSERT_MSG(allocator->id > 0 && allocator->id <= nextAllocatorId, "invalid allocator id");
+
     Allocator* rootAllocator = allocator;
     while (rootAllocator->parentAllocator)
     {

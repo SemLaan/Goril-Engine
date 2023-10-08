@@ -33,6 +33,7 @@ typedef void (*PFN_BackendFree)(Allocator* allocator, void* block);
 
 
 // The client of this struct should not touch it's internals
+// **IMPORTANT* after constructing an allocator somewhere it should NEVER be copied if you want the memory debug tools to work
 typedef struct Allocator
 {
 	PFN_BackendAlloc BackendAlloc;
@@ -40,4 +41,6 @@ typedef struct Allocator
 	PFN_BackendFree BackendFree;
 	void* backendState;
     Allocator* parentAllocator;
+	// Used by memory debug tools
+	u32 id; // Is only usefull in debug mode, is always zero in dist mode
 } Allocator;
