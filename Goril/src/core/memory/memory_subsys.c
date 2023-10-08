@@ -10,16 +10,6 @@ typedef struct MemoryState
 {
 	Allocator globalAllocator;
 	size_t arenaSize;
-/*
-#ifndef GR_DIST
-	size_t memorySubsystemStateSize;
-	size_t allocated;
-	size_t deferredMemory;
-	u64 netAllocationCount;
-	u32 perTagAllocCount[MAX_MEMORY_TAGS];
-#endif // !GR_DIST
-*/
-
 } MemoryState;
 
 static MemoryState* state = nullptr;
@@ -48,21 +38,7 @@ bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 
 	state->globalAllocator = globalAllocator;
 	state->arenaSize = requiredMemory + globalAllocatorStateSize;
-/*
-#ifndef GR_DIST
-	state->allocated = 0;
-	state->deferredMemory = 0;
-	state->memorySubsystemStateSize = sizeof(MemoryState) + globalAllocatorStateSize + GetFreelistAllocHeaderSize();
-	state->netAllocationCount = 0;
-	for (u32 i = 0; i < MAX_MEMORY_TAGS; i++)
-	{
-		state->perTagAllocCount[i] = 0;
-	}
 
-	AllocInfo(state->memorySubsystemStateSize, MEM_TAG_MEMORY_SUBSYS);
-	AllocInfo(0, MEM_TAG_ALLOCATOR_STATE);
-#endif // !GR_DIST
-*/
 	g_Allocators = (GlobalAllocators*)Alloc(&globalAllocator, sizeof(GlobalAllocators), MEM_TAG_MEMORY_SUBSYS);
 	g_Allocators->temporary = CreateBumpAllocator(&globalAllocator, KiB * 5); /// TODO: make configurable
 
@@ -87,15 +63,7 @@ void ShutdownMemory()
 		Free(GetGlobalAllocator(), g_Allocators);
 	}
 
-/*
-#ifndef GR_DIST
-	// Removing all the allocation info from the state to print memory stats one last time for debugging 
-	// This way the programmer can check if everything else in the application was freed by seeing if it prints 0 net allocations
-	FreeInfo(state->memorySubsystemStateSize, MEM_TAG_MEMORY_SUBSYS);
-	FreeInfo(0, MEM_TAG_ALLOCATOR_STATE);
-	PrintMemoryStats();
-#endif // !GR_DIST
-*/
+	PRINT_MEMORY_STATS();
 
 	initialized = false;
 
@@ -112,41 +80,8 @@ Allocator* GetGlobalAllocator()
 }
 
 /*
-#ifndef GR_DIST
-const u64 GetMemoryUsage()
-{
-	return state->allocated;
-}
 
-const u64 GetNetAllocations()
-{
-	return state->netAllocationCount;
-}
-#endif // !GR_DIST
 
-static const char* GetMemoryScaleString(u64 bytes, u64* out_scale)
-{
-	if (bytes < KiB)
-	{
-		*out_scale = 1;
-		return "B";
-	}
-	else if (bytes < MiB)
-	{
-		*out_scale = KiB;
-		return "KiB";
-	}
-	else if (bytes < GiB)
-	{
-		*out_scale = MiB;
-		return "MiB";
-	}
-	else
-	{
-		*out_scale = GiB;
-		return "GiB";
-	}
-}
 
 void PrintMemoryStats()
 {
@@ -170,40 +105,4 @@ void PrintMemoryStats()
 #endif // !GR_DIST
 }
 
-#ifndef GR_DIST // These functions only get compiled if it's not a distribution build
-void AllocInfo(size_t size, MemTag tag)
-{
-	if (!initialized)
-		return;
-	if (tag != MEM_TAG_SUB_ARENA)
-		state->allocated += size;
-	else
-		state->deferredMemory += size;
-	if (state->allocated > state->arenaSize)
-		GRERROR("Allocating more memory than the application initially asked for, you should probably increase the amount of requested memory in the game config");
-	state->netAllocationCount++;
-	state->perTagAllocCount[tag]++;
-}
-
-void ReAllocInfo(i64 sizeChange)
-{
-	if (!initialized)
-		return;
-	state->allocated += sizeChange;
-}
-
-void FreeInfo(size_t size, MemTag tag)
-{
-	if (!initialized)
-		return;
-	if (tag != MEM_TAG_SUB_ARENA)
-		state->allocated -= size;
-	else
-		state->deferredMemory -= size;
-	if (state->allocated < 0)
-		GRFATAL("Somehow deallocated more memory than was allocated, very impressive and efficient use of memory");
-	state->netAllocationCount--;
-	state->perTagAllocCount[tag]--;
-}
-#endif // !GR_DIST
 */
