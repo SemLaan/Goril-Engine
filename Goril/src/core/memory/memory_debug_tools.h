@@ -8,7 +8,8 @@
 
 #define PRINT_MEMORY_STATS()
 
-#define GET_UNIQUE_ALLOCATOR_ID() 0
+#define REGISTER_ALLOCATOR(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator)
+#define UNREGISTER_ALLOCATOR(allocatorId, allocatorType)
 
 #endif
 
@@ -51,10 +52,11 @@ void _PrintMemoryStats();
 
 #define PRINT_MEMORY_STATS() _PrintMemoryStats()
 
-// Used by allocators to identify themselves to the memory debug tools
-u32 _GetUniqueAllocatorId();
+void _RegisterAllocator(u64 arenaStart, u64 arenaEnd, u32 stateSize, u32* out_allocatorId, AllocatorType type, Allocator* parentAllocator);
+void _UnregisterAllocator(u32 allocatorId, AllocatorType allocatorType);
 
-#define GET_UNIQUE_ALLOCATOR_ID() _GetUniqueAllocatorId()
+#define REGISTER_ALLOCATOR(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator) _RegisterAllocator(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator);
+#define UNREGISTER_ALLOCATOR(allocatorId, allocatorType) _UnregisterAllocator(allocatorId, allocatorType);
 
 void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag memtag, const char* file, u32 line);
 void* DebugRealloc(Allocator* allocator, void* block, u64 newSize, const char* file, u32 line);

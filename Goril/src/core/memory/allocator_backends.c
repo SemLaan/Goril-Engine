@@ -91,12 +91,15 @@ void CreateFreelistAllocator(Allocator* parentAllocator, size_t arenaSize, Alloc
     out_allocator->BackendFree = FreelistFree;
     out_allocator->backendState = state;
     out_allocator->parentAllocator = parentAllocator;
-    out_allocator->id = GET_UNIQUE_ALLOCATOR_ID();
+
+    REGISTER_ALLOCATOR((u64)arenaStart, (u64)arenaStart + arenaSize, stateSize, &out_allocator->id, ALLOCATOR_TYPE_FREELIST, parentAllocator);
 }
 
 void DestroyFreelistAllocator(Allocator* parentAllocator, Allocator allocator)
 {
     FreelistState* state = (FreelistState*)allocator.backendState;
+
+    UNREGISTER_ALLOCATOR(allocator.id, ALLOCATOR_TYPE_FREELIST);
 
     // Frees the entire arena including state
     Free(parentAllocator, state);
@@ -425,12 +428,15 @@ void CreateBumpAllocator(Allocator* parentAllocator, size_t arenaSize, Allocator
     out_allocator->BackendFree = BumpFree;
     out_allocator->backendState = state;
     out_allocator->parentAllocator = parentAllocator;
-    out_allocator->id = GET_UNIQUE_ALLOCATOR_ID();
+
+    REGISTER_ALLOCATOR((u64)arenaStart, (u64)arenaStart + arenaSize, stateSize, &out_allocator->id, ALLOCATOR_TYPE_BUMP, parentAllocator);
 }
 
 void DestroyBumpAllocator(Allocator* parentAllocator, Allocator allocator)
 {
     BumpAllocatorState* state = (BumpAllocatorState*)allocator.backendState;
+
+    UNREGISTER_ALLOCATOR(allocator.id, ALLOCATOR_TYPE_BUMP);
 
     // Frees the entire arena including state
     Free(parentAllocator, state);
@@ -589,12 +595,15 @@ void CreatePoolAllocator(Allocator* parentAllocator, u32 blockSize, u32 poolSize
     out_allocator->BackendFree = PoolFree;
     out_allocator->backendState = state;
     out_allocator->parentAllocator = parentAllocator;
-    out_allocator->id = GET_UNIQUE_ALLOCATOR_ID();
+
+    REGISTER_ALLOCATOR((u64)state->poolStart, (u64)state->poolStart + (blockSize * poolSize), stateSize + blockTrackerSize, &out_allocator->id, ALLOCATOR_TYPE_POOL, parentAllocator);
 }
 
 void DestroyPoolAllocator(Allocator* parentAllocator, Allocator allocator)
 {
     PoolAllocatorState* state = (PoolAllocatorState*)allocator.backendState;
+
+    UNREGISTER_ALLOCATOR(allocator.id, ALLOCATOR_TYPE_POOL);
 
     // Frees the entire arena including state
     Free(parentAllocator, state);
@@ -717,7 +726,8 @@ bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* o
     out_allocator->BackendFree = FreelistFree;
     out_allocator->backendState = state;
     out_allocator->parentAllocator = nullptr;
-    out_allocator->id = GET_UNIQUE_ALLOCATOR_ID();
+
+    REGISTER_ALLOCATOR((u64)arenaStart, (u64)arenaStart + arenaSize, stateSize, &out_allocator->id, ALLOCATOR_TYPE_GLOBAL, nullptr);
 
     return true;
 }
@@ -725,6 +735,9 @@ bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* o
 void DestroyGlobalAllocator(Allocator allocator)
 {
     FreelistState* state = (FreelistState*)allocator.backendState;
+
+    UNREGISTER_ALLOCATOR(allocator.id, ALLOCATOR_TYPE_GLOBAL);
+
     // Frees the entire arena including state
     free(state);
 }

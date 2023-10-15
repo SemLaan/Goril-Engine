@@ -32,6 +32,16 @@ typedef void* (*PFN_BackendRealloc)(Allocator* allocator, void* block, u64 newSi
 typedef void (*PFN_BackendFree)(Allocator* allocator, void* block);
 
 
+typedef enum AllocatorType
+{
+	ALLOCATOR_TYPE_GLOBAL,
+	ALLOCATOR_TYPE_FREELIST,
+	ALLOCATOR_TYPE_BUMP,
+	ALLOCATOR_TYPE_POOL,
+	ALLOCATOR_TYPE_MAX_VALUE,
+} AllocatorType;
+
+
 // The client of this struct should not touch it's internals
 // **IMPORTANT* after constructing an allocator somewhere it should NEVER be copied if you want the memory debug tools to work
 typedef struct Allocator
