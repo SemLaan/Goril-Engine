@@ -29,3 +29,6 @@ void DarraySetSize(void* elements, u32 size);
 
 // Only use on small arrays because performance is poor, consider a hash map
 bool DarrayContains(void* elements, void* element);
+
+// Only use on small arrays because performance is poor, consider a hash map
+u32 DarrayGetElementIndex(void* elements, void* element);

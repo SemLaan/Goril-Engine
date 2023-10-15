@@ -110,3 +110,17 @@ bool DarrayContains(void* elements, void* element)
 
 	return false;
 }
+
+u32 DarrayGetElementIndex(void* elements, void* element)
+{
+	Darray* state = (Darray*)elements - 1;
+
+	for (u32 i = 0; i < state->size; i++)
+	{
+		if (CompareMemory((u8*)elements + (i * state->stride), element, state->stride))
+			return i;
+	}
+
+	GRERROR("Darray: tried to get element index of non-existent element");
+	return UINT32_MAX;
+}
