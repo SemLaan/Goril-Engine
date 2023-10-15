@@ -35,18 +35,18 @@ bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* o
 void DestroyGlobalAllocator(Allocator allocator);
 
 // ================================== Freelist allocator =================================================================================================================================================
-Allocator CreateFreelistAllocator(Allocator* parentAllocator, size_t arenaSize);
+void CreateFreelistAllocator(Allocator* parentAllocator, size_t arenaSize, Allocator* out_allocator);
 void DestroyFreelistAllocator(Allocator* parentAllocator, Allocator allocator);
 size_t FreelistGetFreeNodes(void* backendState);
 u32 GetFreelistAllocHeaderSize();
 
 // ==================================== Bump allocator ================================================================================================================================================
-Allocator CreateBumpAllocator(Allocator* parentAllocator, size_t arenaSize);
+void CreateBumpAllocator(Allocator* parentAllocator, size_t arenaSize, Allocator* out_allocator);
 void DestroyBumpAllocator(Allocator* parentAllocator, Allocator allocator);
 
 
 // ===================================== Pool allocator =============================================================================================================================================
 // Size of blocks this allocator returns, and amount of blocks in this allocator.
 // all blocks created by this allocator are aligned on allocSize (provided it is a power of two)
-Allocator CreatePoolAllocator(Allocator* parentAllocator, u32 blockSize, u32 poolSize);
+void CreatePoolAllocator(Allocator* parentAllocator, u32 blockSize, u32 poolSize, Allocator* out_allocator);
 void DestroyPoolAllocator(Allocator* parentAllocator, Allocator allocator);

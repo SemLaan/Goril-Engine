@@ -67,7 +67,7 @@ void _StartMemoryDebugSubsys()
     state = Alloc(&memoryDebugAllocator, sizeof(*state), MEM_TAG_MEMORY_DEBUG);
     ZeroMem(state, sizeof(*state));
     state->allocationsMap = MapU64Create(&memoryDebugAllocator, MEM_TAG_MEMORY_DEBUG, 2000, 100, Hash6432Shift);
-    state->allocInfoPool = CreatePoolAllocator(&memoryDebugAllocator, sizeof(AllocInfo), 2100);
+    CreatePoolAllocator(&memoryDebugAllocator, sizeof(AllocInfo), 2100, &state->allocInfoPool);
     state->totalUserAllocated = 0;
     state->totalUserAllocationCount = 0;
     state->arenaStart = memoryDebugArenaStart;

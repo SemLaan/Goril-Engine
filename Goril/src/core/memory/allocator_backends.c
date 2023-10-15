@@ -52,7 +52,7 @@ static void* FreelistPrimitiveAlloc(void* backendState, size_t size);
 static bool FreelistPrimitiveTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize);
 static void FreelistPrimitiveFree(void* backendState, void* block, size_t size);
 
-Allocator CreateFreelistAllocator(Allocator* parentAllocator, size_t arenaSize)
+void CreateFreelistAllocator(Allocator* parentAllocator, size_t arenaSize, Allocator* out_allocator)
 {
     arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
 
@@ -86,15 +86,12 @@ Allocator CreateFreelistAllocator(Allocator* parentAllocator, size_t arenaSize)
     state->head->next = nullptr;
 
     // Linking the allocator object to the freelist functions
-    Allocator allocator = {};
-    allocator.BackendAlloc = FreelistAlignedAlloc;
-    allocator.BackendRealloc = FreelistReAlloc;
-    allocator.BackendFree = FreelistFree;
-    allocator.backendState = state;
-    allocator.parentAllocator = parentAllocator;
-    allocator.id = GET_UNIQUE_ALLOCATOR_ID();
-
-    return allocator;
+    out_allocator->BackendAlloc = FreelistAlignedAlloc;
+    out_allocator->BackendRealloc = FreelistReAlloc;
+    out_allocator->BackendFree = FreelistFree;
+    out_allocator->backendState = state;
+    out_allocator->parentAllocator = parentAllocator;
+    out_allocator->id = GET_UNIQUE_ALLOCATOR_ID();
 }
 
 void DestroyFreelistAllocator(Allocator* parentAllocator, Allocator allocator)
@@ -400,7 +397,7 @@ static void* BumpPrimitiveAlloc(void* backendState, size_t size);
 static bool BumpPrimitiveTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize);
 static void BumpPrimitiveFree(void* backendState, void* block, size_t size);
 
-Allocator CreateBumpAllocator(Allocator* parentAllocator, size_t arenaSize)
+void CreateBumpAllocator(Allocator* parentAllocator, size_t arenaSize, Allocator* out_allocator)
 {
     arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
 
@@ -423,15 +420,12 @@ Allocator CreateBumpAllocator(Allocator* parentAllocator, size_t arenaSize)
     state->allocCount = 0;
 
     // Linking the allocator object to the freelist functions
-    Allocator allocator = {};
-    allocator.BackendAlloc = BumpAlignedAlloc;
-    allocator.BackendRealloc = BumpReAlloc;
-    allocator.BackendFree = BumpFree;
-    allocator.backendState = state;
-    allocator.parentAllocator = parentAllocator;
-    allocator.id = GET_UNIQUE_ALLOCATOR_ID();
-
-    return allocator;
+    out_allocator->BackendAlloc = BumpAlignedAlloc;
+    out_allocator->BackendRealloc = BumpReAlloc;
+    out_allocator->BackendFree = BumpFree;
+    out_allocator->backendState = state;
+    out_allocator->parentAllocator = parentAllocator;
+    out_allocator->id = GET_UNIQUE_ALLOCATOR_ID();
 }
 
 void DestroyBumpAllocator(Allocator* parentAllocator, Allocator allocator)
@@ -567,7 +561,7 @@ static void* PoolAlignedAlloc(Allocator* allocator, u64 size, u32 alignment);
 static void* PoolReAlloc(Allocator* allocator, void* block, u64 size);
 static void PoolFree(Allocator* allocator, void* block);
 
-Allocator CreatePoolAllocator(Allocator* parentAllocator, u32 blockSize, u32 poolSize)
+void CreatePoolAllocator(Allocator* parentAllocator, u32 blockSize, u32 poolSize, Allocator* out_allocator)
 {
     // Calculating required memory (client size + state size)
     u32 stateSize = sizeof(PoolAllocatorState);
@@ -590,15 +584,12 @@ Allocator CreatePoolAllocator(Allocator* parentAllocator, u32 blockSize, u32 poo
 	state->controlBlockCount = ceil((f32)poolSize / 32.f);
 
     // Linking the allocator object to the freelist functions
-    Allocator allocator = {};
-    allocator.BackendAlloc = PoolAlignedAlloc;
-    allocator.BackendRealloc = PoolReAlloc;
-    allocator.BackendFree = PoolFree;
-    allocator.backendState = state;
-    allocator.parentAllocator = parentAllocator;
-    allocator.id = GET_UNIQUE_ALLOCATOR_ID();
-
-    return allocator;
+    out_allocator->BackendAlloc = PoolAlignedAlloc;
+    out_allocator->BackendRealloc = PoolReAlloc;
+    out_allocator->BackendFree = PoolFree;
+    out_allocator->backendState = state;
+    out_allocator->parentAllocator = parentAllocator;
+    out_allocator->id = GET_UNIQUE_ALLOCATOR_ID();
 }
 
 void DestroyPoolAllocator(Allocator* parentAllocator, Allocator allocator)

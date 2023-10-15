@@ -40,7 +40,7 @@ bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 	state->arenaSize = requiredMemory + globalAllocatorStateSize;
 
 	g_Allocators = (GlobalAllocators*)Alloc(&globalAllocator, sizeof(GlobalAllocators), MEM_TAG_MEMORY_SUBSYS);
-	g_Allocators->temporary = CreateBumpAllocator(&globalAllocator, KiB * 5); /// TODO: make configurable
+	CreateBumpAllocator(&globalAllocator, KiB * 5, &g_Allocators->temporary); /// TODO: make configurable
 
 	return true;
 }
