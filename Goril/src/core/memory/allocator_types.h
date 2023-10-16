@@ -44,7 +44,7 @@ typedef enum AllocatorType
 
 // The client of this struct should not touch it's internals
 // **IMPORTANT* after constructing an allocator somewhere it's parent should NEVER be copied if you want the memory debug tools to work
-// TODO: change this
+// TODO: change this by making everything use id instead of pointers to the parent allocator
 typedef struct Allocator
 {
 	PFN_BackendAlloc BackendAlloc;

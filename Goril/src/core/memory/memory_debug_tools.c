@@ -50,6 +50,7 @@ typedef struct RegisteredAllocatorInfo
     u64 arenaEnd;
     u32 stateSize;
     u32 allocatorId;
+    u32 parentAllocatorId;
     AllocatorType type;
 } RegisteredAllocatorInfo;
 
@@ -125,6 +126,23 @@ static const char* GetMemoryScaleString(u64 bytes, u64* out_scale)
     }
 }
 
+void PrintAllocatorStatsRecursively(RegisteredAllocatorInfo* root, u32 registeredAllocatorCount, u32 depth)
+{
+    char* tabs = Alloc(&memoryDebugAllocator, depth + 1/*null terminator*/, MEM_TAG_MEMORY_DEBUG);
+    SetMem(tabs, '\t', depth);
+    tabs[depth] = 0;
+
+    GRINFO("%s%s (id)%u, (type)%s", tabs, root->name, root->allocatorId, allocatorTypeToString[root->type]);
+    
+    Free(&memoryDebugAllocator, tabs);
+
+    for (u32 i = 0; i < registeredAllocatorCount; ++i)
+    {
+        if (root->allocatorId == state->registeredAllocatorDarray[i].parentAllocatorId)
+            PrintAllocatorStatsRecursively(state->registeredAllocatorDarray + i, registeredAllocatorCount, depth + 1);
+    }
+}
+
 void _PrintMemoryStats()
 {
     GRINFO("Printing memory stats:");
@@ -133,10 +151,9 @@ void _PrintMemoryStats()
     u32 registeredAllocatorCount = DarrayGetSize(state->registeredAllocatorDarray);
     GRINFO("Printing %u live allocators:", registeredAllocatorCount);
 
-    for (u32 i = 0; i < registeredAllocatorCount; ++i)
-    {
-        GRINFO("\tAllocator %u: %u(id), %s(type)", i, state->registeredAllocatorDarray[i].allocatorId, allocatorTypeToString[state->registeredAllocatorDarray[i].type]);
-    }
+    RegisteredAllocatorInfo* globalAllocator = state->registeredAllocatorDarray;
+
+    PrintAllocatorStatsRecursively(globalAllocator, registeredAllocatorCount, 1/*start depth 1 to indent all allocators at least one tab*/);
 
     // Printing total allocation stats
     const char* scaleString;
@@ -217,6 +234,10 @@ void _RegisterAllocator(u64 arenaStart, u64 arenaEnd, u32 stateSize, u32* out_al
     allocatorInfo.arenaEnd = arenaEnd;
     allocatorInfo.stateSize = stateSize;
     allocatorInfo.type = type;
+    if (parentAllocator != nullptr)
+        allocatorInfo.parentAllocatorId = parentAllocator->id;
+    else
+        allocatorInfo.parentAllocatorId = 0;
 
     state->registeredAllocatorDarray = DarrayPushback(state->registeredAllocatorDarray, &allocatorInfo);
 }
