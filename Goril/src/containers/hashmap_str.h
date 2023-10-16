@@ -17,9 +17,9 @@ typedef struct MapEntryStr
 typedef struct HashmapStr
 {
     HashFunctionStr hashFunction;
-    Allocator linkedEntryPool;
-    Allocator keyPool;
-    Allocator* allocator;
+    Allocator* linkedEntryPool;
+    Allocator* keyPool;
+    Allocator* parentAllocator;
     MapEntryStr* backingArray;
     u32 backingArrayElementCount;
     u32 maxKeyLength;

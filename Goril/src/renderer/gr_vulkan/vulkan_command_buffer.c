@@ -103,7 +103,7 @@ bool EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 wa
 	semaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
 	semaphoreInfo.deviceIndex = 0;
 
-	VkSemaphoreSubmitInfo* semaphoreInfosDarray = DarrayCreate(sizeof(VkSemaphoreSubmitInfo), signalSemaphoreCount + 1, &g_Allocators->temporary, MEM_TAG_RENDERER_SUBSYS);
+	VkSemaphoreSubmitInfo* semaphoreInfosDarray = DarrayCreate(sizeof(VkSemaphoreSubmitInfo), signalSemaphoreCount + 1, g_Allocators->temporary, MEM_TAG_RENDERER_SUBSYS);
 	semaphoreInfosDarray = DarrayPushback(semaphoreInfosDarray, &semaphoreInfo);
 
 	for (u32 i = 0; i < signalSemaphoreCount; ++i)
@@ -189,7 +189,7 @@ bool SubmitCommandBuffers(u32 waitSemaphoreCount, VkSemaphoreSubmitInfo* pWaitSe
 	}
 #endif // GR_DEBUG
 
-	VkCommandBufferSubmitInfo* commandBufferSubmitInfosDarray = (VkCommandBufferSubmitInfo*)DarrayCreate(sizeof(VkCommandBufferSubmitInfo), commandBufferCount, &g_Allocators->temporary, MEM_TAG_RENDERER_SUBSYS);
+	VkCommandBufferSubmitInfo* commandBufferSubmitInfosDarray = (VkCommandBufferSubmitInfo*)DarrayCreate(sizeof(VkCommandBufferSubmitInfo), commandBufferCount, g_Allocators->temporary, MEM_TAG_RENDERER_SUBSYS);
 	for (u32 i = 0; i < commandBufferCount; ++i)
 	{
 		VkCommandBufferSubmitInfo commandBufferInfo = {};
@@ -209,7 +209,7 @@ bool SubmitCommandBuffers(u32 waitSemaphoreCount, VkSemaphoreSubmitInfo* pWaitSe
 	semaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
 	semaphoreInfo.deviceIndex = 0;
 
-	VkSemaphoreSubmitInfo* semaphoreInfosDarray = (VkSemaphoreSubmitInfo*)DarrayCreate(sizeof(VkSemaphoreSubmitInfo), signalSemaphoreCount + 1, &g_Allocators->temporary, MEM_TAG_RENDERER_SUBSYS);
+	VkSemaphoreSubmitInfo* semaphoreInfosDarray = (VkSemaphoreSubmitInfo*)DarrayCreate(sizeof(VkSemaphoreSubmitInfo), signalSemaphoreCount + 1, g_Allocators->temporary, MEM_TAG_RENDERER_SUBSYS);
 	semaphoreInfosDarray = (VkSemaphoreSubmitInfo*)DarrayPushback(semaphoreInfosDarray, &semaphoreInfo);
 
 	for (u32 i = 0; i < signalSemaphoreCount; ++i)

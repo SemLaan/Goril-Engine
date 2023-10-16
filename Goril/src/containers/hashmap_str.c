@@ -10,7 +10,7 @@ HashmapStr* MapStrCreate(Allocator* allocator, MemTag memtag, u32 backingArrayEl
     hashmap->hashFunction = hashFunction;
     CreatePoolAllocator("Map linked entry pool", allocator, sizeof(MapEntryStr), maxCollisions, &hashmap->linkedEntryPool);
     CreatePoolAllocator("Map key pool", allocator, maxKeyLength, maxCollisions + backingArrayElementCount, &hashmap->keyPool);
-    hashmap->allocator = allocator;
+    hashmap->parentAllocator = allocator;
     hashmap->maxKeyLength = maxKeyLength;
 
     ZeroMem(hashmap->backingArray, sizeof(MapEntryStr) * backingArrayElementCount);
@@ -20,10 +20,10 @@ HashmapStr* MapStrCreate(Allocator* allocator, MemTag memtag, u32 backingArrayEl
 
 void MapStrDestroy(HashmapStr* hashmap)
 {
-    DestroyPoolAllocator(hashmap->allocator, hashmap->linkedEntryPool);
-    DestroyPoolAllocator(hashmap->allocator, hashmap->keyPool);
+    DestroyPoolAllocator(hashmap->linkedEntryPool);
+    DestroyPoolAllocator(hashmap->keyPool);
 
-    Free(hashmap->allocator, hashmap);
+    Free(hashmap->parentAllocator, hashmap);
 }
 
 void MapStrInsert(HashmapStr* hashmap, const char* key, u32 keyLength, void* value)
@@ -42,13 +42,13 @@ void MapStrInsert(HashmapStr* hashmap, const char* key, u32 keyLength, void* val
         }
         else
         {
-            currentEntry->next = Alloc(&hashmap->linkedEntryPool, sizeof(MapEntryStr), MEM_TAG_HASHMAP);
+            currentEntry->next = Alloc(hashmap->linkedEntryPool, sizeof(MapEntryStr), MEM_TAG_HASHMAP);
             ZeroMem(currentEntry->next, sizeof(MapEntryStr));
             currentEntry = currentEntry->next;
         }
     }
 
-    currentEntry->key = Alloc(&hashmap->keyPool, hashmap->maxKeyLength, MEM_TAG_HASHMAP);
+    currentEntry->key = Alloc(hashmap->keyPool, hashmap->maxKeyLength, MEM_TAG_HASHMAP);
     GRASSERT_DEBUG(keyLength < hashmap->maxKeyLength);
     MemCopy(currentEntry->key, key, keyLength);
     currentEntry->keyLength = keyLength;

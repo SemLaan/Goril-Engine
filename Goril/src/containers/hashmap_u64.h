@@ -20,8 +20,8 @@ typedef struct MapEntryU64
 typedef struct HashmapU64
 {
     HashFunctionU64 hashFunction;
-    Allocator linkedEntryPool;
-    Allocator* allocator;
+    Allocator* linkedEntryPool;
+    Allocator* parentAllocator;
     MapEntryU64* backingArray;
     u32 backingArrayElementCount;
 } HashmapU64;

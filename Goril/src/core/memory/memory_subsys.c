@@ -8,7 +8,7 @@
 
 typedef struct MemoryState
 {
-	Allocator globalAllocator;
+	Allocator* globalAllocator;
 	size_t arenaSize;
 } MemoryState;
 
@@ -24,7 +24,7 @@ bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 	initialized = false;
 
 	// Creating the global allocator and allocating all application memory
-	Allocator globalAllocator;
+	Allocator* globalAllocator;
 	size_t globalAllocatorStateSize;
 	if (!CreateGlobalAllocator("Global allocator", requiredMemory, &globalAllocator, &globalAllocatorStateSize, nullptr))
 	{
@@ -33,14 +33,14 @@ bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 	}
 
 	// Creating the memory state
-	state = Alloc(&globalAllocator, sizeof(MemoryState), MEM_TAG_MEMORY_SUBSYS);
+	state = Alloc(globalAllocator, sizeof(MemoryState), MEM_TAG_MEMORY_SUBSYS);
 	initialized = true;
 
 	state->globalAllocator = globalAllocator;
 	state->arenaSize = requiredMemory + globalAllocatorStateSize;
 
-	g_Allocators = (GlobalAllocators*)Alloc(&globalAllocator, sizeof(GlobalAllocators), MEM_TAG_MEMORY_SUBSYS);
-	CreateBumpAllocator("Temporary allocator", &globalAllocator, KiB * 5, &g_Allocators->temporary); /// TODO: make configurable
+	g_Allocators = (GlobalAllocators*)Alloc(globalAllocator, sizeof(GlobalAllocators), MEM_TAG_MEMORY_SUBSYS);
+	CreateBumpAllocator("Temporary allocator", globalAllocator, KiB * 5, &g_Allocators->temporary); /// TODO: make configurable
 
 	return true;
 }
@@ -59,7 +59,7 @@ void ShutdownMemory()
 
 	if (g_Allocators)
 	{
-		DestroyBumpAllocator(GetGlobalAllocator(), g_Allocators->temporary);
+		DestroyBumpAllocator(g_Allocators->temporary);
 		Free(GetGlobalAllocator(), g_Allocators);
 	}
 
@@ -67,7 +67,7 @@ void ShutdownMemory()
 
 	initialized = false;
 
-	Allocator globalAllocator = state->globalAllocator;
+	Allocator* globalAllocator = state->globalAllocator;
 	Free(GetGlobalAllocator(), state);
 
 	// Return all the application memory back to the OS
@@ -76,7 +76,7 @@ void ShutdownMemory()
 
 Allocator* GetGlobalAllocator()
 {
-	return &state->globalAllocator;
+	return state->globalAllocator;
 }
 
 /*

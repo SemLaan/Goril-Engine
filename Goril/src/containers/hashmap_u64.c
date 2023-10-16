@@ -25,7 +25,7 @@ HashmapU64* MapU64Create(Allocator* allocator, MemTag memtag, u32 backingArrayEl
     hashmap->backingArrayElementCount = backingArrayElementCount;
     hashmap->hashFunction = hashFunction;
     CreatePoolAllocator("Map linked entry pool", allocator, sizeof(MapEntryU64), maxCollisions, &hashmap->linkedEntryPool);
-    hashmap->allocator = allocator;
+    hashmap->parentAllocator = allocator;
 
     ZeroMem(hashmap->backingArray, sizeof(MapEntryU64) * backingArrayElementCount);
 
@@ -34,9 +34,9 @@ HashmapU64* MapU64Create(Allocator* allocator, MemTag memtag, u32 backingArrayEl
 
 void MapU64Destroy(HashmapU64* hashmap)
 {
-    DestroyPoolAllocator(hashmap->allocator, hashmap->linkedEntryPool);
+    DestroyPoolAllocator(hashmap->linkedEntryPool);
 
-    Free(hashmap->allocator, hashmap);
+    Free(hashmap->parentAllocator, hashmap);
 }
 
 void MapU64Insert(HashmapU64* hashmap, u64 key, void* value)
@@ -56,7 +56,7 @@ void MapU64Insert(HashmapU64* hashmap, u64 key, void* value)
         }
         else
         {
-            currentEntry->next = Alloc(&hashmap->linkedEntryPool, sizeof(MapEntryU64), MEM_TAG_HASHMAP);
+            currentEntry->next = Alloc(hashmap->linkedEntryPool, sizeof(MapEntryU64), MEM_TAG_HASHMAP);
             ZeroMem(currentEntry->next, sizeof(MapEntryU64));
             currentEntry = currentEntry->next;
         }
@@ -114,7 +114,7 @@ void* MapU64Delete(HashmapU64* hashmap, u64 key)
             else // if there is a previous entry, meaning current entry is in a linked list and NOT in the backing array
             {
                 previousEntry->next = currentEntry->next;
-                Free(&hashmap->linkedEntryPool, currentEntry);
+                Free(hashmap->linkedEntryPool, currentEntry);
             }
             return returnValue;
         }

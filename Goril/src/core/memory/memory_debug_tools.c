@@ -46,6 +46,7 @@ typedef struct AllocInfo
 typedef struct RegisteredAllocatorInfo
 {
     const char* name;
+    Allocator* allocator;
     u64 arenaStart;
     u64 arenaEnd;
     u32 stateSize;
@@ -61,7 +62,7 @@ typedef struct MemoryDebugState
     u64 arenaSize;
     RegisteredAllocatorInfo* registeredAllocatorDarray;
     HashmapU64* allocationsMap;
-    Allocator allocInfoPool;
+    Allocator* allocInfoPool;
     u64 totalUserAllocated;
     u64 totalUserAllocationCount;
     u32 perTagAllocationCount[MAX_MEMORY_TAGS];
@@ -69,7 +70,7 @@ typedef struct MemoryDebugState
 } MemoryDebugState;
 
 static bool memoryDebuggingAllocatorsCreated = false;
-static Allocator memoryDebugAllocator;
+static Allocator* memoryDebugAllocator;
 static MemoryDebugState* state = nullptr;
 
 // ========================================= startup and shutdown =============================================
@@ -82,16 +83,16 @@ void _StartMemoryDebugSubsys()
     if (!CreateGlobalAllocator("Debug allocator", memoryDebugArenaSize, &memoryDebugAllocator, nullptr, &memoryDebugArenaStart))
         GRASSERT_MSG(false, "Creating memory debug allocator failed");
 
-    state = Alloc(&memoryDebugAllocator, sizeof(*state), MEM_TAG_MEMORY_DEBUG);
+    state = Alloc(memoryDebugAllocator, sizeof(*state), MEM_TAG_MEMORY_DEBUG);
     ZeroMem(state, sizeof(*state));
-    state->allocationsMap = MapU64Create(&memoryDebugAllocator, MEM_TAG_MEMORY_DEBUG, 2000, 100, Hash6432Shift);
-    CreatePoolAllocator("Alloc info pool", &memoryDebugAllocator, sizeof(AllocInfo), 2100, &state->allocInfoPool);
+    state->allocationsMap = MapU64Create(memoryDebugAllocator, MEM_TAG_MEMORY_DEBUG, 2000, 100, Hash6432Shift);
+    CreatePoolAllocator("Alloc info pool", memoryDebugAllocator, sizeof(AllocInfo), 2100, &state->allocInfoPool);
     state->totalUserAllocated = 0;
     state->totalUserAllocationCount = 0;
     state->arenaStart = memoryDebugArenaStart;
     state->arenaSize = memoryDebugArenaSize;
     state->arenaEnd = memoryDebugArenaStart + memoryDebugArenaSize;
-    state->registeredAllocatorDarray = DarrayCreate(sizeof(*state->registeredAllocatorDarray), 10, &memoryDebugAllocator, MEM_TAG_MEMORY_DEBUG);
+    state->registeredAllocatorDarray = DarrayCreate(sizeof(*state->registeredAllocatorDarray), 10, memoryDebugAllocator, MEM_TAG_MEMORY_DEBUG);
 
     memoryDebuggingAllocatorsCreated = true;
 }
@@ -128,13 +129,32 @@ static const char* GetMemoryScaleString(u64 bytes, u64* out_scale)
 
 void PrintAllocatorStatsRecursively(RegisteredAllocatorInfo* root, u32 registeredAllocatorCount, u32 depth)
 {
-    char* tabs = Alloc(&memoryDebugAllocator, depth + 1/*null terminator*/, MEM_TAG_MEMORY_DEBUG);
+    char* tabs = Alloc(memoryDebugAllocator, depth + 1/*null terminator*/, MEM_TAG_MEMORY_DEBUG);
     SetMem(tabs, '\t', depth);
     tabs[depth] = 0;
 
     GRINFO("%s%s (id)%u, (type)%s", tabs, root->name, root->allocatorId, allocatorTypeToString[root->type]);
+
+    switch (root->type)
+    {
+    case ALLOCATOR_TYPE_GLOBAL:
+        
+        break;
+    case ALLOCATOR_TYPE_FREELIST:
+        
+        break;
+    case ALLOCATOR_TYPE_BUMP:
+        
+        break;
+    case ALLOCATOR_TYPE_POOL:
+        
+        break;
+    default:
+        GRERROR("Unknown allocator type");
+        break;
+    }
     
-    Free(&memoryDebugAllocator, tabs);
+    Free(memoryDebugAllocator, tabs);
 
     for (u32 i = 0; i < registeredAllocatorCount; ++i)
     {
@@ -171,7 +191,7 @@ void _PrintMemoryStats()
 
     // Printing all active allocations
     // TODO: add a bool parameter to the function to specify whether to print this or not, because it's a lot
-    AllocInfo** allocInfoDarray = (AllocInfo**)MapU64GetValueDarray(state->allocationsMap, &memoryDebugAllocator);
+    AllocInfo** allocInfoDarray = (AllocInfo**)MapU64GetValueDarray(state->allocationsMap, memoryDebugAllocator);
 
     RegisteredAllocatorInfo* allocatedWithAllocator;
 
@@ -214,7 +234,7 @@ static u32 _GetUniqueAllocatorId()
     return nextAllocatorId;
 }
 
-void _RegisterAllocator(u64 arenaStart, u64 arenaEnd, u32 stateSize, u32* out_allocatorId, AllocatorType type, Allocator* parentAllocator, const char* name)
+void _RegisterAllocator(u64 arenaStart, u64 arenaEnd, u32 stateSize, u32* out_allocatorId, AllocatorType type, Allocator* parentAllocator, const char* name, Allocator* allocator)
 {
     // Making sure debug allocators don't get registered, we also don't have to worry about them getting unregistered as
     // they will be cleaned up by the OS, and thus don't call unregister
@@ -229,6 +249,7 @@ void _RegisterAllocator(u64 arenaStart, u64 arenaEnd, u32 stateSize, u32* out_al
 
     RegisteredAllocatorInfo allocatorInfo = {};
     allocatorInfo.name = name;
+    allocatorInfo.allocator = allocator;
     allocatorInfo.allocatorId = *out_allocatorId;
     allocatorInfo.arenaStart = arenaStart;
     allocatorInfo.arenaEnd = arenaEnd;
@@ -277,7 +298,7 @@ void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag me
 
         void* allocation = allocator->BackendAlloc(allocator, size, alignment);
 
-        AllocInfo* allocInfo = Alloc(&state->allocInfoPool, sizeof(AllocInfo), MEM_TAG_MEMORY_DEBUG);
+        AllocInfo* allocInfo = Alloc(state->allocInfoPool, sizeof(AllocInfo), MEM_TAG_MEMORY_DEBUG);
         allocInfo->allocatorId = allocator->id;
         allocInfo->allocSize = size;
         allocInfo->tag = memtag;
@@ -309,7 +330,7 @@ void* DebugRealloc(Allocator* allocator, void* block, u64 newSize, const char* f
 
         void* reallocation = allocator->BackendRealloc(allocator, block, newSize);
 
-        AllocInfo* newAllocInfo = Alloc(&state->allocInfoPool, sizeof(AllocInfo), MEM_TAG_MEMORY_DEBUG);
+        AllocInfo* newAllocInfo = Alloc(state->allocInfoPool, sizeof(AllocInfo), MEM_TAG_MEMORY_DEBUG);
         newAllocInfo->allocatorId = oldAllocInfo->allocatorId;
         newAllocInfo->allocSize = newSize;
         newAllocInfo->tag = oldAllocInfo->tag;
@@ -317,7 +338,7 @@ void* DebugRealloc(Allocator* allocator, void* block, u64 newSize, const char* f
         newAllocInfo->line = oldAllocInfo->line;
         MapU64Insert(state->allocationsMap, (u64)reallocation, newAllocInfo);
 
-        Free(&state->allocInfoPool, oldAllocInfo);
+        Free(state->allocInfoPool, oldAllocInfo);
 
         return reallocation;
     }
@@ -344,7 +365,7 @@ void DebugFree(Allocator* allocator, void* block, const char* file, u32 line)
         state->perTagAllocated[allocInfo->tag] -= allocInfo->allocSize;
         state->perTagAllocationCount[allocInfo->tag]--;
         allocator->BackendFree(allocator, block);
-        Free(&state->allocInfoPool, allocInfo);
+        Free(state->allocInfoPool, allocInfo);
     }
 }
 

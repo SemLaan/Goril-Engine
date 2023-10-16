@@ -8,7 +8,7 @@
 
 #define PRINT_MEMORY_STATS()
 
-#define REGISTER_ALLOCATOR(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator, name)
+#define REGISTER_ALLOCATOR(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator, name, allocator)
 #define UNREGISTER_ALLOCATOR(allocatorId, allocatorType)
 
 #endif
@@ -52,10 +52,10 @@ void _PrintMemoryStats();
 
 #define PRINT_MEMORY_STATS() _PrintMemoryStats()
 
-void _RegisterAllocator(u64 arenaStart, u64 arenaEnd, u32 stateSize, u32* out_allocatorId, AllocatorType type, Allocator* parentAllocator, const char* name);
+void _RegisterAllocator(u64 arenaStart, u64 arenaEnd, u32 stateSize, u32* out_allocatorId, AllocatorType type, Allocator* parentAllocator, const char* name, Allocator* allocator);
 void _UnregisterAllocator(u32 allocatorId, AllocatorType allocatorType);
 
-#define REGISTER_ALLOCATOR(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator, name) _RegisterAllocator(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator, name);
+#define REGISTER_ALLOCATOR(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator, name, allocator) _RegisterAllocator(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator, name, allocator);
 #define UNREGISTER_ALLOCATOR(allocatorId, allocatorType) _UnregisterAllocator(allocatorId, allocatorType);
 
 void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag memtag, const char* file, u32 line);

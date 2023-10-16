@@ -4,7 +4,7 @@
 
 typedef struct GlobalAllocators
 {
-	Allocator temporary;
+	Allocator* temporary;
 } GlobalAllocators;
 
 extern GlobalAllocators* g_Allocators;
