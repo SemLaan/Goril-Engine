@@ -135,19 +135,28 @@ void PrintAllocatorStatsRecursively(RegisteredAllocatorInfo* root, u32 registere
 
     GRINFO("%s%s (id)%u, (type)%s", tabs, root->name, root->allocatorId, allocatorTypeToString[root->type]);
 
+    u64 arenaSize = root->arenaEnd - root->arenaStart;
+
+    const char* scaleString;
+    u64 scale;
+    scaleString = GetMemoryScaleString(arenaSize, &scale);
+    f32 arenaSizeScaled = (f32)arenaSize / (f32)scale;
+    f32 usedAmount;
+
     switch (root->type)
     {
     case ALLOCATOR_TYPE_GLOBAL:
-        
-        break;
     case ALLOCATOR_TYPE_FREELIST:
-        
+        usedAmount = (f32)GetFreelistAllocatorArenaUsage(root->allocator);
+        GRINFO("%s%.2f/%.2f%s\t%.2f%%%% used", tabs, usedAmount / (f32)scale, arenaSizeScaled, scaleString, usedAmount / (f32)arenaSize);
         break;
     case ALLOCATOR_TYPE_BUMP:
-        
+        usedAmount = (f32)GetBumpAllocatorArenaUsage(root->allocator);
+        GRINFO("%s%.2f/%.2f%s\t%.2f%%%% used", tabs, usedAmount / (f32)scale, arenaSizeScaled, scaleString, usedAmount / (f32)arenaSize);
         break;
     case ALLOCATOR_TYPE_POOL:
-        
+        usedAmount = (f32)GetPoolAllocatorArenaUsage(root->allocator);
+        GRINFO("%s%.2f/%.2f%s\t%.2f%%%% used", tabs, usedAmount / (f32)scale, arenaSizeScaled, scaleString, usedAmount / (f32)arenaSize);
         break;
     default:
         GRERROR("Unknown allocator type");
@@ -165,6 +174,7 @@ void PrintAllocatorStatsRecursively(RegisteredAllocatorInfo* root, u32 registere
 
 void _PrintMemoryStats()
 {
+    GRINFO("=======================================================================================================");
     GRINFO("Printing memory stats:");
 
     // Printing allocators
@@ -221,6 +231,7 @@ void _PrintMemoryStats()
     }
 
     DarrayDestroy(allocInfoDarray);
+    GRINFO("=======================================================================================================");
 }
 
 // ================================= Registering and unregistering allocators ====================================

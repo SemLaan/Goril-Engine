@@ -107,6 +107,7 @@ void DestroyFreelistAllocator(Allocator* allocator)
 
     // Frees the entire arena including state
     Free(allocator->parentAllocator, state);
+    Free(allocator->parentAllocator, allocator);
 }
 
 size_t FreelistGetFreeNodes(void* backendState)
@@ -127,6 +128,21 @@ size_t FreelistGetFreeNodes(void* backendState)
 u32 GetFreelistAllocHeaderSize()
 {
     return sizeof(AllocHeader);
+}
+
+u64 GetFreelistAllocatorArenaUsage(Allocator* allocator)
+{
+    FreelistState* state = (FreelistState*)allocator->backendState;
+    u64 freeAmount = 0;
+    FreelistNode* node = state->head;
+
+    while (node)
+    {
+        freeAmount += node->size;
+        node = node->next;
+    }
+
+    return state->arenaSize - freeAmount;
 }
 
 static FreelistNode* GetNodeFromPool(FreelistState* state)
@@ -448,6 +464,15 @@ void DestroyBumpAllocator(Allocator* allocator)
 
     // Frees the entire arena including state
     Free(allocator->parentAllocator, state);
+
+    Free(allocator->parentAllocator, allocator);
+}
+
+u64 GetBumpAllocatorArenaUsage(Allocator* allocator)
+{
+    BumpAllocatorState* state = (BumpAllocatorState*)allocator->backendState;
+
+    return (u64)state->bumpPointer - (u64)state->arenaStart;
 }
 
 static void* BumpAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
@@ -619,6 +644,7 @@ void DestroyPoolAllocator(Allocator* allocator)
 
     // Frees the entire arena including state
     Free(allocator->parentAllocator, state);
+    Free(allocator->parentAllocator, allocator);
 }
 
 // From: http://tekpool.wordpress.com/category/bit-count/
@@ -636,6 +662,20 @@ u32 First0Bit(u32 i)
 {
 	i = ~i;
 	return BitCount((i & (-i)) - 1);
+}
+
+u64 GetPoolAllocatorArenaUsage(Allocator* allocator)
+{
+    PoolAllocatorState* state = (PoolAllocatorState*)allocator->backendState;
+
+    u32 takenBlocks = 0;
+
+    for (u32 i = 0; i < state->controlBlockCount; ++i)
+	{
+		takenBlocks += BitCount(state->controlBlocks[i]);
+	}
+
+    return state->blockSize * takenBlocks;
 }
 
 static void* PoolAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
@@ -756,4 +796,5 @@ void DestroyGlobalAllocator(Allocator* allocator)
 
     // Frees the entire arena including state
     free(state);
+    free(allocator);
 }
