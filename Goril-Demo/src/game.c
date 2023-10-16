@@ -19,7 +19,7 @@ bool Init()
 
     void* test = Alloc(gameAllocator, 2050, MEM_TAG_GAME);
 
-    test = Realloc(GetGlobalAllocator(), test, 30);
+    test = Realloc(gameAllocator, test, 30);
 
     Free(gameAllocator, test);
 

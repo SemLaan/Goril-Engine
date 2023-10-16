@@ -43,7 +43,6 @@ typedef enum AllocatorType
 
 
 // The client of this struct should not touch it's internals
-// **IMPORTANT* Don't copy the allocator only pointers to it
 typedef struct Allocator
 {
 	PFN_BackendAlloc BackendAlloc;

@@ -421,6 +421,34 @@ void DebugFree(Allocator* allocator, void* block, const char* file, u32 line)
             GRFATAL("Address that was attempted to be freed: 0x%08x", (u64)block);
             GRASSERT(false);
         }
+
+        // Checking if the free is using the wrong allocator
+        if (allocInfo->allocatorId != allocator->id)
+        {
+            GRFATAL("Tried to free allocation with wrong allocator!");
+            GRFATAL("Allocation: %s:%u", allocInfo->file, allocInfo->line);
+            GRFATAL("Free: %s:%u", file, line);
+            u32 registeredAllocatorCount = DarrayGetSize(state->registeredAllocatorDarray);
+            const char* allocatorName;
+            for (u32 i = 0; i < registeredAllocatorCount; ++i)
+            {
+                if (state->registeredAllocatorDarray[i].allocatorId == allocator->id)
+                {
+                    allocatorName = state->registeredAllocatorDarray[i].name;
+                }
+            }
+            GRFATAL("Wrong allocator: %s", allocatorName);
+            for (u32 i = 0; i < registeredAllocatorCount; ++i)
+            {
+                if (state->registeredAllocatorDarray[i].allocatorId == allocInfo->allocatorId)
+                {
+                    allocatorName = state->registeredAllocatorDarray[i].name;
+                }
+            }
+            GRFATAL("Correct allocator: %s", allocatorName);
+            GRASSERT(false);
+        }
+        
         state->totalUserAllocationCount--;
         state->totalUserAllocated -= allocInfo->allocSize;
         state->perTagAllocated[allocInfo->tag] -= allocInfo->allocSize;
