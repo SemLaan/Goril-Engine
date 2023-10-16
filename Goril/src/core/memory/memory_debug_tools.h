@@ -8,6 +8,9 @@
 
 #define PRINT_MEMORY_STATS()
 
+#include "../asserts.h"
+#define MARK_ALLOCATOR(allocator) GRASSERT_MSG(false, "Don't forget to remove allocator markers")
+
 #define REGISTER_ALLOCATOR(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator, name, allocator)
 #define UNREGISTER_ALLOCATOR(allocatorId, allocatorType)
 
@@ -51,6 +54,12 @@ void _ShutdownMemoryDebugSubsys();
 void _PrintMemoryStats();
 
 #define PRINT_MEMORY_STATS() _PrintMemoryStats()
+
+void _MarkAllocator(Allocator* allocator);
+
+// Marks an allocator for debugging. replaces all allocator allocations with malloc, allowing external memory debuggers to be used.
+// TODO: This disables seeing how much of the allocator is being used (for now)
+#define MARK_ALLOCATOR(allocator) _MarkAllocator(allocator);
 
 void _RegisterAllocator(u64 arenaStart, u64 arenaEnd, u32 stateSize, u32* out_allocatorId, AllocatorType type, Allocator* parentAllocator, const char* name, Allocator* allocator);
 void _UnregisterAllocator(u32 allocatorId, AllocatorType allocatorType);

@@ -15,6 +15,14 @@ bool Init()
 {
     CreateFreelistAllocator("Game allocator", GetGlobalAllocator(), KiB * 5, &gameAllocator);
 
+    //MARK_ALLOCATOR(gameAllocator);
+
+    void* test = Alloc(gameAllocator, 2050, MEM_TAG_GAME);
+
+    test = Realloc(GetGlobalAllocator(), test, 30);
+
+    Free(gameAllocator, test);
+
     gamestate = Alloc(gameAllocator, sizeof(*gamestate), MEM_TAG_GAME);
 
     PRINT_MEMORY_STATS();

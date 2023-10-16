@@ -7,6 +7,7 @@
 #include "containers/hashmap_u64.h"
 #include "core/asserts.h"
 #include "core/logger.h"
+#include <stdlib.h>
 
 static const char* memTagToText[MAX_MEMORY_TAGS] = {
     "ALLOCATOR STATE    ",
@@ -41,6 +42,7 @@ typedef struct AllocInfo
     u32 line;
     MemTag tag;
     u32 allocSize;
+    u32 alignment;
 } AllocInfo;
 
 typedef struct RegisteredAllocatorInfo
@@ -57,6 +59,7 @@ typedef struct RegisteredAllocatorInfo
 
 typedef struct MemoryDebugState
 {
+    u32 markedAllocatorId;
     u64 arenaStart;
     u64 arenaEnd;
     u64 arenaSize;
@@ -93,6 +96,7 @@ void _StartMemoryDebugSubsys()
     state->arenaSize = memoryDebugArenaSize;
     state->arenaEnd = memoryDebugArenaStart + memoryDebugArenaSize;
     state->registeredAllocatorDarray = DarrayCreate(sizeof(*state->registeredAllocatorDarray), 10, memoryDebugAllocator, MEM_TAG_MEMORY_DEBUG);
+    state->markedAllocatorId = UINT32_MAX;
 
     memoryDebuggingAllocatorsCreated = true;
 }
@@ -129,7 +133,7 @@ static const char* GetMemoryScaleString(u64 bytes, u64* out_scale)
 
 void PrintAllocatorStatsRecursively(RegisteredAllocatorInfo* root, u32 registeredAllocatorCount, u32 depth)
 {
-    char* tabs = Alloc(memoryDebugAllocator, depth + 1/*null terminator*/, MEM_TAG_MEMORY_DEBUG);
+    char* tabs = Alloc(memoryDebugAllocator, depth + 1 /*null terminator*/, MEM_TAG_MEMORY_DEBUG);
     SetMem(tabs, '\t', depth);
     tabs[depth] = 0;
 
@@ -162,7 +166,7 @@ void PrintAllocatorStatsRecursively(RegisteredAllocatorInfo* root, u32 registere
         GRERROR("Unknown allocator type");
         break;
     }
-    
+
     Free(memoryDebugAllocator, tabs);
 
     for (u32 i = 0; i < registeredAllocatorCount; ++i)
@@ -183,7 +187,7 @@ void _PrintMemoryStats()
 
     RegisteredAllocatorInfo* globalAllocator = state->registeredAllocatorDarray;
 
-    PrintAllocatorStatsRecursively(globalAllocator, registeredAllocatorCount, 1/*start depth 1 to indent all allocators at least one tab*/);
+    PrintAllocatorStatsRecursively(globalAllocator, registeredAllocatorCount, 1 /*start depth 1 to indent all allocators at least one tab*/);
 
     // Printing total allocation stats
     const char* scaleString;
@@ -232,6 +236,11 @@ void _PrintMemoryStats()
 
     DarrayDestroy(allocInfoDarray);
     GRINFO("=======================================================================================================");
+}
+
+void _MarkAllocator(Allocator* allocator)
+{
+    state->markedAllocatorId = allocator->id;
 }
 
 // ================================= Registering and unregistering allocators ====================================
@@ -307,10 +316,16 @@ void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag me
         state->perTagAllocated[memtag] += size;
         state->perTagAllocationCount[memtag]++;
 
-        void* allocation = allocator->BackendAlloc(allocator, size, alignment);
+        void* allocation;
+
+        if (allocator->id == state->markedAllocatorId)
+            allocation = _aligned_malloc(size, alignment);
+        else
+            allocation = allocator->BackendAlloc(allocator, size, alignment);
 
         AllocInfo* allocInfo = Alloc(state->allocInfoPool, sizeof(AllocInfo), MEM_TAG_MEMORY_DEBUG);
         allocInfo->allocatorId = allocator->id;
+        allocInfo->alignment = alignment;
         allocInfo->allocSize = size;
         allocInfo->tag = memtag;
         allocInfo->file = file;
@@ -330,16 +345,51 @@ void* DebugRealloc(Allocator* allocator, void* block, u64 newSize, const char* f
     else // if normal allocation
     {
         AllocInfo* oldAllocInfo = MapU64Delete(state->allocationsMap, (u64)block);
+
+        // Checking if this allocation exists
         if (oldAllocInfo == nullptr)
         {
             GRFATAL("Tried to realloc memory block that doesn't exists!, File: %s:%u", file, line);
             GRFATAL("Address that was attempted to be reallocated: 0x%08x", (u64)block);
             GRASSERT(false);
         }
+
+        // Checking if the realloc is using the wrong allocator
+        if (oldAllocInfo->allocatorId != allocator->id)
+        {
+            GRFATAL("Tried to realloc allocation with wrong allocator!");
+            GRFATAL("Allocation: %s:%u", oldAllocInfo->file, oldAllocInfo->line);
+            GRFATAL("Reallocation: %s:%u", file, line);
+            u32 registeredAllocatorCount = DarrayGetSize(state->registeredAllocatorDarray);
+            const char* allocatorName;
+            for (u32 i = 0; i < registeredAllocatorCount; ++i)
+            {
+                if (state->registeredAllocatorDarray[i].allocatorId == allocator->id)
+                {
+                    allocatorName = state->registeredAllocatorDarray[i].name;
+                }
+            }
+            GRFATAL("Wrong allocator: %s", allocatorName);
+            for (u32 i = 0; i < registeredAllocatorCount; ++i)
+            {
+                if (state->registeredAllocatorDarray[i].allocatorId == oldAllocInfo->allocatorId)
+                {
+                    allocatorName = state->registeredAllocatorDarray[i].name;
+                }
+            }
+            GRFATAL("Correct allocator: %s", allocatorName);
+            GRASSERT(false);
+        }
+
         state->totalUserAllocated -= (oldAllocInfo->allocSize - newSize);
         state->perTagAllocated[oldAllocInfo->tag] -= (oldAllocInfo->allocSize - newSize);
 
-        void* reallocation = allocator->BackendRealloc(allocator, block, newSize);
+        void* reallocation;
+
+        if (allocator->id == state->markedAllocatorId)
+            reallocation = _aligned_realloc(block, newSize, oldAllocInfo->alignment);
+        else
+            reallocation = allocator->BackendRealloc(allocator, block, newSize);
 
         AllocInfo* newAllocInfo = Alloc(state->allocInfoPool, sizeof(AllocInfo), MEM_TAG_MEMORY_DEBUG);
         newAllocInfo->allocatorId = oldAllocInfo->allocatorId;
@@ -376,7 +426,11 @@ void DebugFree(Allocator* allocator, void* block, const char* file, u32 line)
         state->perTagAllocated[allocInfo->tag] -= allocInfo->allocSize;
         state->perTagAllocationCount[allocInfo->tag]--;
         allocator->BackendFree(allocator, block);
-        Free(state->allocInfoPool, allocInfo);
+
+        if (allocator->id == state->markedAllocatorId)
+            _aligned_free(block);
+        else
+            Free(state->allocInfoPool, allocInfo);
     }
 }
 
