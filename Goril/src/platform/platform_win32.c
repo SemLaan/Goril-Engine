@@ -41,7 +41,7 @@ bool InitializePlatform(const char* windowName, u32 windowWidth, u32 windowHeigh
 {
 	GRASSERT_DEBUG(state == nullptr); // If this fails init platform was called twice
 	GRINFO("Initializing platform subsystem...");
-	state = (PlatformState*)Alloc(GetGlobalAllocator(), sizeof(PlatformState), MEM_TAG_PLATFORM_SUBSYS);
+	state = Alloc(GetGlobalAllocator(), sizeof(PlatformState), MEM_TAG_PLATFORM_SUBSYS);
 
 	LARGE_INTEGER frequency;
     QueryPerformanceFrequency(&frequency);

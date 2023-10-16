@@ -8,8 +8,8 @@ HashmapStr* MapStrCreate(Allocator* allocator, MemTag memtag, u32 backingArrayEl
     hashmap->backingArray = (MapEntryStr*)(hashmap + 1);
     hashmap->backingArrayElementCount = backingArrayElementCount;
     hashmap->hashFunction = hashFunction;
-    CreatePoolAllocator(allocator, sizeof(MapEntryStr), maxCollisions, &hashmap->linkedEntryPool);
-    CreatePoolAllocator(allocator, maxKeyLength, maxCollisions + backingArrayElementCount, &hashmap->keyPool);
+    CreatePoolAllocator("Map linked entry pool", allocator, sizeof(MapEntryStr), maxCollisions, &hashmap->linkedEntryPool);
+    CreatePoolAllocator("Map key pool", allocator, maxKeyLength, maxCollisions + backingArrayElementCount, &hashmap->keyPool);
     hashmap->allocator = allocator;
     hashmap->maxKeyLength = maxKeyLength;
 

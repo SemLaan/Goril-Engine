@@ -8,11 +8,14 @@
 #include <renderer/renderer.h>
 #include <renderer/texture.h>
 
+Allocator gameAllocator;
 GameState* gamestate = nullptr;
 
 bool Init()
 {
-    gamestate = Alloc(GetGlobalAllocator(), sizeof(*gamestate), MEM_TAG_GAME);
+    CreateFreelistAllocator("Game allocator", GetGlobalAllocator(), KiB * 5, &gameAllocator);
+
+    gamestate = Alloc(&gameAllocator, sizeof(*gamestate), MEM_TAG_GAME);
 
     PRINT_MEMORY_STATS();
 
@@ -203,7 +206,9 @@ bool Shutdown()
     VertexBufferDestroy(gamestate->vertexBuffer);
     TextureDestroy(gamestate->texture);
 
-    Free(GetGlobalAllocator(), gamestate);
+    Free(&gameAllocator, gamestate);
+
+    DestroyFreelistAllocator(gameAllocator);
 
     return true;
 }

@@ -3,27 +3,27 @@
 #ifndef GR_DIST
 
 #include "allocator_frontends.h"
+#include "containers/darray.h"
+#include "containers/hashmap_u64.h"
 #include "core/asserts.h"
 #include "core/logger.h"
-#include "containers/hashmap_u64.h"
-#include "containers/darray.h"
 
 static const char* memTagToText[MAX_MEMORY_TAGS] = {
-	"ALLOCATOR STATE    ",
-	"SUB ARENA          ",
-	"MEMORY SUBSYS      ",
-	"LOGGING SUBSYS     ",
-	"PLATFORM SUBSYS    ",
-	"EVENT SUBSYS       ",
-	"RENDERER SUBSYS    ",
-	"INPUT SUBSYS       ",
-	"GAME               ",
-	"TEST               ",
-	"DARRAY             ",
-	"VERTEX BUFFER      ",
-	"INDEX BUFFER       ",
-	"TEXTURE            ",
-	"HASHMAP            ",
+    "ALLOCATOR STATE    ",
+    "SUB ARENA          ",
+    "MEMORY SUBSYS      ",
+    "LOGGING SUBSYS     ",
+    "PLATFORM SUBSYS    ",
+    "EVENT SUBSYS       ",
+    "RENDERER SUBSYS    ",
+    "INPUT SUBSYS       ",
+    "GAME               ",
+    "TEST               ",
+    "DARRAY             ",
+    "VERTEX BUFFER      ",
+    "INDEX BUFFER       ",
+    "TEXTURE            ",
+    "HASHMAP            ",
     "MEMORY DEBUG       ",
 };
 
@@ -34,9 +34,9 @@ static const char* allocatorTypeToString[ALLOCATOR_TYPE_MAX_VALUE] = {
     "pool",
 };
 
-
 typedef struct AllocInfo
 {
+    u32 allocatorId;
     const char* file;
     u32 line;
     MemTag tag;
@@ -45,6 +45,7 @@ typedef struct AllocInfo
 
 typedef struct RegisteredAllocatorInfo
 {
+    const char* name;
     u64 arenaStart;
     u64 arenaEnd;
     u32 stateSize;
@@ -66,11 +67,9 @@ typedef struct MemoryDebugState
     u32 perTagAllocated[MAX_MEMORY_TAGS];
 } MemoryDebugState;
 
-
 static bool memoryDebuggingAllocatorsCreated = false;
 static Allocator memoryDebugAllocator;
 static MemoryDebugState* state = nullptr;
-
 
 // ========================================= startup and shutdown =============================================
 void _StartMemoryDebugSubsys()
@@ -79,13 +78,13 @@ void _StartMemoryDebugSubsys()
 
     u64 memoryDebugArenaStart = 0;
 
-    if (!CreateGlobalAllocator(memoryDebugArenaSize, &memoryDebugAllocator, nullptr, &memoryDebugArenaStart))
-		GRASSERT_MSG(false, "Creating memory debug allocator failed");
+    if (!CreateGlobalAllocator("Debug allocator", memoryDebugArenaSize, &memoryDebugAllocator, nullptr, &memoryDebugArenaStart))
+        GRASSERT_MSG(false, "Creating memory debug allocator failed");
 
     state = Alloc(&memoryDebugAllocator, sizeof(*state), MEM_TAG_MEMORY_DEBUG);
     ZeroMem(state, sizeof(*state));
     state->allocationsMap = MapU64Create(&memoryDebugAllocator, MEM_TAG_MEMORY_DEBUG, 2000, 100, Hash6432Shift);
-    CreatePoolAllocator(&memoryDebugAllocator, sizeof(AllocInfo), 2100, &state->allocInfoPool);
+    CreatePoolAllocator("Alloc info pool", &memoryDebugAllocator, sizeof(AllocInfo), 2100, &state->allocInfoPool);
     state->totalUserAllocated = 0;
     state->totalUserAllocationCount = 0;
     state->arenaStart = memoryDebugArenaStart;
@@ -104,26 +103,26 @@ void _ShutdownMemoryDebugSubsys()
 // ============================================= Memory printing utils =============================================
 static const char* GetMemoryScaleString(u64 bytes, u64* out_scale)
 {
-	if (bytes < KiB)
-	{
-		*out_scale = 1;
-		return "B";
-	}
-	else if (bytes < MiB)
-	{
-		*out_scale = KiB;
-		return "KiB";
-	}
-	else if (bytes < GiB)
-	{
-		*out_scale = MiB;
-		return "MiB";
-	}
-	else
-	{
-		*out_scale = GiB;
-		return "GiB";
-	}
+    if (bytes < KiB)
+    {
+        *out_scale = 1;
+        return "B";
+    }
+    else if (bytes < MiB)
+    {
+        *out_scale = KiB;
+        return "KiB";
+    }
+    else if (bytes < GiB)
+    {
+        *out_scale = MiB;
+        return "MiB";
+    }
+    else
+    {
+        *out_scale = GiB;
+        return "GiB";
+    }
 }
 
 void _PrintMemoryStats()
@@ -132,37 +131,56 @@ void _PrintMemoryStats()
 
     // Printing allocators
     u32 registeredAllocatorCount = DarrayGetSize(state->registeredAllocatorDarray);
-
     GRINFO("Printing %u live allocators:", registeredAllocatorCount);
+
     for (u32 i = 0; i < registeredAllocatorCount; ++i)
     {
         GRINFO("\tAllocator %u: %u(id), %s(type)", i, state->registeredAllocatorDarray[i].allocatorId, allocatorTypeToString[state->registeredAllocatorDarray[i].type]);
     }
 
-
     // Printing total allocation stats
-	const char* scaleString;
-	u64 scale;
+    const char* scaleString;
+    u64 scale;
     scaleString = GetMemoryScaleString(state->totalUserAllocated, &scale);
     GRINFO("Total user allocation count: %llu", state->totalUserAllocationCount);
     GRINFO("Total user allocated: %.2f%s", (f32)state->totalUserAllocated / (f32)scale, scaleString);
 
     // Printing allocation stats per tag
     GRINFO("Allocations by tag:");
-	for (u32 i = 0; i < MAX_MEMORY_TAGS; ++i)
-	{
-		GRINFO("\t%s: %u", memTagToText[i], state->perTagAllocationCount[i]);
-	}
+    for (u32 i = 0; i < MAX_MEMORY_TAGS; ++i)
+    {
+        GRINFO("\t%s: %u", memTagToText[i], state->perTagAllocationCount[i]);
+    }
 
     // Printing all active allocations
     // TODO: add a bool parameter to the function to specify whether to print this or not, because it's a lot
     AllocInfo** allocInfoDarray = (AllocInfo**)MapU64GetValueDarray(state->allocationsMap, &memoryDebugAllocator);
 
+    RegisteredAllocatorInfo* allocatedWithAllocator;
+
     GRINFO("All active allocations:");
     for (u32 i = 0; i < DarrayGetSize(allocInfoDarray); ++i)
     {
         AllocInfo* item = allocInfoDarray[i];
-        GRINFO("\tSize: %u, File: %s:%u", item->allocSize, item->file, item->line);
+
+        allocatedWithAllocator = nullptr;
+
+        for (u32 i = 0; i < registeredAllocatorCount; ++i)
+        {
+            if (state->registeredAllocatorDarray[i].allocatorId == item->allocatorId)
+            {
+                allocatedWithAllocator = state->registeredAllocatorDarray + i;
+                break;
+            }
+        }
+
+        if (allocatedWithAllocator == nullptr)
+        {
+            GRFATAL("Live allocation with outdated allocator: %s:%u", item->file, item->line);
+            GRASSERT_MSG(false, "Live allocation with outdated allocator");
+        }
+        else
+            GRINFO("\tAllocated by: (name)%s (id)%u (type)%s, Size: %u, File: %s:%u", allocatedWithAllocator->name, allocatedWithAllocator->allocatorId, allocatorTypeToString[allocatedWithAllocator->type], item->allocSize, item->file, item->line);
     }
 
     DarrayDestroy(allocInfoDarray);
@@ -179,9 +197,9 @@ static u32 _GetUniqueAllocatorId()
     return nextAllocatorId;
 }
 
-void _RegisterAllocator(u64 arenaStart, u64 arenaEnd, u32 stateSize, u32* out_allocatorId, AllocatorType type, Allocator* parentAllocator)
+void _RegisterAllocator(u64 arenaStart, u64 arenaEnd, u32 stateSize, u32* out_allocatorId, AllocatorType type, Allocator* parentAllocator, const char* name)
 {
-    // Making sure debug allocators don't get registered, we also don't have to worry about them getting unregistered as 
+    // Making sure debug allocators don't get registered, we also don't have to worry about them getting unregistered as
     // they will be cleaned up by the OS, and thus don't call unregister
     // They get an id of zero which only debug allocators can get
     if (!memoryDebuggingAllocatorsCreated)
@@ -193,6 +211,7 @@ void _RegisterAllocator(u64 arenaStart, u64 arenaEnd, u32 stateSize, u32* out_al
     *out_allocatorId = _GetUniqueAllocatorId();
 
     RegisteredAllocatorInfo allocatorInfo = {};
+    allocatorInfo.name = name;
     allocatorInfo.allocatorId = *out_allocatorId;
     allocatorInfo.arenaStart = arenaStart;
     allocatorInfo.arenaEnd = arenaEnd;
@@ -220,7 +239,6 @@ void _UnregisterAllocator(u32 allocatorId, AllocatorType allocatorType)
     GRASSERT_MSG(false, "Tried to destroy allocator that wasn't found");
 }
 
-
 // ============================================= Debug alloc, realloc and free hook-ins =====================================
 void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag memtag, const char* file, u32 line)
 {
@@ -239,6 +257,7 @@ void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag me
         void* allocation = allocator->BackendAlloc(allocator, size, alignment);
 
         AllocInfo* allocInfo = Alloc(&state->allocInfoPool, sizeof(AllocInfo), MEM_TAG_MEMORY_DEBUG);
+        allocInfo->allocatorId = allocator->id;
         allocInfo->allocSize = size;
         allocInfo->tag = memtag;
         allocInfo->file = file;
@@ -254,7 +273,7 @@ void* DebugRealloc(Allocator* allocator, void* block, u64 newSize, const char* f
     if (allocator->id == 0)
     {
         return allocator->BackendRealloc(allocator, block, newSize);
-    } 
+    }
     else // if normal allocation
     {
         AllocInfo* oldAllocInfo = MapU64Delete(state->allocationsMap, (u64)block);
@@ -270,12 +289,13 @@ void* DebugRealloc(Allocator* allocator, void* block, u64 newSize, const char* f
         void* reallocation = allocator->BackendRealloc(allocator, block, newSize);
 
         AllocInfo* newAllocInfo = Alloc(&state->allocInfoPool, sizeof(AllocInfo), MEM_TAG_MEMORY_DEBUG);
+        newAllocInfo->allocatorId = oldAllocInfo->allocatorId;
         newAllocInfo->allocSize = newSize;
         newAllocInfo->tag = oldAllocInfo->tag;
         newAllocInfo->file = oldAllocInfo->file;
         newAllocInfo->line = oldAllocInfo->line;
         MapU64Insert(state->allocationsMap, (u64)reallocation, newAllocInfo);
-        
+
         Free(&state->allocInfoPool, oldAllocInfo);
 
         return reallocation;
@@ -306,6 +326,5 @@ void DebugFree(Allocator* allocator, void* block, const char* file, u32 line)
         Free(&state->allocInfoPool, allocInfo);
     }
 }
-
 
 #endif

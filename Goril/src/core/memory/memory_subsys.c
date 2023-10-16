@@ -26,7 +26,7 @@ bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 	// Creating the global allocator and allocating all application memory
 	Allocator globalAllocator;
 	size_t globalAllocatorStateSize;
-	if (!CreateGlobalAllocator(requiredMemory, &globalAllocator, &globalAllocatorStateSize, nullptr))
+	if (!CreateGlobalAllocator("Global allocator", requiredMemory, &globalAllocator, &globalAllocatorStateSize, nullptr))
 	{
 		GRFATAL("Creating global allocator failed");
 		return false;
@@ -40,7 +40,7 @@ bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
 	state->arenaSize = requiredMemory + globalAllocatorStateSize;
 
 	g_Allocators = (GlobalAllocators*)Alloc(&globalAllocator, sizeof(GlobalAllocators), MEM_TAG_MEMORY_SUBSYS);
-	CreateBumpAllocator(&globalAllocator, KiB * 5, &g_Allocators->temporary); /// TODO: make configurable
+	CreateBumpAllocator("Temporary allocator", &globalAllocator, KiB * 5, &g_Allocators->temporary); /// TODO: make configurable
 
 	return true;
 }

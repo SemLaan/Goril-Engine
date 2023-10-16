@@ -52,7 +52,7 @@ static void* FreelistPrimitiveAlloc(void* backendState, size_t size);
 static bool FreelistPrimitiveTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize);
 static void FreelistPrimitiveFree(void* backendState, void* block, size_t size);
 
-void CreateFreelistAllocator(Allocator* parentAllocator, size_t arenaSize, Allocator* out_allocator)
+void CreateFreelistAllocator(const char* name, Allocator* parentAllocator, size_t arenaSize, Allocator* out_allocator)
 {
     arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
 
@@ -92,17 +92,17 @@ void CreateFreelistAllocator(Allocator* parentAllocator, size_t arenaSize, Alloc
     out_allocator->backendState = state;
     out_allocator->parentAllocator = parentAllocator;
 
-    REGISTER_ALLOCATOR((u64)arenaStart, (u64)arenaStart + arenaSize, stateSize, &out_allocator->id, ALLOCATOR_TYPE_FREELIST, parentAllocator);
+    REGISTER_ALLOCATOR((u64)arenaStart, (u64)arenaStart + arenaSize, stateSize, &out_allocator->id, ALLOCATOR_TYPE_FREELIST, parentAllocator, name);
 }
 
-void DestroyFreelistAllocator(Allocator* parentAllocator, Allocator allocator)
+void DestroyFreelistAllocator(Allocator allocator)
 {
     FreelistState* state = (FreelistState*)allocator.backendState;
 
     UNREGISTER_ALLOCATOR(allocator.id, ALLOCATOR_TYPE_FREELIST);
 
     // Frees the entire arena including state
-    Free(parentAllocator, state);
+    Free(allocator.parentAllocator, state);
 }
 
 size_t FreelistGetFreeNodes(void* backendState)
@@ -400,7 +400,7 @@ static void* BumpPrimitiveAlloc(void* backendState, size_t size);
 static bool BumpPrimitiveTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize);
 static void BumpPrimitiveFree(void* backendState, void* block, size_t size);
 
-void CreateBumpAllocator(Allocator* parentAllocator, size_t arenaSize, Allocator* out_allocator)
+void CreateBumpAllocator(const char* name, Allocator* parentAllocator, size_t arenaSize, Allocator* out_allocator)
 {
     arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
 
@@ -429,7 +429,7 @@ void CreateBumpAllocator(Allocator* parentAllocator, size_t arenaSize, Allocator
     out_allocator->backendState = state;
     out_allocator->parentAllocator = parentAllocator;
 
-    REGISTER_ALLOCATOR((u64)arenaStart, (u64)arenaStart + arenaSize, stateSize, &out_allocator->id, ALLOCATOR_TYPE_BUMP, parentAllocator);
+    REGISTER_ALLOCATOR((u64)arenaStart, (u64)arenaStart + arenaSize, stateSize, &out_allocator->id, ALLOCATOR_TYPE_BUMP, parentAllocator, name);
 }
 
 void DestroyBumpAllocator(Allocator* parentAllocator, Allocator allocator)
@@ -567,7 +567,7 @@ static void* PoolAlignedAlloc(Allocator* allocator, u64 size, u32 alignment);
 static void* PoolReAlloc(Allocator* allocator, void* block, u64 size);
 static void PoolFree(Allocator* allocator, void* block);
 
-void CreatePoolAllocator(Allocator* parentAllocator, u32 blockSize, u32 poolSize, Allocator* out_allocator)
+void CreatePoolAllocator(const char* name, Allocator* parentAllocator, u32 blockSize, u32 poolSize, Allocator* out_allocator)
 {
     // Calculating required memory (client size + state size)
     u32 stateSize = sizeof(PoolAllocatorState);
@@ -596,7 +596,7 @@ void CreatePoolAllocator(Allocator* parentAllocator, u32 blockSize, u32 poolSize
     out_allocator->backendState = state;
     out_allocator->parentAllocator = parentAllocator;
 
-    REGISTER_ALLOCATOR((u64)state->poolStart, (u64)state->poolStart + (blockSize * poolSize), stateSize + blockTrackerSize, &out_allocator->id, ALLOCATOR_TYPE_POOL, parentAllocator);
+    REGISTER_ALLOCATOR((u64)state->poolStart, (u64)state->poolStart + (blockSize * poolSize), stateSize + blockTrackerSize, &out_allocator->id, ALLOCATOR_TYPE_POOL, parentAllocator, name);
 }
 
 void DestroyPoolAllocator(Allocator* parentAllocator, Allocator allocator)
@@ -678,7 +678,7 @@ static void PoolFree(Allocator* allocator, void* block)
 // =====================================================================================================================================================================================================
 // ================================== Global allocator creation =====================================================================
 // =====================================================================================================================================================================================================
-bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* out_stateSize, u64* out_arenaStart)
+bool CreateGlobalAllocator(const char* name, size_t arenaSize, Allocator* out_allocator, size_t* out_stateSize, u64* out_arenaStart)
 {
     // Calculating the required nodes for an arena of the given size
     // Make one node for every "freelist node factor" nodes that fit in the arena
@@ -727,7 +727,7 @@ bool CreateGlobalAllocator(size_t arenaSize, Allocator* out_allocator, size_t* o
     out_allocator->backendState = state;
     out_allocator->parentAllocator = nullptr;
 
-    REGISTER_ALLOCATOR((u64)arenaStart, (u64)arenaStart + arenaSize, stateSize, &out_allocator->id, ALLOCATOR_TYPE_GLOBAL, nullptr);
+    REGISTER_ALLOCATOR((u64)arenaStart, (u64)arenaStart + arenaSize, stateSize, &out_allocator->id, ALLOCATOR_TYPE_GLOBAL, nullptr, name);
 
     return true;
 }

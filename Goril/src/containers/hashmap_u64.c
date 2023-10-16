@@ -24,7 +24,7 @@ HashmapU64* MapU64Create(Allocator* allocator, MemTag memtag, u32 backingArrayEl
     hashmap->backingArray = (MapEntryU64*)(hashmap + 1);
     hashmap->backingArrayElementCount = backingArrayElementCount;
     hashmap->hashFunction = hashFunction;
-    CreatePoolAllocator(allocator, sizeof(MapEntryU64), maxCollisions, &hashmap->linkedEntryPool);
+    CreatePoolAllocator("Map linked entry pool", allocator, sizeof(MapEntryU64), maxCollisions, &hashmap->linkedEntryPool);
     hashmap->allocator = allocator;
 
     ZeroMem(hashmap->backingArray, sizeof(MapEntryU64) * backingArrayElementCount);
