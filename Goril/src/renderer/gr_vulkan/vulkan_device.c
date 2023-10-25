@@ -23,7 +23,7 @@ SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurface
 	return details;
 }
 
-static bool DeviceHasExtensions(VkPhysicalDevice physicalDevice, void** requiredDeviceExtensionsDarray)
+static bool DeviceHasExtensions(VkPhysicalDevice physicalDevice, u32 requiredDeviceExtensionNameCount, const char** requiredDeviceExtensionNames)
 {
 	u32 availableExtensionCount = 0;
 	vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &availableExtensionCount, nullptr);
@@ -31,11 +31,11 @@ static bool DeviceHasExtensions(VkPhysicalDevice physicalDevice, void** required
 	vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &availableExtensionCount, availableExtensionsDarray);
 
 	u32 availableRequiredExtensions = 0;
-	for (u32 i = 0; i < DarrayGetSize(requiredDeviceExtensionsDarray); ++i)
+	for (u32 i = 0; i < requiredDeviceExtensionNameCount; ++i)
 	{
 		for (u32 j = 0; j < availableExtensionCount; ++j)
 		{
-			if (0 == strncmp((const char*)requiredDeviceExtensionsDarray[i], availableExtensionsDarray[j].extensionName, VK_MAX_EXTENSION_NAME_SIZE))
+			if (0 == strncmp(requiredDeviceExtensionNames[i], availableExtensionsDarray[j].extensionName, VK_MAX_EXTENSION_NAME_SIZE))
 			{
 				availableRequiredExtensions++;
 			}
@@ -44,10 +44,10 @@ static bool DeviceHasExtensions(VkPhysicalDevice physicalDevice, void** required
 
 	DarrayDestroy(availableExtensionsDarray);
 
-	return availableRequiredExtensions == DarrayGetSize(requiredDeviceExtensionsDarray);
+	return availableRequiredExtensions == requiredDeviceExtensionNameCount;
 }
 
-bool SelectPhysicalDevice(void** requiredDeviceExtensionsDarray)
+bool SelectPhysicalDevice(u32 requiredDeviceExtensionNameCount, const char** requiredDeviceExtensionNames)
 {
 	vk_state->physicalDevice = VK_NULL_HANDLE;
 
@@ -68,7 +68,7 @@ bool SelectPhysicalDevice(void** requiredDeviceExtensionsDarray)
 		VkPhysicalDeviceProperties properties;
 		vkGetPhysicalDeviceProperties(availableDevicesDarray[i], &properties);
 		bool isDiscrete = properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
-		bool hasExtensions = DeviceHasExtensions(availableDevicesDarray[i], requiredDeviceExtensionsDarray);
+		bool hasExtensions = DeviceHasExtensions(availableDevicesDarray[i], requiredDeviceExtensionNameCount, requiredDeviceExtensionNames);
 		if (isDiscrete && hasExtensions)
 		{
 			GRINFO("Device with required extensions, features and properties found");
@@ -124,7 +124,7 @@ void SelectQueueFamilies(RendererState* state)
 	DarrayDestroy(availableQueueFamiliesDarray);
 }
 
-bool CreateLogicalDevice(RendererState* state, void** requiredDeviceExtensionsDarray, void** requiredDeviceLayersDarray)
+bool CreateLogicalDevice(RendererState* state, u32 requiredDeviceExtensionNameCount, const char** requiredDeviceExtensionNames, u32 requiredLayerNameCount, const char** requiredLayerNames)
 {
 
 	// ===================== Specifying queues for logical device =================================
@@ -181,15 +181,10 @@ bool CreateLogicalDevice(RendererState* state, void** requiredDeviceExtensionsDa
 	createInfo.flags = 0;
 	createInfo.queueCreateInfoCount = DarrayGetSize(queueCreateInfosDarray);
 	createInfo.pQueueCreateInfos = queueCreateInfosDarray;
-#ifndef GR_DIST
-	createInfo.enabledLayerCount = DarrayGetSize(requiredDeviceLayersDarray);
-	createInfo.ppEnabledLayerNames = (const char* const*)requiredDeviceLayersDarray;
-#else
-	createInfo.enabledLayerCount = 0;
-	createInfo.ppEnabledLayerNames = nullptr;
-#endif // !GR_DIST
-	createInfo.enabledExtensionCount = DarrayGetSize(requiredDeviceExtensionsDarray);
-	createInfo.ppEnabledExtensionNames = (const char* const*)requiredDeviceExtensionsDarray;
+	createInfo.enabledLayerCount = requiredLayerNameCount;
+	createInfo.ppEnabledLayerNames = requiredLayerNames;
+	createInfo.enabledExtensionCount = requiredDeviceExtensionNameCount;
+	createInfo.ppEnabledExtensionNames = requiredDeviceExtensionNames;
 	createInfo.pEnabledFeatures = nullptr;
 
 	u32 result = vkCreateDevice(state->physicalDevice, &createInfo, state->allocator, &state->device);

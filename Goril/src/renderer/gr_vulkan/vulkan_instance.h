@@ -4,6 +4,6 @@
 #include "containers/darray.h"
 
 
-bool CreateVulkanInstance(void** requiredExtensionsDarray, void** requiredLayersDarray);
+bool CreateVulkanInstance(u32 requiredExtensionNameCount, const char** requiredExtensionNames, u32 requiredLayerNameCount, const char** requiredLayerNames);
 
 void DestroyVulkanInstance();

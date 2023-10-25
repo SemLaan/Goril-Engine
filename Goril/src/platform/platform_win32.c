@@ -333,10 +333,10 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 }
 
 // ============ Vulkan platform implementation =======================
-void GetPlatformExtensions(void** extensionNamesDarray)
+void GetPlatformExtensions(u32* pExtensionNameCount, const char** extensionNames)
 {
-	const char* vk_khr_win32_surface_extensionname = "VK_KHR_win32_surface";
-	extensionNamesDarray = (void**)DarrayPushback(extensionNamesDarray, &vk_khr_win32_surface_extensionname);
+	extensionNames[*pExtensionNameCount] = "VK_KHR_win32_surface";
+	*pExtensionNameCount += 1;
 }
 
 bool PlatformCreateSurface(VkInstance instance, VkAllocationCallbacks* allocator, VkSurfaceKHR* out_surface)

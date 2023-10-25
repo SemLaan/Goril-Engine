@@ -39,39 +39,40 @@ bool InitializeRenderer()
 
 	RegisterEventListener(EVCODE_WINDOW_RESIZED, OnWindowResize);
 
-	// ================== Getting required extensions and layers ================================
+	// ================== Getting required instance extensions and layers ================================
+	#define MAX_INSTANCE_EXTENSIONS 10
+	#define MAX_INSTANCE_LAYERS 10
 	// Getting required extensions
-	void** requiredExtensionsDarray = (void**)DarrayCreate(sizeof(void*), 5, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: Change allocator
-	GetPlatformExtensions(requiredExtensionsDarray);
-	const char* vk_khr_surface_extension_name = VK_KHR_SURFACE_EXTENSION_NAME;
-	requiredExtensionsDarray = (void**)DarrayPushback(requiredExtensionsDarray, &vk_khr_surface_extension_name);
+	const char* requiredInstanceExtensions[MAX_INSTANCE_EXTENSIONS];
+	u32 requiredInstanceExtensionCount = 0;
+
+	requiredInstanceExtensions[requiredInstanceExtensionCount] = VK_KHR_SURFACE_EXTENSION_NAME;
+	requiredInstanceExtensionCount++;
+	GetPlatformExtensions(&requiredInstanceExtensionCount, requiredInstanceExtensions);
 #ifndef GR_DIST
-	const char* vk_ext_debug_utils_extension_name = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
-	requiredExtensionsDarray = (void**)DarrayPushback(requiredExtensionsDarray, &vk_ext_debug_utils_extension_name);
+	requiredInstanceExtensions[requiredInstanceExtensionCount] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
+	requiredInstanceExtensionCount++;
 #endif // !GR_DIST
 
 	// Getting required layers
-	void** requiredLayersDarray = (void**)DarrayCreate(sizeof(void*), 1, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: Change allocator
+	const char* requiredInstanceLayers[MAX_INSTANCE_LAYERS];
+	u32 requiredInstanceLayerCount = 0;
 #ifndef GR_DIST
-	const char* vk_layer_khronos_validation = "VK_LAYER_KHRONOS_validation";
-	requiredLayersDarray = (void**)DarrayPushback(requiredLayersDarray, &vk_layer_khronos_validation);
+	requiredInstanceLayers[requiredInstanceLayerCount] = "VK_LAYER_KHRONOS_validation";
+	requiredInstanceLayerCount++;
 #endif // !GR_DIST
 
 
 	// ================== Creating instance =================================
-	if (!CreateVulkanInstance(requiredExtensionsDarray, requiredLayersDarray))
+	if (!CreateVulkanInstance(requiredInstanceExtensionCount, requiredInstanceExtensions, requiredInstanceLayerCount, requiredInstanceLayers))
 	{
-		DarrayDestroy(requiredExtensionsDarray);
-		DarrayDestroy(requiredLayersDarray);
 		return false;
 	}
-	DarrayDestroy(requiredExtensionsDarray);
 
 	// =============== Creating debug messenger ============================
 #ifndef GR_DIST
 	if (!CreateDebugMessenger())
 	{
-		DarrayDestroy(requiredLayersDarray);
 		return false;
 	}
 #endif // !GR_DIST
@@ -80,22 +81,21 @@ bool InitializeRenderer()
 	if (!PlatformCreateSurface(vk_state->instance, vk_state->allocator, &vk_state->surface))
 	{
 		GRFATAL("Failed to create Vulkan surface");
-		DarrayDestroy(requiredLayersDarray);
 		return false;
 	}
 
 	// ================ Getting a physical device ==============================
-	void** requiredDeviceExtensionsDarray = (void**)DarrayCreate(sizeof(void*), 3, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
-	const char* vk_khr_swapchain_extension_name = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
-	const char* vk_khr_synch2_extension_name = VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME;
-	const char* vk_khr_timeline_semaphore_extension_name = VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME;
-	requiredDeviceExtensionsDarray = (void**)DarrayPushback(requiredDeviceExtensionsDarray, &vk_khr_swapchain_extension_name);
-	requiredDeviceExtensionsDarray = (void**)DarrayPushback(requiredDeviceExtensionsDarray, &vk_khr_synch2_extension_name);
-	requiredDeviceExtensionsDarray = (void**)DarrayPushback(requiredDeviceExtensionsDarray, &vk_khr_timeline_semaphore_extension_name);
+	#define MAX_DEVICE_EXTENSIONS 10
+	const char* requiredDeviceExtensions[MAX_DEVICE_EXTENSIONS];
+	u32 requiredDeviceExtensionCount = 0;
 
-	if (!SelectPhysicalDevice(requiredDeviceExtensionsDarray))
+	requiredDeviceExtensions[requiredDeviceExtensionCount + 0] = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+	requiredDeviceExtensions[requiredDeviceExtensionCount + 1] = VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME;
+	requiredDeviceExtensions[requiredDeviceExtensionCount + 2] = VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME;
+	requiredDeviceExtensionCount += 3;
+
+	if (!SelectPhysicalDevice(requiredDeviceExtensionCount, requiredDeviceExtensions))
 	{
-		DarrayDestroy(requiredLayersDarray);
 		return false;
 	}
 
@@ -103,12 +103,10 @@ bool InitializeRenderer()
 	SelectQueueFamilies(vk_state);
 
 	// ===================== Creating logical device =============================================
-	if (!CreateLogicalDevice(vk_state, requiredDeviceExtensionsDarray, requiredLayersDarray))
+	if (!CreateLogicalDevice(vk_state, requiredDeviceExtensionCount, requiredDeviceExtensions, requiredInstanceLayerCount, requiredInstanceLayers))
 	{
-		DarrayDestroy(requiredLayersDarray);
 		return false;
 	}
-	DarrayDestroy(requiredLayersDarray);
 
 	// ===================== sets up queues and command pools ================================
 	if (!CreateQueues())

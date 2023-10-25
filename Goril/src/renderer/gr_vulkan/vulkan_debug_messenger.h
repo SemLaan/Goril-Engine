@@ -5,8 +5,13 @@
 
 
 #ifndef GR_DIST
+
 VkDebugUtilsMessengerCreateInfoEXT GetDebugMessengerCreateInfo();
 
 bool CreateDebugMessenger();
 void DestroyDebugMessenger();
+
+#else
+
+
 #endif // !GR_DIST

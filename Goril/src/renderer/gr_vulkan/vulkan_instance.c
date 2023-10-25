@@ -5,7 +5,7 @@
 // TODO: make a custom string thing with strncmp replacement so string.h doesn't have to be included
 #include <string.h>
 
-bool CreateVulkanInstance(void** requiredExtensionsDarray, void** requiredLayersDarray)
+bool CreateVulkanInstance(u32 requiredExtensionNameCount, const char** requiredExtensionNames, u32 requiredLayerNameCount, const char** requiredLayerNames)
 {
 	// ================ App info =============================================
 	VkApplicationInfo appInfo = {};
@@ -25,11 +25,11 @@ bool CreateVulkanInstance(void** requiredExtensionsDarray, void** requiredLayers
 		vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, availableExtensionsDarray);
 
 		u32 availableRequiredExtensions = 0;
-		for (u32 i = 0; i < DarrayGetSize(requiredExtensionsDarray); ++i)
+		for (u32 i = 0; i < requiredExtensionNameCount; ++i)
 		{
 			for (u32 j = 0; j < availableExtensionCount; ++j)
 			{
-				if (0 == strncmp((const char*)requiredExtensionsDarray[i], availableExtensionsDarray[j].extensionName, VK_MAX_EXTENSION_NAME_SIZE))
+				if (0 == strncmp(requiredExtensionNames[i], availableExtensionsDarray[j].extensionName, VK_MAX_EXTENSION_NAME_SIZE))
 				{
 					availableRequiredExtensions++;
 				}
@@ -38,7 +38,7 @@ bool CreateVulkanInstance(void** requiredExtensionsDarray, void** requiredLayers
 
 		DarrayDestroy(availableExtensionsDarray);
 
-		if (availableRequiredExtensions < DarrayGetSize(requiredExtensionsDarray))
+		if (availableRequiredExtensions < requiredExtensionNameCount)
 		{
 			GRFATAL("Couldn't find required Vulkan extensions");
 			return false;
@@ -57,11 +57,11 @@ bool CreateVulkanInstance(void** requiredExtensionsDarray, void** requiredLayers
 		vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayersDarray);
 
 		u32 availableRequiredLayers = 0;
-		for (u32 i = 0; i < DarrayGetSize(requiredLayersDarray); ++i)
+		for (u32 i = 0; i < requiredLayerNameCount; ++i)
 		{
 			for (u32 j = 0; j < availableLayerCount; ++j)
 			{
-				if (0 == strncmp((const char*)requiredLayersDarray[i], availableLayersDarray[j].layerName, VK_MAX_EXTENSION_NAME_SIZE))
+				if (0 == strncmp(requiredLayerNames[i], availableLayersDarray[j].layerName, VK_MAX_EXTENSION_NAME_SIZE))
 				{
 					availableRequiredLayers++;
 				}
@@ -70,7 +70,7 @@ bool CreateVulkanInstance(void** requiredExtensionsDarray, void** requiredLayers
 
 		DarrayDestroy(availableLayersDarray);
 
-		if (availableRequiredLayers < DarrayGetSize(requiredLayersDarray))
+		if (availableRequiredLayers < requiredLayerNameCount)
 		{
 			GRFATAL("Couldn't find required Vulkan layers");
 			return false;
@@ -105,10 +105,10 @@ bool CreateVulkanInstance(void** requiredExtensionsDarray, void** requiredLayers
 #endif // !GR_DIST
 		createInfo.flags = 0;
 		createInfo.pApplicationInfo = &appInfo;
-		createInfo.enabledLayerCount = DarrayGetSize(requiredLayersDarray);
-		createInfo.ppEnabledLayerNames = (const char* const*)requiredLayersDarray;
-		createInfo.enabledExtensionCount = (u32)DarrayGetSize(requiredExtensionsDarray);
-		createInfo.ppEnabledExtensionNames = (const char* const*)requiredExtensionsDarray;
+		createInfo.enabledLayerCount = requiredLayerNameCount;
+		createInfo.ppEnabledLayerNames = requiredLayerNames;
+		createInfo.enabledExtensionCount = requiredExtensionNameCount;
+		createInfo.ppEnabledExtensionNames = requiredExtensionNames;
 
 		VkResult result = vkCreateInstance(&createInfo, vk_state->allocator, &vk_state->instance);
 
