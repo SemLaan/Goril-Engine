@@ -8,6 +8,7 @@ layout(location = 7) in uint v_textureIndex;
 
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec2 texCoord;
+layout(location = 2) out flat uint textureIndex;
 
 layout(set = 0, binding = 0) uniform UniformBufferObject
 {
@@ -18,5 +19,6 @@ layout(set = 0, binding = 0) uniform UniformBufferObject
 void main() {
 	fragColor = v_color;
 	texCoord = v_texCoord;
+	textureIndex = v_textureIndex;
 	gl_Position = ubo.projView * v_model * vec4(v_position, 1.0);
 }
