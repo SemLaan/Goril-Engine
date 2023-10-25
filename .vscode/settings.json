@@ -42,6 +42,8 @@
         "memory_subsys.h": "c",
         "hashmap_u64.h": "c",
         "allocator_frontends.h": "c",
-        "memory_debug_tools.h": "c"
+        "memory_debug_tools.h": "c",
+        "vulkan_renderpass.h": "c",
+        "vulkan_instance.h": "c"
     }
 }

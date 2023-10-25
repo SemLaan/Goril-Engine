@@ -98,28 +98,28 @@ bool SelectPhysicalDevice(u32 requiredDeviceExtensionNameCount, const char** req
 void SelectQueueFamilies(RendererState* state)
 {
 	u32 queueFamilyCount = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(state->physicalDevice, &queueFamilyCount, nullptr);
+	vkGetPhysicalDeviceQueueFamilyProperties(vk_state->physicalDevice, &queueFamilyCount, nullptr);
 	VkQueueFamilyProperties* availableQueueFamiliesDarray = (VkQueueFamilyProperties*)DarrayCreateWithSize(sizeof(VkQueueFamilyProperties), queueFamilyCount, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
-	vkGetPhysicalDeviceQueueFamilyProperties(state->physicalDevice, &queueFamilyCount, availableQueueFamiliesDarray);
+	vkGetPhysicalDeviceQueueFamilyProperties(vk_state->physicalDevice, &queueFamilyCount, availableQueueFamiliesDarray);
 
-	state->queueIndices.transferFamily = UINT32_MAX;
+	vk_state->transferQueue.index = UINT32_MAX;
 
 	for (u32 i = 0; i < queueFamilyCount; ++i)
 	{
 		VkBool32 presentSupport = false;
-		vkGetPhysicalDeviceSurfaceSupportKHR(state->physicalDevice, i, state->surface, &presentSupport);
+		vkGetPhysicalDeviceSurfaceSupportKHR(vk_state->physicalDevice, i, state->surface, &presentSupport);
 		bool graphicsSupport = availableQueueFamiliesDarray[i].queueFlags & VK_QUEUE_GRAPHICS_BIT;
 		bool transferSupport = availableQueueFamiliesDarray[i].queueFlags & VK_QUEUE_TRANSFER_BIT;
 		if (graphicsSupport)
-			state->queueIndices.graphicsFamily = i;
+			vk_state->graphicsQueue.index = i;
 		if (presentSupport)
-			state->queueIndices.presentFamily = i;
+			vk_state->presentQueueFamilyIndex = i;
 		if (transferSupport && !graphicsSupport)
-			state->queueIndices.transferFamily = i;
+			vk_state->transferQueue.index = i;
 	}
 
-	if (state->queueIndices.transferFamily == UINT32_MAX)
-		state->queueIndices.transferFamily = state->queueIndices.graphicsFamily;
+	if (vk_state->transferQueue.index == UINT32_MAX)
+		vk_state->transferQueue.index = vk_state->graphicsQueue.index;
 	/// TODO: check if the device even has queue families for all these things, if not fail startup (is this even required? i think implementations need at least transfer and graphics(?), and compute and present are implied by the existence of the extensions)
 	DarrayDestroy(availableQueueFamiliesDarray);
 }
@@ -131,12 +131,12 @@ bool CreateLogicalDevice(RendererState* state, u32 requiredDeviceExtensionNameCo
 	VkDeviceQueueCreateInfo* queueCreateInfosDarray = (VkDeviceQueueCreateInfo*)DarrayCreate(sizeof(VkDeviceQueueCreateInfo), 1, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: switch allocator
 
 	u32* uniqueQueueFamiliesDarray = (u32*)DarrayCreate(sizeof(u32), 5, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: switch allocator
-	if (!DarrayContains(uniqueQueueFamiliesDarray, &state->queueIndices.graphicsFamily))
-		uniqueQueueFamiliesDarray = (u32*)DarrayPushback(uniqueQueueFamiliesDarray, &state->queueIndices.graphicsFamily);
-	if (!DarrayContains(uniqueQueueFamiliesDarray, &state->queueIndices.presentFamily))
-		uniqueQueueFamiliesDarray = (u32*)DarrayPushback(uniqueQueueFamiliesDarray, &state->queueIndices.presentFamily);
-	if (!DarrayContains(uniqueQueueFamiliesDarray, &state->queueIndices.transferFamily))
-		uniqueQueueFamiliesDarray = (u32*)DarrayPushback(uniqueQueueFamiliesDarray, &state->queueIndices.transferFamily);
+	if (!DarrayContains(uniqueQueueFamiliesDarray, &vk_state->graphicsQueue.index))
+		uniqueQueueFamiliesDarray = (u32*)DarrayPushback(uniqueQueueFamiliesDarray, &vk_state->graphicsQueue.index);
+	if (!DarrayContains(uniqueQueueFamiliesDarray, &vk_state->presentQueueFamilyIndex))
+		uniqueQueueFamiliesDarray = (u32*)DarrayPushback(uniqueQueueFamiliesDarray, &vk_state->presentQueueFamilyIndex);
+	if (!DarrayContains(uniqueQueueFamiliesDarray, &vk_state->transferQueue.index))
+		uniqueQueueFamiliesDarray = (u32*)DarrayPushback(uniqueQueueFamiliesDarray, &vk_state->transferQueue.index);
 
 	f32 queuePriority = 1.0f;
 
@@ -187,7 +187,7 @@ bool CreateLogicalDevice(RendererState* state, u32 requiredDeviceExtensionNameCo
 	createInfo.ppEnabledExtensionNames = requiredDeviceExtensionNames;
 	createInfo.pEnabledFeatures = nullptr;
 
-	u32 result = vkCreateDevice(state->physicalDevice, &createInfo, state->allocator, &state->device);
+	u32 result = vkCreateDevice(vk_state->physicalDevice, &createInfo, state->allocator, &state->device);
 
 	DarrayDestroy(queueCreateInfosDarray);
 
@@ -204,8 +204,8 @@ void DestroyLogicalDevice(RendererState* state)
 {
 	if (state->device)
 		vkDestroyDevice(state->device, state->allocator);
-	if (state->swapchainSupport.formatsDarray)
-		DarrayDestroy(state->swapchainSupport.formatsDarray);
-	if (state->swapchainSupport.presentModesDarray)
-		DarrayDestroy(state->swapchainSupport.presentModesDarray);
+	if (vk_state->swapchainSupport.formatsDarray)
+		DarrayDestroy(vk_state->swapchainSupport.formatsDarray);
+	if (vk_state->swapchainSupport.presentModesDarray)
+		DarrayDestroy(vk_state->swapchainSupport.presentModesDarray);
 }

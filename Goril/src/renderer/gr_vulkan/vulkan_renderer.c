@@ -34,7 +34,7 @@ bool InitializeRenderer()
 	vk_state = (RendererState*)Alloc(GetGlobalAllocator(), sizeof(RendererState), MEM_TAG_RENDERER_SUBSYS);
 	vk_state->allocator = nullptr;
 
-	vk_state->currentFrame = 0;
+	vk_state->currentInFlightFrameIndex = 0;
 	vk_state->shouldRecreateSwapchain = false;
 
 	RegisterEventListener(EVCODE_WINDOW_RESIZED, OnWindowResize);
@@ -131,7 +131,7 @@ bool InitializeRenderer()
 	// ============================ Allocate a command buffer =======================================
 	for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
-		if (!AllocateCommandBuffer(&vk_state->graphicsQueue, &vk_state->commandBuffers[i]))
+		if (!AllocateCommandBuffer(&vk_state->graphicsQueue, &vk_state->graphicsCommandBuffers[i]))
 			return false;
 	}
 
@@ -177,8 +177,8 @@ void ShutdownRenderer()
 	// =================================== Free command buffers ===================================================
 	for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
-		if (vk_state->commandBuffers[i])
-			FreeCommandBuffer(vk_state->commandBuffers[i]);
+		if (vk_state->graphicsCommandBuffers[i])
+			FreeCommandBuffer(vk_state->graphicsCommandBuffers[i]);
 	}
 
 	// ====================== Destroying swapchain framebuffers if they were created ================================
@@ -256,7 +256,7 @@ bool RenderFrame()
 	vkWaitSemaphores(vk_state->device, &semaphoreWaitInfo, UINT64_MAX);
 
 	// Getting the next image from the swapchain (doesn't block the CPU and only blocks the GPU if there's no image available (which only happens in certain present modes with certain buffer counts))
-	VkResult result = vkAcquireNextImageKHR(vk_state->device, vk_state->swapchain, UINT64_MAX, vk_state->imageAvailableSemaphoresDarray[vk_state->currentFrame], VK_NULL_HANDLE, &vk_state->currentSwapchainImageIndex);
+	VkResult result = vkAcquireNextImageKHR(vk_state->device, vk_state->swapchain, UINT64_MAX, vk_state->imageAvailableSemaphoresDarray[vk_state->currentInFlightFrameIndex], VK_NULL_HANDLE, &vk_state->currentSwapchainImageIndex);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
@@ -278,8 +278,8 @@ bool RenderFrame()
 	Preprocess2DSceneData();
 
 	// ===================================== Begin command buffer recording =========================================
-	ResetAndBeginCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame]);
-	VkCommandBuffer currentCommandBuffer = vk_state->commandBuffers[vk_state->currentFrame]->handle;
+	ResetAndBeginCommandBuffer(vk_state->graphicsCommandBuffers[vk_state->currentInFlightFrameIndex]);
+	VkCommandBuffer currentCommandBuffer = vk_state->graphicsCommandBuffers[vk_state->currentInFlightFrameIndex]->handle;
 
 	// =============================== acquire ownership of all uploaded resources =======================================
 	for (u32 i = 0; i < DarrayGetSize(vk_state->requestedQueueAcquisitionOperationsDarray); ++i)
@@ -331,7 +331,7 @@ bool RenderFrame()
 	// =========================================== Render user submitted scene ================================
 	// TODO: binding descriptor sets and binding the pipeline should probably be a part of the Render2DScene function
 	// Binding global descriptor set
-	vkCmdBindDescriptorSets(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->pipelineLayout, 0, 1, &vk_state->uniformDescriptorSetsDarray[vk_state->currentFrame], 0, nullptr);
+	vkCmdBindDescriptorSets(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->pipelineLayout, 0, 1, &vk_state->uniformDescriptorSetsDarray[vk_state->currentInFlightFrameIndex], 0, nullptr);
 
 	/// TODO: bind graphics pipeline function (and abstracting graphics pipelines in general)
 	vkCmdBindPipeline(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->graphicsPipeline);
@@ -340,10 +340,10 @@ bool RenderFrame()
 
 	// ==================================== End renderpass =================================================
 	/// TODO: end renderpass function
-	vkCmdEndRenderPass(vk_state->commandBuffers[vk_state->currentFrame]->handle);
+	vkCmdEndRenderPass(vk_state->graphicsCommandBuffers[vk_state->currentInFlightFrameIndex]->handle);
 
 	// ================================= End command buffer recording ==================================================
-	EndCommandBuffer(vk_state->commandBuffers[vk_state->currentFrame]);
+	EndCommandBuffer(vk_state->graphicsCommandBuffers[vk_state->currentInFlightFrameIndex]);
 
 	// =================================== Submitting command buffer ==============================================
 	// With all the synchronization that that entails...
@@ -353,7 +353,7 @@ bool RenderFrame()
 	// Swapchain image acquisition semaphore
 	waitSemaphores[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 	waitSemaphores[0].pNext = nullptr;
-	waitSemaphores[0].semaphore = vk_state->imageAvailableSemaphoresDarray[vk_state->currentFrame];
+	waitSemaphores[0].semaphore = vk_state->imageAvailableSemaphoresDarray[vk_state->currentInFlightFrameIndex];
 	waitSemaphores[0].value = 0;
 	waitSemaphores[0].stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 	waitSemaphores[0].deviceIndex = 0;
@@ -384,7 +384,7 @@ bool RenderFrame()
 	VkSemaphoreSubmitInfo signalSemaphores[SIGNAL_SEMAPHORE_COUNT] = {};
 	signalSemaphores[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 	signalSemaphores[0].pNext = nullptr;
-	signalSemaphores[0].semaphore = vk_state->renderFinishedSemaphoresDarray[vk_state->currentFrame];
+	signalSemaphores[0].semaphore = vk_state->renderFinishedSemaphoresDarray[vk_state->currentInFlightFrameIndex];
 	signalSemaphores[0].value = 0;
 	signalSemaphores[0].stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 	signalSemaphores[0].deviceIndex = 0;
@@ -398,14 +398,14 @@ bool RenderFrame()
 	signalSemaphores[1].deviceIndex = 0;
 
 	// Submitting the command buffer which allows the GPU to actually start working on this frame
-	SubmitCommandBuffers(WAIT_SEMAPHORE_COUNT, waitSemaphores, SIGNAL_SEMAPHORE_COUNT, signalSemaphores, 1, vk_state->commandBuffers[vk_state->currentFrame], nullptr);
+	SubmitCommandBuffers(WAIT_SEMAPHORE_COUNT, waitSemaphores, SIGNAL_SEMAPHORE_COUNT, signalSemaphores, 1, vk_state->graphicsCommandBuffers[vk_state->currentInFlightFrameIndex], nullptr);
 
 	// ============================== Telling the GPU to present this frame (after it's rendered of course, synced with a binary semaphore) =================================
 	VkPresentInfoKHR presentInfo = {};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pNext = nullptr;
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &vk_state->renderFinishedSemaphoresDarray[vk_state->currentFrame];
+	presentInfo.pWaitSemaphores = &vk_state->renderFinishedSemaphoresDarray[vk_state->currentInFlightFrameIndex];
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &vk_state->swapchain;
 	presentInfo.pImageIndices = &vk_state->currentSwapchainImageIndex;
@@ -414,7 +414,7 @@ bool RenderFrame()
 	// When using mailbox present mode, vulkan will take care of skipping the presentation of this frame if another one is already finished
 	vkQueuePresentKHR(vk_state->presentQueue, &presentInfo);
 
-	vk_state->currentFrame = (vk_state->currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+	vk_state->currentInFlightFrameIndex = (vk_state->currentInFlightFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 
 	return true;
 }
@@ -491,15 +491,15 @@ static void Preprocess2DSceneData()
 	Free(GetGlobalAllocator(), instanceData);
 
 	// =============================== Updating descriptor sets ==================================
-	MemCopy(vk_state->uniformBuffersMappedDarray[vk_state->currentFrame], &renderer2DState->currentGlobalUBO, sizeof(GlobalUniformObject));
-	UpdateDescriptorSets(vk_state->currentFrame, (VulkanImage*)renderer2DState->currentRenderData.spriteRenderInfoDarray[0].texture.internalState); // TODO: make gfx pipelines configurable
+	MemCopy(vk_state->uniformBuffersMappedDarray[vk_state->currentInFlightFrameIndex], &renderer2DState->currentGlobalUBO, sizeof(GlobalUniformObject));
+	UpdateDescriptorSets(vk_state->currentInFlightFrameIndex, (VulkanImage*)renderer2DState->currentRenderData.spriteRenderInfoDarray[0].texture.internalState); // TODO: make gfx pipelines configurable
 }
 
 static void Render2DScene()
 {
 	u32 spriteCount = DarrayGetSize(renderer2DState->currentRenderData.spriteRenderInfoDarray);
 
-	VkCommandBuffer currentCommandBuffer = vk_state->commandBuffers[vk_state->currentFrame]->handle;
+	VkCommandBuffer currentCommandBuffer = vk_state->graphicsCommandBuffers[vk_state->currentInFlightFrameIndex]->handle;
 
 	VulkanVertexBuffer* quadBuffer = renderer2DState->quadVertexBuffer.internalState;
 	VulkanIndexBuffer* indexBuffer = renderer2DState->quadIndexBuffer.internalState;
@@ -523,7 +523,7 @@ void Submit2DScene(SceneRenderData2D sceneData)
 
 void DrawIndexed(VertexBuffer _vertexBuffer, IndexBuffer _indexBuffer, PushConstantObject* pPushConstantValues)
 {
-	VkCommandBuffer currentCommandBuffer = vk_state->commandBuffers[vk_state->currentFrame]->handle;
+	VkCommandBuffer currentCommandBuffer = vk_state->graphicsCommandBuffers[vk_state->currentInFlightFrameIndex]->handle;
 
 	VulkanVertexBuffer* vertexBuffer = (VulkanVertexBuffer*)_vertexBuffer.internalState;
 	VulkanIndexBuffer* indexBuffer = (VulkanIndexBuffer*)_indexBuffer.internalState;

@@ -7,16 +7,14 @@ bool CreateQueues()
 {
 	// =================== Getting the device queues ======================================================
 	// Present family queue
-	vkGetDeviceQueue(vk_state->device, vk_state->queueIndices.presentFamily, 0, &vk_state->presentQueue);
+	vkGetDeviceQueue(vk_state->device, vk_state->presentQueueFamilyIndex, 0, &vk_state->presentQueue);
 
 	///TODO: get compute queue
 	// Graphics, transfer and (in the future) compute queue
-	vkGetDeviceQueue(vk_state->device, vk_state->queueIndices.graphicsFamily, 0, &vk_state->graphicsQueue.handle);
-	vk_state->graphicsQueue.index = vk_state->queueIndices.graphicsFamily;
+	vkGetDeviceQueue(vk_state->device, vk_state->graphicsQueue.index, 0, &vk_state->graphicsQueue.handle);
 	vk_state->graphicsQueue.resourcesPendingDestructionDarray = (ResourceDestructionInfo*)DarrayCreate(sizeof(ResourceDestructionInfo), 20, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); /// TODO: change allocator to renderer local allocator (when it exists)
 
-	vkGetDeviceQueue(vk_state->device, vk_state->queueIndices.transferFamily, 0, &vk_state->transferQueue.handle);
-	vk_state->transferQueue.index = vk_state->queueIndices.transferFamily;
+	vkGetDeviceQueue(vk_state->device, vk_state->transferQueue.index, 0, &vk_state->transferQueue.handle);
 	vk_state->transferQueue.resourcesPendingDestructionDarray = (ResourceDestructionInfo*)DarrayCreate(sizeof(ResourceDestructionInfo), 20, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); /// TODO: change allocator to renderer local allocator (when it exists)
 
 	// ==================== Creating command pools for each of the queue families =============================
@@ -24,7 +22,7 @@ bool CreateQueues()
 	commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	commandPoolCreateInfo.pNext = nullptr;
 	commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	commandPoolCreateInfo.queueFamilyIndex = vk_state->queueIndices.graphicsFamily;
+	commandPoolCreateInfo.queueFamilyIndex = vk_state->graphicsQueue.index;
 
 	if (VK_SUCCESS != vkCreateCommandPool(vk_state->device, &commandPoolCreateInfo, vk_state->allocator, &vk_state->graphicsQueue.commandPool))
 	{
@@ -33,7 +31,7 @@ bool CreateQueues()
 	}
 
 	commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
-	commandPoolCreateInfo.queueFamilyIndex = vk_state->queueIndices.transferFamily;
+	commandPoolCreateInfo.queueFamilyIndex = vk_state->transferQueue.index;
 
 	if (VK_SUCCESS != vkCreateCommandPool(vk_state->device, &commandPoolCreateInfo, vk_state->allocator, &vk_state->transferQueue.commandPool))
 	{

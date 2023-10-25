@@ -7,19 +7,19 @@
 bool CreateSwapchain(RendererState* state)
 {
 	// Getting a swapchain format
-	VkSurfaceFormatKHR format = state->swapchainSupport.formatsDarray[0];
-	for (u32 i = 0; i < DarrayGetSize(state->swapchainSupport.formatsDarray); ++i)
+	VkSurfaceFormatKHR format = vk_state->swapchainSupport.formatsDarray[0];
+	for (u32 i = 0; i < DarrayGetSize(vk_state->swapchainSupport.formatsDarray); ++i)
 	{
-		VkSurfaceFormatKHR availableFormat = state->swapchainSupport.formatsDarray[i];
+		VkSurfaceFormatKHR availableFormat = vk_state->swapchainSupport.formatsDarray[i];
 		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
 			format = availableFormat;
 	}
 
 	// Getting a presentation mode
 	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
-	for (u32 i = 0; i < DarrayGetSize(state->swapchainSupport.presentModesDarray); ++i)
+	for (u32 i = 0; i < DarrayGetSize(vk_state->swapchainSupport.presentModesDarray); ++i)
 	{
-		VkPresentModeKHR availablePresentMode = state->swapchainSupport.presentModesDarray[i];
+		VkPresentModeKHR availablePresentMode = vk_state->swapchainSupport.presentModesDarray[i];
 		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
 			presentMode = availablePresentMode;
 	}
@@ -28,9 +28,9 @@ bool CreateSwapchain(RendererState* state)
 	vec2i windowSize = GetPlatformWindowSize();
 	VkExtent2D swapchainExtent = { (u32)windowSize.x, (u32)windowSize.y };
 	// Making sure the swapchain isn't too big or too small
-	DarrayDestroy(state->swapchainSupport.formatsDarray);
-	DarrayDestroy(state->swapchainSupport.presentModesDarray);
-	state->swapchainSupport = QuerySwapchainSupport(state->physicalDevice, state->surface);
+	DarrayDestroy(vk_state->swapchainSupport.formatsDarray);
+	DarrayDestroy(vk_state->swapchainSupport.presentModesDarray);
+	vk_state->swapchainSupport = QuerySwapchainSupport(state->physicalDevice, state->surface);
 	if (swapchainExtent.width > state->swapchainSupport.capabilities.maxImageExtent.width)
 		swapchainExtent.width = state->swapchainSupport.capabilities.maxImageExtent.width;
 	if (swapchainExtent.height > state->swapchainSupport.capabilities.maxImageExtent.height)
@@ -56,8 +56,8 @@ bool CreateSwapchain(RendererState* state)
 	createInfo.imageArrayLayers = 1;
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-	u32 queueFamilyIndices[2] = { state->queueIndices.graphicsFamily, state->queueIndices.presentFamily };
-	if (state->queueIndices.graphicsFamily != state->queueIndices.presentFamily)
+	u32 queueFamilyIndices[2] = { state->graphicsQueue.index, state->presentQueueFamilyIndex };
+	if (state->graphicsQueue.index != state->presentQueueFamilyIndex)
 	{
 		createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 		createInfo.queueFamilyIndexCount = 2;

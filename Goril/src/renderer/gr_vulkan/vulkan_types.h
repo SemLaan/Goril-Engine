@@ -70,52 +70,55 @@ typedef struct SwapchainSupportDetails
 	VkPresentModeKHR* presentModesDarray;
 } SwapchainSupportDetails;
 
-typedef struct QueueFamilyIndices
-{
-	u32 graphicsFamily;
-	u32 presentFamily;
-	u32 transferFamily;
-} QueueFamilyIndices;
-
-//TODO: refactor this mess
 typedef struct RendererState
 {
-	VkInstance instance;
-	VkPhysicalDevice physicalDevice;
+	// Frequently used data (every frame)
 	VkDevice device;
-	QueueFamily graphicsQueue;
-	QueueFamily transferQueue;
-	VkQueue presentQueue;
-	QueueFamilyIndices queueIndices;
-	VkSurfaceKHR surface;
-	SwapchainSupportDetails swapchainSupport;
 	VkSwapchainKHR swapchain;
-	VkImage* swapchainImagesDarray;
-	VkImageView* swapchainImageViewsDarray;
-	VkFormat swapchainFormat;
+	VkQueue presentQueue;
+	VkFramebuffer* swapchainFramebuffersDarray;	// TODO: gets removed when i switch to dynamic renderpasses
+	CommandBuffer* graphicsCommandBuffers[MAX_FRAMES_IN_FLIGHT]; //TODO: ideally is not a pointer
+	u32 currentInFlightFrameIndex;
+	u32 currentSwapchainImageIndex;
+	bool shouldRecreateSwapchain;
 	VkExtent2D swapchainExtent;
-	VkRenderPass renderpass;
-	VkDescriptorSetLayout descriptorSetLayout;
-	VkBuffer* uniformBuffersDarray;
-	VkDeviceMemory* uniformBuffersMemoryDarray;
-	void** uniformBuffersMappedDarray;
-	VkDescriptorPool uniformDescriptorPool;
-	VkDescriptorSet* uniformDescriptorSetsDarray;
-	VkPipelineLayout pipelineLayout;
-	VkPipeline graphicsPipeline;
-	VkFramebuffer* swapchainFramebuffersDarray;
-	CommandBuffer* commandBuffers[MAX_FRAMES_IN_FLIGHT];
-	VkSemaphore* imageAvailableSemaphoresDarray;
-	VkSemaphore* renderFinishedSemaphoresDarray;
+
+	// Binary semaphores for synchronizing the swapchain with the screen and the GPU
+	VkSemaphore* imageAvailableSemaphoresDarray;	//TODO: change to static array to remove pointer indirection
+	VkSemaphore* renderFinishedSemaphoresDarray;	//TODO: change to static array to remove pointer indirection
+
+	// Timeline semaphores for synchronizing uploads and 
 	VulkanSemaphore vertexUploadSemaphore;
 	VulkanSemaphore indexUploadSemaphore;
 	VulkanSemaphore imageUploadSemaphore;
 	VulkanSemaphore frameSemaphore;
+
+	// TODO: state that needs to be moved out of the global renderer state
+	VkRenderPass renderpass;// TODO: factor into 2d renderer and switch to dynamic renderpass
+	VkDescriptorSetLayout descriptorSetLayout;// TODO: factor into 2d renderer
+	VkBuffer* uniformBuffersDarray;// TODO: factor into 2d renderer
+	VkDeviceMemory* uniformBuffersMemoryDarray;// TODO: factor into 2d renderer
+	void** uniformBuffersMappedDarray;// TODO: factor into 2d renderer
+	VkDescriptorPool uniformDescriptorPool;// TODO: factor into 2d renderer
+	VkDescriptorSet* uniformDescriptorSetsDarray; // TODO: factor into 2d renderer 
+	VkPipelineLayout pipelineLayout;	// TODO: factor into 2d renderer
+	VkPipeline graphicsPipeline;		// TODO: factor into 2d renderer
+
+	// Data that is not used every frame or possibly used every frame
+	QueueFamily graphicsQueue;
+	QueueFamily transferQueue;
 	VkDependencyInfo** requestedQueueAcquisitionOperationsDarray;
-	u32 currentFrame;
-	u32 currentSwapchainImageIndex;
-	bool shouldRecreateSwapchain;
 	VkAllocationCallbacks* allocator;
+
+	// Data that is only used on startup/shutdown
+	VkInstance instance;
+	VkPhysicalDevice physicalDevice;
+	SwapchainSupportDetails swapchainSupport;
+	u32 presentQueueFamilyIndex;
+	VkSurfaceKHR surface; // TODO: check where this is used
+	VkFormat swapchainFormat;
+	VkImage* swapchainImagesDarray; // TODO: this might become used often once the switch to dynamic renderpasses is made
+	VkImageView* swapchainImageViewsDarray; // TODO: this might become used often once the switch to dynamic renderpasses is made
 #ifndef GR_DIST
 	VkDebugUtilsMessengerEXT debugMessenger;
 #endif // !GR_DIST
