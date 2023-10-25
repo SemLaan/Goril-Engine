@@ -63,12 +63,12 @@ void ShutdownMemory()
 		Free(GetGlobalAllocator(), g_Allocators);
 	}
 
-	PRINT_MEMORY_STATS();
-
 	initialized = false;
 
 	Allocator* globalAllocator = state->globalAllocator;
 	Free(GetGlobalAllocator(), state);
+
+	PRINT_MEMORY_STATS();
 
 	// Return all the application memory back to the OS
 	DestroyGlobalAllocator(globalAllocator);

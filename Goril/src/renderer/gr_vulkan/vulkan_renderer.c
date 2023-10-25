@@ -174,6 +174,13 @@ void ShutdownRenderer()
 	// ================================ Destroy sync objects if they were created ===========================================
 	DestroySyncObjects();
 
+	// =================================== Free command buffers ===================================================
+	for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+	{
+		if (vk_state->commandBuffers[i])
+			FreeCommandBuffer(vk_state->commandBuffers[i]);
+	}
+
 	// ====================== Destroying swapchain framebuffers if they were created ================================
 	DestroySwapchainFramebuffers(vk_state);
 
