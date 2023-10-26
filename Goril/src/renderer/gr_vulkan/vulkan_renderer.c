@@ -107,10 +107,22 @@ bool InitializeRenderer()
     if (!CreateQueues())
         return false;
 
+    // ============================ Allocate a command buffer =======================================
+    for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    {
+        if (!AllocateCommandBuffer(&vk_state->graphicsQueue, &vk_state->graphicsCommandBuffers[i]))
+            return false;
+    }
+
+    // ================================ Create sync objects ===========================================
+    if (!CreateSyncObjects())
+        return false;
+
     // ======================== Creating the swapchain ===============================================
     if (!CreateSwapchain(vk_state))
         return false;
 
+    // TODO: remove the swapchain framebuffers and renderpass by making it dynamic, also remove this other stuff and add it to the startup of the 2d renderer
     // ========================== Creating renderpass ==============================================
     if (!CreateRenderpass(vk_state))
         return false;
@@ -121,17 +133,6 @@ bool InitializeRenderer()
 
     // ======================= Create swapchain framebuffers ============================================
     if (!CreateSwapchainFramebuffers(vk_state))
-        return false;
-
-    // ============================ Allocate a command buffer =======================================
-    for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-    {
-        if (!AllocateCommandBuffer(&vk_state->graphicsQueue, &vk_state->graphicsCommandBuffers[i]))
-            return false;
-    }
-
-    // ================================ Create sync objects ===========================================
-    if (!CreateSyncObjects())
         return false;
 
     vk_state->requestedQueueAcquisitionOperationsDarray = (VkDependencyInfo**)DarrayCreate(sizeof(VkDependencyInfo*), 10, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); /// TODO: change allocator to renderer local allocator (when it exists)
@@ -166,18 +167,6 @@ void ShutdownRenderer()
     if (vk_state->requestedQueueAcquisitionOperationsDarray)
         DarrayDestroy(vk_state->requestedQueueAcquisitionOperationsDarray);
 
-    // ================================ Destroy sync objects if they were created ===========================================
-    DestroySyncObjects();
-
-    // =================================== Free command buffers ===================================================
-    if (vk_state->graphicsCommandBuffers)
-    {
-        for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-        {
-            FreeCommandBuffer(vk_state->graphicsCommandBuffers[i]);
-        }
-    }
-
     // ====================== Destroying swapchain framebuffers if they were created ================================
     DestroySwapchainFramebuffers(vk_state);
 
@@ -189,6 +178,18 @@ void ShutdownRenderer()
 
     // ====================== Destroying swapchain if it was created ================================
     DestroySwapchain(vk_state);
+
+    // ================================ Destroy sync objects if they were created ===========================================
+    DestroySyncObjects();
+
+    // =================================== Free command buffers ===================================================
+    if (vk_state->graphicsCommandBuffers)
+    {
+        for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+        {
+            FreeCommandBuffer(vk_state->graphicsCommandBuffers[i]);
+        }
+    }
 
     // ===================== destroys queues and command pools ================================
     DestroyQueues();
