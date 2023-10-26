@@ -32,9 +32,10 @@ bool InitializeRenderer()
     GRINFO("Initializing renderer subsystem...");
 
     vk_state = AlignedAlloc(GetGlobalAllocator(), sizeof(RendererState), 64/*cache line*/, MEM_TAG_RENDERER_SUBSYS);
-	CreateFreelistAllocator("renderer allocator", GetGlobalAllocator(), KiB * 10, &vk_state->rendererAllocator);
+	CreateFreelistAllocator("renderer allocator", GetGlobalAllocator(), KiB * 100, &vk_state->rendererAllocator);
 	CreateBumpAllocator("renderer bump allocator", vk_state->rendererAllocator, KiB, &vk_state->rendererBumpAllocator);
 	CreatePoolAllocator("renderer resource destructor pool", vk_state->rendererAllocator, RENDER_POOL_BLOCK_SIZE_32, 30, &vk_state->poolAllocator32B);
+	CreatePoolAllocator("Renderer resource acquisition pool", vk_state->rendererAllocator, QUEUE_ACQUISITION_POOL_BLOCK_SIZE, 30, &vk_state->resourceAcquisitionPool);
 
     vk_state->allocator = nullptr;
 
@@ -43,7 +44,7 @@ bool InitializeRenderer()
 
     RegisterEventListener(EVCODE_WINDOW_RESIZED, OnWindowResize);
 
-// ================== Getting required instance extensions and layers ================================
+	// ================== Getting required instance extensions and layers ================================
 #define MAX_INSTANCE_EXTENSIONS 10
 #define MAX_INSTANCE_LAYERS 10
     // Getting required extensions
@@ -216,6 +217,7 @@ void ShutdownRenderer()
     // ======================= Destroying instance if it was created =======================================
     DestroyVulkanInstance();
 
+	DestroyPoolAllocator(vk_state->resourceAcquisitionPool);
 	DestroyPoolAllocator(vk_state->poolAllocator32B);
 	DestroyBumpAllocator(vk_state->rendererBumpAllocator);
 	DestroyFreelistAllocator(vk_state->rendererAllocator);
@@ -294,7 +296,7 @@ bool RenderFrame()
     for (u32 i = 0; i < DarrayGetSize(vk_state->requestedQueueAcquisitionOperationsDarray); ++i)
     {
         vkCmdPipelineBarrier2(currentCommandBuffer, vk_state->requestedQueueAcquisitionOperationsDarray[i]);
-        Free(vk_state->rendererAllocator, vk_state->requestedQueueAcquisitionOperationsDarray[i]);
+        Free(vk_state->resourceAcquisitionPool, vk_state->requestedQueueAcquisitionOperationsDarray[i]);
     }
 
     DarraySetSize(vk_state->requestedQueueAcquisitionOperationsDarray, 0);

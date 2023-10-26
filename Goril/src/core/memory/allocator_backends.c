@@ -683,7 +683,7 @@ static void* PoolAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
 	PoolAllocatorState* state = (PoolAllocatorState*)allocator->backendState;
 
 	GRASSERT_DEBUG(alignment == MIN_ALIGNMENT);
-	GRASSERT_DEBUG(size == state->blockSize);
+	GRASSERT_DEBUG(size <= state->blockSize);
 
 	u32 firstFreeBlock = UINT32_MAX;
 

@@ -156,7 +156,7 @@ VertexBuffer VertexBufferCreate(void* vertices, size_t size)
         // Creating the buffer memory barrier for the queue family acquire operation
         // This is put in the requestedQueueAcquisitionOperations list and will be submitted as a command in the draw loop,
         // also synced with vertex upload semaphore, so ownership isn't acquired before it is released
-        VkDependencyInfo* acquireDependencyInfo = (VkDependencyInfo*)Alloc(vk_state->rendererAllocator, sizeof(VkDependencyInfo) + sizeof(VkBufferMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
+        VkDependencyInfo* acquireDependencyInfo = Alloc(vk_state->resourceAcquisitionPool, sizeof(VkDependencyInfo) + sizeof(VkBufferMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
         VkBufferMemoryBarrier2* acquireBufferInfo = (VkBufferMemoryBarrier2*)(acquireDependencyInfo + 1);
 
         acquireBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
@@ -273,7 +273,7 @@ void VertexBufferUpdate(VertexBuffer clientBuffer, void* vertices, u64 size)
     // Creating the buffer memory barrier for the queue family acquire operation
     // This is put in the requestedQueueAcquisitionOperations list and will be submitted as a command in the draw loop,
     // also synced with vertex upload semaphore, so ownership isn't acquired before it is released
-    VkDependencyInfo* acquireDependencyInfo = (VkDependencyInfo*)Alloc(vk_state->rendererAllocator, sizeof(VkDependencyInfo) + sizeof(VkBufferMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
+    VkDependencyInfo* acquireDependencyInfo = Alloc(vk_state->resourceAcquisitionPool, sizeof(VkDependencyInfo) + sizeof(VkBufferMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
     VkBufferMemoryBarrier2* acquireBufferInfo = (VkBufferMemoryBarrier2*)(acquireDependencyInfo + 1);
 
     acquireBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
@@ -400,7 +400,7 @@ IndexBuffer IndexBufferCreate(u32* indices, size_t indexCount)
     // Creating the buffer memory barrier for the queue family acquire operation
     // This is put in the requestedQueueAcquisitionOperations list and will be submitted as a command in the draw loop,
     // also synced with index upload semaphore, so ownership isn't acquired before it is released
-    VkDependencyInfo* acquireDependencyInfo = (VkDependencyInfo*)Alloc(vk_state->rendererAllocator, sizeof(VkDependencyInfo) + sizeof(VkBufferMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
+    VkDependencyInfo* acquireDependencyInfo = Alloc(vk_state->resourceAcquisitionPool, sizeof(VkDependencyInfo) + sizeof(VkBufferMemoryBarrier2), MEM_TAG_RENDERER_SUBSYS);
     VkBufferMemoryBarrier2* acquireBufferInfo = (VkBufferMemoryBarrier2*)(acquireDependencyInfo + 1);
 
     acquireBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;

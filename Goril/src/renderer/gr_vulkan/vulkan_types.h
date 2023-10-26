@@ -9,6 +9,7 @@ extern RendererState* vk_state;
 
 #define MAX_FRAMES_IN_FLIGHT 2
 #define RENDER_POOL_BLOCK_SIZE_32 32
+#define QUEUE_ACQUISITION_POOL_BLOCK_SIZE 160 // 160 bytes (2.5 cache lines) 32 byte aligned, enough to store VkDependencyInfo + (VkImageMemoryBarrier2 or VkBufferMemoryBarrier2)
 
 
 // TODO: if still under 32B when finished, switch to pool allocator (or some other size pool allocator)
@@ -114,6 +115,7 @@ typedef struct RendererState
 	Allocator* rendererAllocator;									// Global allocator of the renderer subsys
 	Allocator* rendererBumpAllocator;								// Bump allocator for the renderer subsys
 	Allocator* poolAllocator32B;									// Pool allocator of the renderer subsys
+	Allocator* resourceAcquisitionPool;								// Pool allocator for resource acquisition operation infos (memory barriers)
 
 	// Data that is not used every frame or possibly used every frame
 	QueueFamily graphicsQueue;										// Graphics family queue
