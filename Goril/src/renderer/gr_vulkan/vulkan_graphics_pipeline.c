@@ -46,9 +46,9 @@ bool CreateGraphicsPipeline()
 
     VkDeviceSize uniformBufferSize = sizeof(GlobalUniformObject);
 
-    vk_state->uniformBuffersDarray = (VkBuffer*)DarrayCreateWithSize(sizeof(VkBuffer), MAX_FRAMES_IN_FLIGHT, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
-    vk_state->uniformBuffersMemoryDarray = (VkDeviceMemory*)DarrayCreateWithSize(sizeof(VkDeviceMemory), MAX_FRAMES_IN_FLIGHT, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
-    vk_state->uniformBuffersMappedDarray = (void**)DarrayCreateWithSize(sizeof(void*), MAX_FRAMES_IN_FLIGHT, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+    vk_state->uniformBuffersDarray = (VkBuffer*)DarrayCreateWithSize(sizeof(VkBuffer), MAX_FRAMES_IN_FLIGHT, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
+    vk_state->uniformBuffersMemoryDarray = (VkDeviceMemory*)DarrayCreateWithSize(sizeof(VkDeviceMemory), MAX_FRAMES_IN_FLIGHT, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
+    vk_state->uniformBuffersMappedDarray = (void**)DarrayCreateWithSize(sizeof(void*), MAX_FRAMES_IN_FLIGHT, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
 
     for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
@@ -91,7 +91,7 @@ bool CreateGraphicsPipeline()
     descriptorSetAllocInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
     descriptorSetAllocInfo.pSetLayouts = descriptorSetLayouts;
 
-    vk_state->uniformDescriptorSetsDarray = (VkDescriptorSet*)DarrayCreateWithSize(sizeof(VkDescriptorSet), MAX_FRAMES_IN_FLIGHT, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+    vk_state->uniformDescriptorSetsDarray = (VkDescriptorSet*)DarrayCreateWithSize(sizeof(VkDescriptorSet), MAX_FRAMES_IN_FLIGHT, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
 
     if (VK_SUCCESS != vkAllocateDescriptorSets(vk_state->device, &descriptorSetAllocInfo, vk_state->uniformDescriptorSetsDarray))
     {

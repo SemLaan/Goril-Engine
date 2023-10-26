@@ -11,6 +11,7 @@ extern RendererState* vk_state;
 #define RENDER_POOL_BLOCK_SIZE_32 32
 
 
+// TODO: if still under 32B when finished, switch to pool allocator (or some other size pool allocator)
 typedef struct VulkanVertexBuffer
 {
 	VkDeviceSize size;
@@ -18,6 +19,7 @@ typedef struct VulkanVertexBuffer
 	VkDeviceMemory memory;
 } VulkanVertexBuffer;
 
+// TODO: if still under 32B when finished, switch to pool allocator (or some other size pool allocator)
 typedef struct VulkanIndexBuffer
 {
 	VkDeviceSize size;
@@ -26,6 +28,7 @@ typedef struct VulkanIndexBuffer
 	size_t indexCount;
 } VulkanIndexBuffer;
 
+// TODO: if still under 32B when finished, switch to pool allocator (or some other size pool allocator)
 typedef struct VulkanImage
 {
 	VkImage handle;
@@ -109,6 +112,7 @@ typedef struct RendererState
 
 	// Allocators
 	Allocator* rendererAllocator;									// Global allocator of the renderer subsys
+	Allocator* rendererBumpAllocator;								// Bump allocator for the renderer subsys
 	Allocator* poolAllocator32B;									// Pool allocator of the renderer subsys
 
 	// Data that is not used every frame or possibly used every frame

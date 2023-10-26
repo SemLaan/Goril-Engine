@@ -31,8 +31,9 @@ bool InitializeRenderer()
     GRASSERT_DEBUG(vk_state == nullptr); // If this triggers init got called twice
     GRINFO("Initializing renderer subsystem...");
 
-    vk_state = (RendererState*)Alloc(GetGlobalAllocator(), sizeof(RendererState), MEM_TAG_RENDERER_SUBSYS);
-	CreateFreelistAllocator("renderer allocator", GetGlobalAllocator(), KiB, &vk_state->rendererAllocator);
+    vk_state = AlignedAlloc(GetGlobalAllocator(), sizeof(RendererState), 64/*cache line*/, MEM_TAG_RENDERER_SUBSYS);
+	CreateFreelistAllocator("renderer allocator", GetGlobalAllocator(), KiB * 10, &vk_state->rendererAllocator);
+	CreateBumpAllocator("renderer bump allocator", vk_state->rendererAllocator, KiB, &vk_state->rendererBumpAllocator);
 	CreatePoolAllocator("renderer resource destructor pool", vk_state->rendererAllocator, RENDER_POOL_BLOCK_SIZE_32, 30, &vk_state->poolAllocator32B);
 
     vk_state->allocator = nullptr;
@@ -141,7 +142,7 @@ bool InitializeRenderer()
     if (!CreateSyncObjects())
         return false;
 
-    vk_state->requestedQueueAcquisitionOperationsDarray = (VkDependencyInfo**)DarrayCreate(sizeof(VkDependencyInfo*), 10, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); /// TODO: change allocator to renderer local allocator (when it exists)
+    vk_state->requestedQueueAcquisitionOperationsDarray = (VkDependencyInfo**)DarrayCreate(sizeof(VkDependencyInfo*), 10, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); /// TODO: change allocator to renderer local allocator (when it exists)
 
     Init2DRenderer();
 
@@ -207,7 +208,7 @@ void ShutdownRenderer()
     if (vk_state->surface)
         vkDestroySurfaceKHR(vk_state->instance, vk_state->surface, vk_state->allocator);
 
-        // ===================== Destroying debug messenger if it was created =================================
+    // ===================== Destroying debug messenger if it was created =================================
 #ifndef GR_DIST
     DestroyDebugMessenger();
 #endif // !GR_DIST
@@ -216,6 +217,7 @@ void ShutdownRenderer()
     DestroyVulkanInstance();
 
 	DestroyPoolAllocator(vk_state->poolAllocator32B);
+	DestroyBumpAllocator(vk_state->rendererBumpAllocator);
 	DestroyFreelistAllocator(vk_state->rendererAllocator);
     Free(GetGlobalAllocator(), vk_state);
     vk_state = nullptr;
@@ -292,7 +294,7 @@ bool RenderFrame()
     for (u32 i = 0; i < DarrayGetSize(vk_state->requestedQueueAcquisitionOperationsDarray); ++i)
     {
         vkCmdPipelineBarrier2(currentCommandBuffer, vk_state->requestedQueueAcquisitionOperationsDarray[i]);
-        Free(GetGlobalAllocator(), vk_state->requestedQueueAcquisitionOperationsDarray[i]);
+        Free(vk_state->rendererAllocator, vk_state->requestedQueueAcquisitionOperationsDarray[i]);
     }
 
     DarraySetSize(vk_state->requestedQueueAcquisitionOperationsDarray, 0);
@@ -438,7 +440,7 @@ static Renderer2DState* renderer2DState = nullptr;
 
 static void Init2DRenderer()
 {
-    renderer2DState = Alloc(GetGlobalAllocator(), sizeof(*renderer2DState), MEM_TAG_RENDERER_SUBSYS);
+    renderer2DState = Alloc(vk_state->rendererBumpAllocator, sizeof(*renderer2DState), MEM_TAG_RENDERER_SUBSYS);
 
 #define QUAD_VERT_COUNT 4
     Vertex quadVertices[QUAD_VERT_COUNT] =
@@ -468,7 +470,7 @@ static void Shutdown2DRenderer()
     VertexBufferDestroy(renderer2DState->instancedBuffer);
     VertexBufferDestroy(renderer2DState->quadVertexBuffer);
 
-    Free(GetGlobalAllocator(), renderer2DState);
+    Free(vk_state->rendererBumpAllocator, renderer2DState);
 }
 
 static void Preprocess2DSceneData()
@@ -483,7 +485,7 @@ static void Preprocess2DSceneData()
     // TODO: bind textures
     // TODO: set uniforms (textures and camera)
 
-    SpriteInstance* instanceData = Alloc(GetGlobalAllocator(), sizeof(*instanceData) * spriteCount, MEM_TAG_RENDERER_SUBSYS);
+    SpriteInstance* instanceData = Alloc(vk_state->rendererAllocator, sizeof(*instanceData) * spriteCount, MEM_TAG_RENDERER_SUBSYS);
 
     for (u32 i = 0; i < spriteCount; ++i)
     {
@@ -493,7 +495,7 @@ static void Preprocess2DSceneData()
 
     VertexBufferUpdate(renderer2DState->instancedBuffer, instanceData, spriteCount * sizeof(*instanceData));
 
-    Free(GetGlobalAllocator(), instanceData);
+    Free(vk_state->rendererAllocator, instanceData);
 
     // =============================== Updating descriptor sets ==================================
     MemCopy(vk_state->uniformBuffersMappedDarray[vk_state->currentInFlightFrameIndex], &renderer2DState->currentGlobalUBO, sizeof(GlobalUniformObject));

@@ -12,10 +12,10 @@ bool CreateQueues()
 	///TODO: get compute queue
 	// Graphics, transfer and (in the future) compute queue
 	vkGetDeviceQueue(vk_state->device, vk_state->graphicsQueue.index, 0, &vk_state->graphicsQueue.handle);
-	vk_state->graphicsQueue.resourcesPendingDestructionDarray = (ResourceDestructionInfo*)DarrayCreate(sizeof(ResourceDestructionInfo), 20, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); /// TODO: change allocator to renderer local allocator (when it exists)
+	vk_state->graphicsQueue.resourcesPendingDestructionDarray = (ResourceDestructionInfo*)DarrayCreate(sizeof(ResourceDestructionInfo), 20, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); /// TODO: change allocator to renderer local allocator (when it exists)
 
 	vkGetDeviceQueue(vk_state->device, vk_state->transferQueue.index, 0, &vk_state->transferQueue.handle);
-	vk_state->transferQueue.resourcesPendingDestructionDarray = (ResourceDestructionInfo*)DarrayCreate(sizeof(ResourceDestructionInfo), 20, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); /// TODO: change allocator to renderer local allocator (when it exists)
+	vk_state->transferQueue.resourcesPendingDestructionDarray = (ResourceDestructionInfo*)DarrayCreate(sizeof(ResourceDestructionInfo), 20, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); /// TODO: change allocator to renderer local allocator (when it exists)
 
 	// ==================== Creating command pools for each of the queue families =============================
 	VkCommandPoolCreateInfo commandPoolCreateInfo = {};

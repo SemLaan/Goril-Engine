@@ -18,7 +18,7 @@ bool ReadFile(const char* filename, MemTag tag, char** out_data, u64* out_fileSi
 	fseek(file, 0L, SEEK_END);
 
 	*out_fileSize = ftell(file);
-	*out_data = (char*)AlignedAlloc(GetGlobalAllocator(), *out_fileSize, 64, tag);
+	*out_data = (char*)AlignedAlloc(vk_state->rendererAllocator, *out_fileSize, 64, tag);
 
 	rewind(file);
 	fread(*out_data, 1, *out_fileSize, file);
@@ -41,12 +41,12 @@ bool CreateShaderModule(const char* filename, RendererState* state, VkShaderModu
 
 	if (VK_SUCCESS != vkCreateShaderModule(state->device, &createInfo, state->allocator, out_shaderModule))
 	{
-		Free(GetGlobalAllocator(), fileData);
+		Free(vk_state->rendererAllocator, fileData);
 		GRERROR("Shader module creation failed");
 		return false;
 	}
 
-	Free(GetGlobalAllocator(), fileData);
+	Free(vk_state->rendererAllocator, fileData);
 
 	return true;
 }

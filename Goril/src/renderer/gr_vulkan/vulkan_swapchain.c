@@ -87,10 +87,10 @@ bool CreateSwapchain(RendererState* state)
 
 	u32 swapchainImageCount = 0;
 	vkGetSwapchainImagesKHR(state->device, state->swapchain, &swapchainImageCount, 0);
-	state->swapchainImagesDarray = (VkImage*)DarrayCreateWithSize(sizeof(VkImage), swapchainImageCount, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+	state->swapchainImagesDarray = (VkImage*)DarrayCreateWithSize(sizeof(VkImage), swapchainImageCount, vk_state->rendererBumpAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: dont use darray
 	vkGetSwapchainImagesKHR(state->device, state->swapchain, &swapchainImageCount, state->swapchainImagesDarray);
 
-	state->swapchainImageViewsDarray = (VkImageView*)DarrayCreateWithSize(sizeof(VkImageView), swapchainImageCount, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+	state->swapchainImageViewsDarray = (VkImageView*)DarrayCreateWithSize(sizeof(VkImageView), swapchainImageCount, vk_state->rendererBumpAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: dont use darray
 
 	for (u32 i = 0; i < swapchainImageCount; ++i)
 	{
@@ -142,7 +142,7 @@ void DestroySwapchain(RendererState* state)
 
 bool CreateSwapchainFramebuffers(RendererState* state)
 {
-	state->swapchainFramebuffersDarray = (VkFramebuffer*)DarrayCreateWithSize(sizeof(VkFramebuffer), DarrayGetSize(state->swapchainImagesDarray), GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+	state->swapchainFramebuffersDarray = (VkFramebuffer*)DarrayCreateWithSize(sizeof(VkFramebuffer), DarrayGetSize(state->swapchainImagesDarray), vk_state->rendererBumpAllocator, MEM_TAG_RENDERER_SUBSYS);
 
 	for (u32 i = 0; i < DarrayGetSize(state->swapchainFramebuffersDarray); ++i)
 	{

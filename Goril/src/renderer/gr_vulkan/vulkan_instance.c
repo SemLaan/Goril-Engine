@@ -21,7 +21,7 @@ bool CreateVulkanInstance(u32 requiredExtensionNameCount, const char** requiredE
 		// Checking if required extensions are available
 		u32 availableExtensionCount = 0;
 		vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, nullptr);
-		VkExtensionProperties* availableExtensionsDarray = (VkExtensionProperties*)DarrayCreateWithSize(sizeof(VkExtensionProperties), availableExtensionCount, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+		VkExtensionProperties* availableExtensionsDarray = (VkExtensionProperties*)DarrayCreateWithSize(sizeof(VkExtensionProperties), availableExtensionCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
 		vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, availableExtensionsDarray);
 
 		u32 availableRequiredExtensions = 0;
@@ -53,7 +53,7 @@ bool CreateVulkanInstance(u32 requiredExtensionNameCount, const char** requiredE
 		// Checking if required layers are available
 		u32 availableLayerCount = 0;
 		vkEnumerateInstanceLayerProperties(&availableLayerCount, nullptr);
-		VkLayerProperties* availableLayersDarray = (VkLayerProperties*)DarrayCreate(sizeof(VkLayerProperties), availableLayerCount, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+		VkLayerProperties* availableLayersDarray = (VkLayerProperties*)DarrayCreate(sizeof(VkLayerProperties), availableLayerCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
 		vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayersDarray);
 
 		u32 availableRequiredLayers = 0;

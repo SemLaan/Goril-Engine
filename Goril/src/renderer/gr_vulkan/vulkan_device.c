@@ -12,12 +12,12 @@ SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurface
 
 	u32 formatCount = 0;
 	vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
-	details.formatsDarray = (VkSurfaceFormatKHR*)DarrayCreateWithSize(sizeof(VkSurfaceFormatKHR), formatCount, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: replace allocator
+	details.formatsDarray = (VkSurfaceFormatKHR*)DarrayCreateWithSize(sizeof(VkSurfaceFormatKHR), formatCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: change from darray to just array
 	vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, (VkSurfaceFormatKHR*)details.formatsDarray);
 
 	u32 presentModeCount = 0;
 	vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
-	details.presentModesDarray = (VkPresentModeKHR*)DarrayCreateWithSize(sizeof(VkPresentModeKHR), presentModeCount, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: replace allocator
+	details.presentModesDarray = (VkPresentModeKHR*)DarrayCreateWithSize(sizeof(VkPresentModeKHR), presentModeCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: change from darray to just array
 	vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, (VkPresentModeKHR*)details.presentModesDarray);
 
 	return details;
@@ -27,7 +27,7 @@ static bool DeviceHasExtensions(VkPhysicalDevice physicalDevice, u32 requiredDev
 {
 	u32 availableExtensionCount = 0;
 	vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &availableExtensionCount, nullptr);
-	VkExtensionProperties* availableExtensionsDarray = (VkExtensionProperties*)DarrayCreateWithSize(sizeof(VkExtensionProperties), availableExtensionCount, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: replace allocator
+	VkExtensionProperties* availableExtensionsDarray = (VkExtensionProperties*)DarrayCreateWithSize(sizeof(VkExtensionProperties), availableExtensionCount, g_Allocators->temporary, MEM_TAG_RENDERER_SUBSYS); // TODO: change from darray to just array
 	vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &availableExtensionCount, availableExtensionsDarray);
 
 	u32 availableRequiredExtensions = 0;
@@ -59,7 +59,7 @@ bool SelectPhysicalDevice(u32 requiredDeviceExtensionNameCount, const char** req
 		return false;
 	}
 
-	VkPhysicalDevice* availableDevicesDarray = (VkPhysicalDevice*)DarrayCreateWithSize(sizeof(VkPhysicalDevice), deviceCount, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: different allocator
+	VkPhysicalDevice* availableDevicesDarray = (VkPhysicalDevice*)DarrayCreateWithSize(sizeof(VkPhysicalDevice), deviceCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: different allocator
 	vkEnumeratePhysicalDevices(vk_state->instance, &deviceCount, availableDevicesDarray);
 
 	/// TODO: better device selection
@@ -99,7 +99,7 @@ void SelectQueueFamilies(RendererState* state)
 {
 	u32 queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(vk_state->physicalDevice, &queueFamilyCount, nullptr);
-	VkQueueFamilyProperties* availableQueueFamiliesDarray = (VkQueueFamilyProperties*)DarrayCreateWithSize(sizeof(VkQueueFamilyProperties), queueFamilyCount, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS);
+	VkQueueFamilyProperties* availableQueueFamiliesDarray = (VkQueueFamilyProperties*)DarrayCreateWithSize(sizeof(VkQueueFamilyProperties), queueFamilyCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
 	vkGetPhysicalDeviceQueueFamilyProperties(vk_state->physicalDevice, &queueFamilyCount, availableQueueFamiliesDarray);
 
 	vk_state->transferQueue.index = UINT32_MAX;
@@ -128,9 +128,9 @@ bool CreateLogicalDevice(RendererState* state, u32 requiredDeviceExtensionNameCo
 {
 
 	// ===================== Specifying queues for logical device =================================
-	VkDeviceQueueCreateInfo* queueCreateInfosDarray = (VkDeviceQueueCreateInfo*)DarrayCreate(sizeof(VkDeviceQueueCreateInfo), 1, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: switch allocator
+	VkDeviceQueueCreateInfo* queueCreateInfosDarray = (VkDeviceQueueCreateInfo*)DarrayCreate(sizeof(VkDeviceQueueCreateInfo), 1, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: switch allocator
 
-	u32* uniqueQueueFamiliesDarray = (u32*)DarrayCreate(sizeof(u32), 5, GetGlobalAllocator(), MEM_TAG_RENDERER_SUBSYS); // TODO: switch allocator
+	u32* uniqueQueueFamiliesDarray = (u32*)DarrayCreate(sizeof(u32), 5, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: switch allocator
 	if (!DarrayContains(uniqueQueueFamiliesDarray, &vk_state->graphicsQueue.index))
 		uniqueQueueFamiliesDarray = (u32*)DarrayPushback(uniqueQueueFamiliesDarray, &vk_state->graphicsQueue.index);
 	if (!DarrayContains(uniqueQueueFamiliesDarray, &vk_state->presentQueueFamilyIndex))
