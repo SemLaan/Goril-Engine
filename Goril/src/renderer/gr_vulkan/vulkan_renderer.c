@@ -17,6 +17,7 @@
 #include "vulkan_swapchain.h"
 #include "vulkan_sync_objects.h"
 #include "vulkan_types.h"
+#include "vulkan_utils.h"
 
 // TODO: remove these
 static void Init2DRenderer();
@@ -32,12 +33,13 @@ bool InitializeRenderer()
     GRINFO("Initializing renderer subsystem...");
 
     vk_state = AlignedAlloc(GetGlobalAllocator(), sizeof(RendererState), 64/*cache line*/, MEM_TAG_RENDERER_SUBSYS);
+    ZeroMem(vk_state, sizeof(*vk_state));
 	CreateFreelistAllocator("renderer allocator", GetGlobalAllocator(), KiB * 100, &vk_state->rendererAllocator);
 	CreateBumpAllocator("renderer bump allocator", vk_state->rendererAllocator, KiB * 5, &vk_state->rendererBumpAllocator);
 	CreatePoolAllocator("renderer resource destructor pool", vk_state->rendererAllocator, RENDER_POOL_BLOCK_SIZE_32, 30, &vk_state->poolAllocator32B);
 	CreatePoolAllocator("Renderer resource acquisition pool", vk_state->rendererAllocator, QUEUE_ACQUISITION_POOL_BLOCK_SIZE, 30, &vk_state->resourceAcquisitionPool);
 
-    vk_state->vkAllocator = nullptr;
+    vk_state->vkAllocator = nullptr; // TODO: add something that tracks vulkan API allocations in debug mode
 
     vk_state->currentInFlightFrameIndex = 0;
     vk_state->shouldRecreateSwapchain = false;

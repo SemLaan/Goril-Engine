@@ -2,8 +2,7 @@
 
 #include "core/logger.h"
 #include "vulkan_debug_tools.h"
-// TODO: make a custom string thing with strncmp replacement so string.h doesn't have to be included
-#include <string.h>
+#include "vulkan_utils.h"
 
 bool CreateVulkanInstance(u32 requiredExtensionNameCount, const char** requiredExtensionNames, u32 requiredLayerNameCount, const char** requiredLayerNames)
 {
@@ -24,21 +23,11 @@ bool CreateVulkanInstance(u32 requiredExtensionNameCount, const char** requiredE
         VkExtensionProperties* availableExtensionsDarray = (VkExtensionProperties*)DarrayCreateWithSize(sizeof(VkExtensionProperties), availableExtensionCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
         vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, availableExtensionsDarray);
 
-        u32 availableRequiredExtensions = 0;
-        for (u32 i = 0; i < requiredExtensionNameCount; ++i)
-        {
-            for (u32 j = 0; j < availableExtensionCount; ++j)
-            {
-                if (0 == strncmp(requiredExtensionNames[i], availableExtensionsDarray[j].extensionName, VK_MAX_EXTENSION_NAME_SIZE))
-                {
-                    availableRequiredExtensions++;
-                }
-            }
-        }
+        bool extensionsAvailable = CheckRequiredExtensions(requiredExtensionNameCount, requiredExtensionNames, availableExtensionCount, availableExtensionsDarray);
 
         DarrayDestroy(availableExtensionsDarray);
 
-        if (availableRequiredExtensions < requiredExtensionNameCount)
+        if (!extensionsAvailable)
         {
             GRFATAL("Couldn't find required Vulkan extensions");
             return false;
@@ -54,21 +43,11 @@ bool CreateVulkanInstance(u32 requiredExtensionNameCount, const char** requiredE
         VkLayerProperties* availableLayersDarray = (VkLayerProperties*)DarrayCreate(sizeof(VkLayerProperties), availableLayerCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
         vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayersDarray);
 
-        u32 availableRequiredLayers = 0;
-        for (u32 i = 0; i < requiredLayerNameCount; ++i)
-        {
-            for (u32 j = 0; j < availableLayerCount; ++j)
-            {
-                if (0 == strncmp(requiredLayerNames[i], availableLayersDarray[j].layerName, VK_MAX_EXTENSION_NAME_SIZE))
-                {
-                    availableRequiredLayers++;
-                }
-            }
-        }
+        bool layersAvailable = CheckRequiredLayers(requiredLayerNameCount, requiredLayerNames, availableLayerCount, availableLayersDarray);
 
         DarrayDestroy(availableLayersDarray);
 
-        if (availableRequiredLayers < requiredLayerNameCount)
+        if (!layersAvailable)
         {
             GRFATAL("Couldn't find required Vulkan layers");
             return false;
