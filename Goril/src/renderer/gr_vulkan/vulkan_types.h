@@ -97,36 +97,36 @@ typedef struct RendererState
 	VulkanSemaphore frameSemaphore;									// Timeline semaphore that synchronizes rendering resources
 
 	// TODO: state that needs to be moved out of the global renderer state
-	VkRenderPass renderpass;// TODO: factor into 2d renderer and switch to dynamic renderpass
-	VkDescriptorSetLayout descriptorSetLayout;// TODO: factor into 2d renderer
-	VkBuffer* uniformBuffersDarray;// TODO: factor into 2d renderer
-	VkDeviceMemory* uniformBuffersMemoryDarray;// TODO: factor into 2d renderer
-	void** uniformBuffersMappedDarray;// TODO: factor into 2d renderer
-	VkDescriptorPool uniformDescriptorPool;// TODO: factor into 2d renderer
-	VkDescriptorSet* uniformDescriptorSetsDarray; // TODO: factor into 2d renderer 
-	VkPipelineLayout pipelineLayout;	// TODO: factor into 2d renderer
-	VkPipeline graphicsPipeline;		// TODO: factor into 2d renderer
+	VkRenderPass renderpass;										// TODO: factor into 2d renderer and switch to dynamic renderpass
+	VkDescriptorSetLayout descriptorSetLayout;						// TODO: factor into 2d renderer
+	VkBuffer* uniformBuffersDarray;									// TODO: factor into 2d renderer
+	VkDeviceMemory* uniformBuffersMemoryDarray;						// TODO: factor into 2d renderer
+	void** uniformBuffersMappedDarray;								// TODO: factor into 2d renderer
+	VkDescriptorPool uniformDescriptorPool;							// TODO: factor into 2d renderer
+	VkDescriptorSet* uniformDescriptorSetsDarray; 					// TODO: factor into 2d renderer 
+	VkPipelineLayout pipelineLayout;								// TODO: factor into 2d renderer
+	VkPipeline graphicsPipeline;									// TODO: factor into 2d renderer
 
 	// Allocators
-	Allocator* rendererAllocator;
-	Allocator* poolAllocator32B;
+	Allocator* rendererAllocator;									// Global allocator of the renderer subsys
+	Allocator* poolAllocator32B;									// Pool allocator of the renderer subsys
 
 	// Data that is not used every frame or possibly used every frame
-	QueueFamily graphicsQueue;
-	QueueFamily transferQueue;
-	VkDependencyInfo** requestedQueueAcquisitionOperationsDarray;
-	VkAllocationCallbacks* allocator;
+	QueueFamily graphicsQueue;										// Graphics family queue
+	QueueFamily transferQueue;										// Transfer family queue
+	VkDependencyInfo** requestedQueueAcquisitionOperationsDarray;	// For transfering queue ownership from transfer to graphics after a resource has been uploaded
+	VkAllocationCallbacks* allocator;								// Vulkan API allocator, only for reading vulkan allocations not for taking over allocation from vulkan //TODO: this is currently just nullptr
 
 	// Data that is only used on startup/shutdown
-	VkInstance instance;
-	VkPhysicalDevice physicalDevice;
-	SwapchainSupportDetails swapchainSupport;
-	u32 presentQueueFamilyIndex;
-	VkSurfaceKHR surface;
-	VkFormat swapchainFormat;
-	VkImage* swapchainImagesDarray; // TODO: this might become used often once the switch to dynamic renderpasses is made
-	VkImageView* swapchainImageViewsDarray; // TODO: this might become used often once the switch to dynamic renderpasses is made
+	VkInstance instance;											// Vulkan instance handle
+	VkPhysicalDevice physicalDevice;								// Physical device handle
+	SwapchainSupportDetails swapchainSupport;						// Data about swapchain capabilities
+	u32 presentQueueFamilyIndex;									// What it says on the tin
+	VkSurfaceKHR surface;											// Vulkan surface handle
+	VkFormat swapchainFormat;										// Format of the swapchain
+	VkImage* swapchainImagesDarray;									// Images that make up the swapchain (retrieved from the swapchain) TODO: remove pointer indirection TODO: this might become used often once the switch to dynamic renderpasses is made
+	VkImageView* swapchainImageViewsDarray;							// Image views that make up the swapchain (created from swapchain images) TODO: remove pointer indirection TODO: this might become used often once the switch to dynamic renderpasses is made
 #ifndef GR_DIST
-	VkDebugUtilsMessengerEXT debugMessenger;
+	VkDebugUtilsMessengerEXT debugMessenger;						// Debug messenger, only exists in debug mode
 #endif // !GR_DIST
 } RendererState;
