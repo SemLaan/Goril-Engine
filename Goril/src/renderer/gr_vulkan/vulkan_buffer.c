@@ -25,7 +25,7 @@ u32 FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags requiredFlags)
 
 static void CopyBufferAndTransitionQueue(VkBuffer dstBuffer, VkBuffer srcBuffer, u32 waitSemaphoreCount, VkSemaphoreSubmitInfo *pWaitSemaphoreInfos, u32 signalSemaphoreCount, VkSemaphoreSubmitInfo *pSignalSemaphoreInfos, VkDependencyInfo *pDependencyInfo, VkDeviceSize size, u64 *out_signaledValue)
 {
-	CommandBuffer *transferCommandBuffer;
+	CommandBuffer transferCommandBuffer;
 	AllocateAndBeginSingleUseCommandBuffer(&vk_state->transferQueue, &transferCommandBuffer);
 
 	VkBufferCopy copyRegion = {};
@@ -33,10 +33,10 @@ static void CopyBufferAndTransitionQueue(VkBuffer dstBuffer, VkBuffer srcBuffer,
 	copyRegion.srcOffset = 0;
 	copyRegion.size = size;
 
-	vkCmdCopyBuffer(transferCommandBuffer->handle, srcBuffer, dstBuffer, 1, &copyRegion);
+	vkCmdCopyBuffer(transferCommandBuffer.handle, srcBuffer, dstBuffer, 1, &copyRegion);
 
 	if (pDependencyInfo)
-		vkCmdPipelineBarrier2(transferCommandBuffer->handle, pDependencyInfo);
+		vkCmdPipelineBarrier2(transferCommandBuffer.handle, pDependencyInfo);
 
 	EndSubmitAndFreeSingleUseCommandBuffer(transferCommandBuffer, waitSemaphoreCount, pWaitSemaphoreInfos, signalSemaphoreCount, pSignalSemaphoreInfos, out_signaledValue);
 }

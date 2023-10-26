@@ -88,7 +88,7 @@ Texture TextureCreate(u32 width, u32 height, void* pixels)
 
 	// Transitioning the image for copying, copying the image to gpu, transitioning the image for shader reads, transfering image resource ownership to graphics queue
 	{
-		CommandBuffer* commandBuffer;
+		CommandBuffer commandBuffer;
 		AllocateAndBeginSingleUseCommandBuffer(&vk_state->transferQueue, &commandBuffer);
 
 		// Transitioning the image to transfer dst optimal
@@ -119,7 +119,7 @@ Texture TextureCreate(u32 width, u32 height, void* pixels)
 		transitionDependencyInfo.imageMemoryBarrierCount = 1;
 		transitionDependencyInfo.pImageMemoryBarriers = &transitionBarrier;
 
-		vkCmdPipelineBarrier2(commandBuffer->handle, &transitionDependencyInfo);
+		vkCmdPipelineBarrier2(commandBuffer.handle, &transitionDependencyInfo);
 
 		// Copying the staging buffer into the gpu local image
 		VkBufferImageCopy copyRegion = {};
@@ -137,7 +137,7 @@ Texture TextureCreate(u32 width, u32 height, void* pixels)
 		copyRegion.imageExtent.height = height;
 		copyRegion.imageExtent.depth = 1;
 		
-		vkCmdCopyBufferToImage(commandBuffer->handle, stagingBuffer, image->handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
+		vkCmdCopyBufferToImage(commandBuffer.handle, stagingBuffer, image->handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
 
 		// Creating the buffer memory barrier for the queue family release operation
 		// Also transition the image to shader read only optimal
@@ -168,7 +168,7 @@ Texture TextureCreate(u32 width, u32 height, void* pixels)
 		releaseDependencyInfo.imageMemoryBarrierCount = 1;
 		releaseDependencyInfo.pImageMemoryBarriers = &releaseImageInfo;
 
-		vkCmdPipelineBarrier2(commandBuffer->handle, &releaseDependencyInfo);
+		vkCmdPipelineBarrier2(commandBuffer.handle, &releaseDependencyInfo);
 
 		// Submitting the semaphore that can let other queues know when this index buffer has been uploaded
 		vk_state->imageUploadSemaphore.submitValue++;

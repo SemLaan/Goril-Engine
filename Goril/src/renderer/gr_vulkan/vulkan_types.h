@@ -8,6 +8,8 @@ typedef struct RendererState RendererState;
 extern RendererState* vk_state;
 
 #define MAX_FRAMES_IN_FLIGHT 2
+#define RENDER_POOL_BLOCK_SIZE_32 32
+
 
 typedef struct VulkanVertexBuffer
 {
@@ -107,7 +109,7 @@ typedef struct RendererState
 
 	// Allocators
 	Allocator* rendererAllocator;
-	Allocator* resourceDestructionPool;
+	Allocator* poolAllocator32B;
 
 	// Data that is not used every frame or possibly used every frame
 	QueueFamily graphicsQueue;

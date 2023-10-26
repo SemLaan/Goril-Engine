@@ -32,11 +32,8 @@ void FreeCommandBuffer(CommandBuffer commandBuffer)
 	vkFreeCommandBuffers(vk_state->device, commandBuffer.queueFamily->commandPool, 1, &commandBuffer.handle);
 }
 
-bool AllocateAndBeginSingleUseCommandBuffer(QueueFamily* queueFamily, CommandBuffer** out_pCommandBuffer)
+bool AllocateAndBeginSingleUseCommandBuffer(QueueFamily* queueFamily, CommandBuffer* out_pCommandBuffer)
 {
-	*out_pCommandBuffer = (CommandBuffer*)Alloc(GetGlobalAllocator(), sizeof(CommandBuffer), MEM_TAG_RENDERER_SUBSYS);
-	CommandBuffer* commandBuffer = *out_pCommandBuffer;
-
 	VkCommandBufferAllocateInfo allocateInfo = {};
 	allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocateInfo.pNext = nullptr;
@@ -44,14 +41,13 @@ bool AllocateAndBeginSingleUseCommandBuffer(QueueFamily* queueFamily, CommandBuf
 	allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	allocateInfo.commandBufferCount = 1;
 
-	if (VK_SUCCESS != vkAllocateCommandBuffers(vk_state->device, &allocateInfo, &commandBuffer->handle))
+	if (VK_SUCCESS != vkAllocateCommandBuffers(vk_state->device, &allocateInfo, &out_pCommandBuffer->handle))
 	{
 		GRFATAL("Failed to allocate command buffer");
-		Free(GetGlobalAllocator(), commandBuffer);
 		return false;
 	}
 
-	commandBuffer->queueFamily = queueFamily;
+	out_pCommandBuffer->queueFamily = queueFamily;
 
 	VkCommandBufferBeginInfo beginInfo = {};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -59,7 +55,7 @@ bool AllocateAndBeginSingleUseCommandBuffer(QueueFamily* queueFamily, CommandBuf
 	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 	beginInfo.pInheritanceInfo = nullptr;
 
-	if (VK_SUCCESS != vkBeginCommandBuffer(commandBuffer->handle, &beginInfo))
+	if (VK_SUCCESS != vkBeginCommandBuffer(out_pCommandBuffer->handle, &beginInfo))
 	{
 		GRFATAL("Failed to start recording command buffer");
 		return false;
@@ -72,12 +68,12 @@ static void SingleUseCommandBufferDestructor(void* resource)
 {
 	CommandBuffer* commandBuffer = (CommandBuffer*)resource;
 	vkFreeCommandBuffers(vk_state->device, commandBuffer->queueFamily->commandPool, 1, &commandBuffer->handle);
-	Free(GetGlobalAllocator(), commandBuffer);
+	Free(vk_state->poolAllocator32B, commandBuffer);
 }
 
-bool EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 waitSemaphoreCount, VkSemaphoreSubmitInfo* pWaitSemaphoreSubmitInfos, u32 signalSemaphoreCount, VkSemaphoreSubmitInfo* pSignalSemaphoreSubmitInfos, u64* out_signaledValue)
+bool EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer commandBuffer, u32 waitSemaphoreCount, VkSemaphoreSubmitInfo* pWaitSemaphoreSubmitInfos, u32 signalSemaphoreCount, VkSemaphoreSubmitInfo* pSignalSemaphoreSubmitInfos, u64* out_signaledValue)
 {
-	if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer->handle))
+	if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer.handle))
 	{
 		GRFATAL("Failed to stop recording command buffer");
 		return false;
@@ -86,15 +82,15 @@ bool EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 wa
 	VkCommandBufferSubmitInfo commandBufferInfo = {};
 	commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
 	commandBufferInfo.pNext = nullptr;
-	commandBufferInfo.commandBuffer = commandBuffer->handle;
+	commandBufferInfo.commandBuffer = commandBuffer.handle;
 	commandBufferInfo.deviceMask = 0;
 
-	commandBuffer->queueFamily->semaphore.submitValue++;
+	commandBuffer.queueFamily->semaphore.submitValue++;
 	VkSemaphoreSubmitInfo semaphoreInfo = {};
 	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 	semaphoreInfo.pNext = nullptr;
-	semaphoreInfo.semaphore = commandBuffer->queueFamily->semaphore.handle;
-	semaphoreInfo.value = commandBuffer->queueFamily->semaphore.submitValue;
+	semaphoreInfo.semaphore = commandBuffer.queueFamily->semaphore.handle;
+	semaphoreInfo.value = commandBuffer.queueFamily->semaphore.submitValue;
 	semaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
 	semaphoreInfo.deviceIndex = 0;
 
@@ -115,7 +111,7 @@ bool EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 wa
 	submitInfo.signalSemaphoreInfoCount = DarrayGetSize(semaphoreInfosDarray);
 	submitInfo.pSignalSemaphoreInfos = semaphoreInfosDarray;
 
-	VkResult result = vkQueueSubmit2(commandBuffer->queueFamily->handle, 1, &submitInfo, VK_NULL_HANDLE);
+	VkResult result = vkQueueSubmit2(commandBuffer.queueFamily->handle, 1, &submitInfo, VK_NULL_HANDLE);
 
 	DarrayDestroy(semaphoreInfosDarray);
 
@@ -125,15 +121,18 @@ bool EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 wa
 		return false;
 	}
 
+	CommandBuffer* destructionResource = Alloc(vk_state->poolAllocator32B, RENDER_POOL_BLOCK_SIZE_32, MEM_TAG_RENDERER_SUBSYS);
+	*destructionResource = commandBuffer;
+
 	ResourceDestructionInfo commandBufferDestructionInfo = {};
-	commandBufferDestructionInfo.resource = commandBuffer;
+	commandBufferDestructionInfo.resource = destructionResource;
 	commandBufferDestructionInfo.Destructor = SingleUseCommandBufferDestructor;
-	commandBufferDestructionInfo.signalValue = commandBuffer->queueFamily->semaphore.submitValue;
+	commandBufferDestructionInfo.signalValue = commandBuffer.queueFamily->semaphore.submitValue;
 
 	if (out_signaledValue)
-		*out_signaledValue = commandBuffer->queueFamily->semaphore.submitValue;
+		*out_signaledValue = commandBuffer.queueFamily->semaphore.submitValue;
 
-	commandBuffer->queueFamily->resourcesPendingDestructionDarray = (ResourceDestructionInfo*)DarrayPushback(commandBuffer->queueFamily->resourcesPendingDestructionDarray, &commandBufferDestructionInfo);
+	commandBuffer.queueFamily->resourcesPendingDestructionDarray = (ResourceDestructionInfo*)DarrayPushback(commandBuffer.queueFamily->resourcesPendingDestructionDarray, &commandBufferDestructionInfo);
 
 	return true;
 }

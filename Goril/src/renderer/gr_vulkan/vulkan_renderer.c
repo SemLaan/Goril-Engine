@@ -33,7 +33,7 @@ bool InitializeRenderer()
 
     vk_state = (RendererState*)Alloc(GetGlobalAllocator(), sizeof(RendererState), MEM_TAG_RENDERER_SUBSYS);
 	CreateFreelistAllocator("renderer allocator", GetGlobalAllocator(), KiB, &vk_state->rendererAllocator);
-	CreatePoolAllocator("renderer resource destructor pool", vk_state->rendererAllocator, sizeof(ResourceDestructionInfo), 30, &vk_state->resourceDestructionPool);
+	CreatePoolAllocator("renderer resource destructor pool", vk_state->rendererAllocator, RENDER_POOL_BLOCK_SIZE_32, 30, &vk_state->poolAllocator32B);
 
     vk_state->allocator = nullptr;
 
@@ -214,6 +214,9 @@ void ShutdownRenderer()
 
     // ======================= Destroying instance if it was created =======================================
     DestroyVulkanInstance();
+
+	DestroyPoolAllocator(vk_state->poolAllocator32B);
+	DestroyFreelistAllocator(vk_state->rendererAllocator);
     Free(GetGlobalAllocator(), vk_state);
     vk_state = nullptr;
 }
