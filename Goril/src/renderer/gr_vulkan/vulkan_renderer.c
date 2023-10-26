@@ -54,18 +54,12 @@ bool InitializeRenderer()
     requiredInstanceExtensions[requiredInstanceExtensionCount] = VK_KHR_SURFACE_EXTENSION_NAME;
     requiredInstanceExtensionCount++;
     GetPlatformExtensions(&requiredInstanceExtensionCount, requiredInstanceExtensions);
-#ifndef GR_DIST
-    requiredInstanceExtensions[requiredInstanceExtensionCount] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
-    requiredInstanceExtensionCount++;
-#endif // !GR_DIST
+    ADD_DEBUG_INSTANCE_EXTENSIONS(requiredInstanceExtensions, requiredInstanceExtensionCount);
 
     // Getting required layers
     const char* requiredInstanceLayers[MAX_INSTANCE_LAYERS];
     u32 requiredInstanceLayerCount = 0;
-#ifndef GR_DIST
-    requiredInstanceLayers[requiredInstanceLayerCount] = "VK_LAYER_KHRONOS_validation";
-    requiredInstanceLayerCount++;
-#endif // !GR_DIST
+    ADD_DEBUG_INSTANCE_LAYERS(requiredInstanceLayers, requiredInstanceLayerCount);
 
     // ================== Creating instance =================================
     if (!CreateVulkanInstance(requiredInstanceExtensionCount, requiredInstanceExtensions, requiredInstanceLayerCount, requiredInstanceLayers))
@@ -74,12 +68,7 @@ bool InitializeRenderer()
     }
 
     // =============== Creating debug messenger ============================
-#ifndef GR_DIST
-    if (!CreateDebugMessenger())
-    {
-        return false;
-    }
-#endif // !GR_DIST
+    CreateDebugMessenger();
 
     // ================ Creating a surface =====================================
     if (!PlatformCreateSurface(vk_state->instance, vk_state->allocator, &vk_state->surface))
@@ -210,9 +199,7 @@ void ShutdownRenderer()
         vkDestroySurfaceKHR(vk_state->instance, vk_state->surface, vk_state->allocator);
 
     // ===================== Destroying debug messenger if it was created =================================
-#ifndef GR_DIST
     DestroyDebugMessenger();
-#endif // !GR_DIST
 
     // ======================= Destroying instance if it was created =======================================
     DestroyVulkanInstance();
