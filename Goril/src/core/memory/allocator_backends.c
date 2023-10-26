@@ -8,22 +8,20 @@
 
 #include "mem_utils.h"
 
-// Space added to allocators
-#define ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE KiB
-
-// TODO: rename to freelist allocheader
-// All non-pool allocators store this in front of the user block
-typedef struct AllocHeader
-{
-    void* start;
-    u32 size; // Size of the client allocation
-    u32 alignment;
-} AllocHeader;
 
 // =====================================================================================================================================================================================================
 // ================================== Freelist allocator ===============================================================================================================================================
 // =====================================================================================================================================================================================================
 #define FREELIST_NODE_FACTOR 10
+
+// Freelist allocator stores this in front of the user block to keep track of allocation size and alignment
+typedef struct FreelistAllocHeader
+{
+    void* start;
+    u32 size; // Size of the client allocation
+    u32 alignment;
+    // End should be 4 byte aligned
+} FreelistAllocHeader;
 
 typedef struct FreelistNode
 {
@@ -32,6 +30,7 @@ typedef struct FreelistNode
     struct FreelistNode* next;
 } FreelistNode;
 
+// End should be 4 byte aligned
 typedef struct FreelistState
 {
     void* arenaStart;
@@ -54,11 +53,9 @@ static void FreelistPrimitiveFree(void* backendState, void* block, size_t size);
 
 void CreateFreelistAllocator(const char* name, Allocator* parentAllocator, size_t arenaSize, Allocator** out_allocator)
 {
-    arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
-
     // Calculating the required nodes for an arena of the given size
     // Make one node for every "freelist node factor" nodes that fit in the arena
-    u32 nodeCount = (u32)(arenaSize / (FREELIST_NODE_FACTOR * sizeof(FreelistNode)));
+    u32 nodeCount = (u32)(arenaSize / (FREELIST_NODE_FACTOR * sizeof(FreelistNode))); // TODO: make this logarithmic instead of linear, because big allocators make way too much space for nodes
 
     // Calculating required memory (client size + state size)
     size_t stateSize = sizeof(FreelistState) + nodeCount * sizeof(FreelistNode);
@@ -70,7 +67,7 @@ void CreateFreelistAllocator(const char* name, Allocator* parentAllocator, size_
 
     // Getting pointers to the internal components of the allocator
     FreelistState* state = (FreelistState*)arenaBlock;
-    FreelistNode* nodePool = (FreelistNode*)((u8*)arenaBlock + sizeof(FreelistState));// TODO: worry about alignment
+    FreelistNode* nodePool = (FreelistNode*)((u8*)arenaBlock + sizeof(FreelistState)); // Alignment should be fine, the end of FreelistState is at least 4 byte aligned
     void* arenaStart = (u8*)arenaBlock + stateSize;
 
     // Configuring allocator state
@@ -127,7 +124,7 @@ size_t FreelistGetFreeNodes(void* backendState)
 
 u32 GetFreelistAllocHeaderSize()
 {
-    return sizeof(AllocHeader);
+    return sizeof(FreelistAllocHeader);
 }
 
 u64 GetFreelistAllocatorArenaUsage(Allocator* allocator)
@@ -169,15 +166,15 @@ static void* FreelistAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
 	// Checking if the alignment is greater than min alignment and is a power of two
     GRASSERT_DEBUG((alignment >= MIN_ALIGNMENT) && ((alignment & (alignment - 1)) == 0));
 
-    u32 requiredSize = (u32)size + sizeof(AllocHeader) + alignment - 1;
+    u32 requiredSize = (u32)size + sizeof(FreelistAllocHeader) + alignment - 1;
 
     void* block = FreelistPrimitiveAlloc(allocator->backendState, requiredSize);
-    u64 blockExcludingHeader = (u64)block + sizeof(AllocHeader);
+    u64 blockExcludingHeader = (u64)block + sizeof(FreelistAllocHeader);
     // Gets the next address that is aligned on the requested boundary
     void* alignedBlock = (void*)((blockExcludingHeader + alignment - 1) & ~((u64)alignment - 1));
 
     // Putting in the header
-    AllocHeader* header = (AllocHeader*)alignedBlock - 1;
+    FreelistAllocHeader* header = (FreelistAllocHeader*)alignedBlock - 1;
     header->start = block;
     header->size = (u32)size;
     header->alignment = alignment;
@@ -189,10 +186,10 @@ static void* FreelistAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
 static void* FreelistReAlloc(Allocator* allocator, void* block, u64 size)
 {
 // Going slightly before the block and grabbing the alloc header that is stored there for debug info
-    AllocHeader* header = (AllocHeader*)block - 1;
+    FreelistAllocHeader* header = (FreelistAllocHeader*)block - 1;
     GRASSERT(size != header->size);
-    u64 newTotalSize = size + header->alignment - 1 + sizeof(AllocHeader);
-    u64 oldTotalSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
+    u64 newTotalSize = size + header->alignment - 1 + sizeof(FreelistAllocHeader);
+    u64 oldTotalSize = header->size + header->alignment - 1 + sizeof(FreelistAllocHeader);
 
     // ================== If the realloc is smaller than the original alloc ==========================
     // ===================== Or if there is enough space after the old alloc to just extend it ========================
@@ -206,14 +203,14 @@ static void* FreelistReAlloc(Allocator* allocator, void* block, u64 size)
     // ======================= Copy it to a new allocation and delete the old one ===============================
     // Get new allocation and align it
     void* newBlock = FreelistPrimitiveAlloc(allocator->backendState, newTotalSize);
-    u64 blockExcludingHeader = (u64)newBlock + sizeof(AllocHeader);
+    u64 blockExcludingHeader = (u64)newBlock + sizeof(FreelistAllocHeader);
     void* alignedBlock = (void*)((blockExcludingHeader + header->alignment - 1) & ~((u64)header->alignment - 1));
 
     // Copy the client data
     MemCopy(alignedBlock, block, header->size);
 
     // Fill in the header at the new memory location
-    AllocHeader* newHeader = (AllocHeader*)alignedBlock - 1;
+    FreelistAllocHeader* newHeader = (FreelistAllocHeader*)alignedBlock - 1;
     newHeader->start = newBlock;
     newHeader->size = (u32)size;
     newHeader->alignment = header->alignment;
@@ -227,8 +224,8 @@ static void* FreelistReAlloc(Allocator* allocator, void* block, u64 size)
 static void FreelistFree(Allocator* allocator, void* block)
 {
 	// Going slightly before the block and grabbing the alloc header that is stored there for debug info
-    AllocHeader* header = (AllocHeader*)block - 1;
-    u64 totalFreeSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
+    FreelistAllocHeader* header = (FreelistAllocHeader*)block - 1;
+    u64 totalFreeSize = header->size + header->alignment - 1 + sizeof(FreelistAllocHeader);
 
     FreelistPrimitiveFree(allocator->backendState, header->start, totalFreeSize);
 }
@@ -409,21 +406,14 @@ typedef struct BumpAllocatorState
     u32 allocCount;
 } BumpAllocatorState;
 
-// These functions use other functions to do allocations and prepare the blocks for use
-// (adding a header and aligning the block)
+// These functions do allocation and alignment
 static void* BumpAlignedAlloc(Allocator* allocator, u64 size, u32 alignment);
 static void* BumpReAlloc(Allocator* allocator, void* block, u64 size);
 static void BumpFree(Allocator* allocator, void* block);
 
-// These functions do actual allocation and freeing
-static void* BumpPrimitiveAlloc(void* backendState, size_t size);
-static bool BumpPrimitiveTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize);
-static void BumpPrimitiveFree(void* backendState, void* block, size_t size);
 
 void CreateBumpAllocator(const char* name, Allocator* parentAllocator, size_t arenaSize, Allocator** out_allocator)
 {
-    arenaSize += ALLOCATOR_EXTRA_HEADER_AND_ALIGNMENT_SPACE;
-
     // Calculating required memory (client size + state size)
     size_t stateSize = sizeof(BumpAllocatorState);
     size_t requiredMemory = arenaSize + stateSize;
@@ -477,21 +467,21 @@ u64 GetBumpAllocatorArenaUsage(Allocator* allocator)
 
 static void* BumpAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
 {
+    BumpAllocatorState* state = (BumpAllocatorState*)allocator->backendState;
+
 	// Checking if the alignment is greater than min alignment and is a power of two
     GRASSERT_DEBUG((alignment >= MIN_ALIGNMENT) && ((alignment & (alignment - 1)) == 0));
 
-    u32 requiredSize = (u32)size + sizeof(AllocHeader) + alignment - 1;
+    u32 requiredSize = (u32)size + alignment - 1;
 
-    void* block = BumpPrimitiveAlloc(allocator->backendState, requiredSize);
-    u64 blockExcludingHeader = (u64)block + sizeof(AllocHeader);
+    // Allocating the actual block
+    void* block = state->bumpPointer;
+    state->bumpPointer = (u8*)state->bumpPointer + requiredSize;
+    state->allocCount++;
+    GRASSERT_MSG((u8*)state->bumpPointer <= ((u8*)state->arenaStart + state->arenaSize), "Bump allocator overallocated");
+
     // Gets the next address that is aligned on the requested boundary
-    void* alignedBlock = (void*)((blockExcludingHeader + alignment - 1) & ~((u64)alignment - 1));
-
-    // Putting in the header
-    AllocHeader* header = (AllocHeader*)alignedBlock - 1;
-    header->start = block;
-    header->size = (u32)size;
-    header->alignment = alignment;
+    void* alignedBlock = (void*)(((u64)block + alignment - 1) & ~((u64)alignment - 1));
 
     // return the block to the client
     return alignedBlock;
@@ -499,49 +489,21 @@ static void* BumpAlignedAlloc(Allocator* allocator, u64 size, u32 alignment)
 
 static void* BumpReAlloc(Allocator* allocator, void* block, u64 size)
 {
-	// Going slightly before the block and grabbing the alloc header that is stored there for debug info
-    AllocHeader* header = (AllocHeader*)block - 1;
-    GRASSERT(size != header->size);
-    u64 newTotalSize = size + header->alignment - 1 + sizeof(AllocHeader);
-    u64 oldTotalSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
+	GRASSERT_MSG(false, "Reallocating with bump allocator not allowed");
 
-    // ================== If the realloc is smaller than the original alloc ==========================
-    // ===================== Or if there is enough space after the old alloc to just extend it ========================
-    if (BumpPrimitiveTryReAlloc(allocator->backendState, header->start, oldTotalSize, newTotalSize))
-    {
-        header->size = (u32)size;
-        return block;
-    }
-
-    // ==================== If there's no space at the old allocation ==========================================
-    // ======================= Copy it to a new allocation and delete the old one ===============================
-    // Get new allocation and align it
-    void* newBlock = BumpPrimitiveAlloc(allocator->backendState, newTotalSize);
-    u64 blockExcludingHeader = (u64)newBlock + sizeof(AllocHeader);
-    void* alignedBlock = (void*)((blockExcludingHeader + header->alignment - 1) & ~((u64)header->alignment - 1));
-
-    // Copy the client data
-    MemCopy(alignedBlock, block, header->size);
-
-    // Fill in the header at the new memory location
-    AllocHeader* newHeader = (AllocHeader*)alignedBlock - 1;
-    newHeader->start = newBlock;
-    newHeader->size = (u32)size;
-    newHeader->alignment = header->alignment;
-
-    // Free the old data
-    BumpPrimitiveFree(allocator->backendState, header->start, oldTotalSize);
-
-    return alignedBlock;
+    return nullptr;
 }
 
 static void BumpFree(Allocator* allocator, void* block)
 {
-	// Going slightly before the block and grabbing the alloc header that is stored there for debug info
-    AllocHeader* header = (AllocHeader*)block - 1;
-    u64 totalFreeSize = header->size + header->alignment - 1 + sizeof(AllocHeader);
+    BumpAllocatorState* state = (BumpAllocatorState*)allocator->backendState;
 
-    BumpPrimitiveFree(allocator->backendState, header->start, totalFreeSize);
+    state->allocCount--;
+
+    if (state->allocCount == 0)
+    {
+        state->bumpPointer = state->arenaStart;
+    }
 }
 
 static void* BumpPrimitiveAlloc(void* backendState, size_t size)
@@ -554,34 +516,6 @@ static void* BumpPrimitiveAlloc(void* backendState, size_t size)
     state->allocCount++;
     GRASSERT_MSG((u8*)state->bumpPointer <= ((u8*)state->arenaStart + state->arenaSize), "Bump allocator overallocated");
     return block;
-}
-
-static bool BumpPrimitiveTryReAlloc(void* backendState, void* block, size_t oldSize, size_t newSize)
-{
-    BumpAllocatorState* state = (BumpAllocatorState*)backendState;
-
-    if (oldSize > newSize)
-    {
-        return true;
-    }
-    else if (oldSize < newSize && ((u8*)block + oldSize) == state->bumpPointer)
-    {
-        state->bumpPointer = (u8*)state->bumpPointer + newSize - oldSize;
-        return true;
-    }
-    return false;
-}
-
-static void BumpPrimitiveFree(void* backendState, void* block, size_t size)
-{
-    BumpAllocatorState* state = (BumpAllocatorState*)backendState;
-
-    state->allocCount--;
-
-    if (state->allocCount == 0)
-    {
-        state->bumpPointer = state->arenaStart;
-    }
 }
 
 // =====================================================================================================================================================================================================

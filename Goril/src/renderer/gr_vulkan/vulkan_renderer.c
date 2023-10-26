@@ -33,7 +33,7 @@ bool InitializeRenderer()
 
     vk_state = AlignedAlloc(GetGlobalAllocator(), sizeof(RendererState), 64/*cache line*/, MEM_TAG_RENDERER_SUBSYS);
 	CreateFreelistAllocator("renderer allocator", GetGlobalAllocator(), KiB * 100, &vk_state->rendererAllocator);
-	CreateBumpAllocator("renderer bump allocator", vk_state->rendererAllocator, KiB, &vk_state->rendererBumpAllocator);
+	CreateBumpAllocator("renderer bump allocator", vk_state->rendererAllocator, KiB * 5, &vk_state->rendererBumpAllocator);
 	CreatePoolAllocator("renderer resource destructor pool", vk_state->rendererAllocator, RENDER_POOL_BLOCK_SIZE_32, 30, &vk_state->poolAllocator32B);
 	CreatePoolAllocator("Renderer resource acquisition pool", vk_state->rendererAllocator, QUEUE_ACQUISITION_POOL_BLOCK_SIZE, 30, &vk_state->resourceAcquisitionPool);
 
