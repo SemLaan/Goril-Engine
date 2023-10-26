@@ -73,25 +73,26 @@ typedef struct SwapchainSupportDetails
 typedef struct RendererState
 {
 	// Frequently used data (every frame)
-	VkDevice device;
-	VkSwapchainKHR swapchain;
-	VkQueue presentQueue;
-	VkFramebuffer* swapchainFramebuffersDarray;	// TODO: gets removed when i switch to dynamic renderpasses
-	CommandBuffer* graphicsCommandBuffers[MAX_FRAMES_IN_FLIGHT]; //TODO: ideally is not a pointer
-	u32 currentInFlightFrameIndex;
-	u32 currentSwapchainImageIndex;
-	bool shouldRecreateSwapchain;
-	VkExtent2D swapchainExtent;
+	VkDevice device;												// Logical device
+	VkSwapchainKHR swapchain;										// Swapchain handle
+	VkQueue presentQueue;											// Present queue handle
+	VkFramebuffer* swapchainFramebuffersDarray;						// TODO: gets removed when i switch to dynamic renderpasses
+	CommandBuffer graphicsCommandBuffers[MAX_FRAMES_IN_FLIGHT]; 	// Command buffers for recording entire frames to the graphics queue
+	u32 currentInFlightFrameIndex;									// Current frame % MAX_FRAMES_IN_FLIGHT
+	u32 currentSwapchainImageIndex;									// Current swapchain image index (current frame % swapchain image count)
+	bool shouldRecreateSwapchain;									// Checked at the start of each renderloop, is set to true upon window resize
+	VkExtent2D swapchainExtent;										// Extent of the swapchain, used for beginning renderpass TODO: make the renderpass info beforehand instead of constructing it 
+																	// every frame (actually doing it every frame might be faster, because the space being used on the stack is already in cache)
 
 	// Binary semaphores for synchronizing the swapchain with the screen and the GPU
-	VkSemaphore* imageAvailableSemaphoresDarray;	//TODO: change to static array to remove pointer indirection
-	VkSemaphore* renderFinishedSemaphoresDarray;	//TODO: change to static array to remove pointer indirection
+	VkSemaphore* imageAvailableSemaphoresDarray;					// Binary semaphores that synchronize swapchain image acquisition TODO: change to static array to remove pointer indirection
+	VkSemaphore* renderFinishedSemaphoresDarray;					// Binary semaphores that synchronize swapchain image presentation TODO: change to static array to remove pointer indirection
 
 	// Timeline semaphores for synchronizing uploads and 
-	VulkanSemaphore vertexUploadSemaphore;
-	VulkanSemaphore indexUploadSemaphore;
-	VulkanSemaphore imageUploadSemaphore;
-	VulkanSemaphore frameSemaphore;
+	VulkanSemaphore vertexUploadSemaphore;							// Timeline semaphore that synchronizes vertex upload with vertex input
+	VulkanSemaphore indexUploadSemaphore;							// Timeline semaphore that synchronizes index upload with index input
+	VulkanSemaphore imageUploadSemaphore;							// Timeline semaphore that synchronizes image upload with image usage
+	VulkanSemaphore frameSemaphore;									// Timeline semaphore that synchronizes rendering resources
 
 	// TODO: state that needs to be moved out of the global renderer state
 	VkRenderPass renderpass;// TODO: factor into 2d renderer and switch to dynamic renderpass
@@ -115,7 +116,7 @@ typedef struct RendererState
 	VkPhysicalDevice physicalDevice;
 	SwapchainSupportDetails swapchainSupport;
 	u32 presentQueueFamilyIndex;
-	VkSurfaceKHR surface; // TODO: check where this is used
+	VkSurfaceKHR surface;
 	VkFormat swapchainFormat;
 	VkImage* swapchainImagesDarray; // TODO: this might become used often once the switch to dynamic renderpasses is made
 	VkImageView* swapchainImageViewsDarray; // TODO: this might become used often once the switch to dynamic renderpasses is made

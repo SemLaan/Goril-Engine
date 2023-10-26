@@ -7,11 +7,8 @@
 
 
 
-bool AllocateCommandBuffer(QueueFamily* queueFamily, CommandBuffer** out_pCommandBuffer)
+bool AllocateCommandBuffer(QueueFamily* queueFamily, CommandBuffer* out_pCommandBuffer)
 {
-	*out_pCommandBuffer = (CommandBuffer*)Alloc(GetGlobalAllocator(), sizeof(CommandBuffer), MEM_TAG_RENDERER_SUBSYS);
-	CommandBuffer* commandBuffer = *out_pCommandBuffer;
-
 	VkCommandBufferAllocateInfo allocateInfo = {};
 	allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocateInfo.pNext = nullptr;
@@ -19,22 +16,20 @@ bool AllocateCommandBuffer(QueueFamily* queueFamily, CommandBuffer** out_pComman
 	allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	allocateInfo.commandBufferCount = 1;
 
-	if (VK_SUCCESS != vkAllocateCommandBuffers(vk_state->device, &allocateInfo, &commandBuffer->handle))
+	if (VK_SUCCESS != vkAllocateCommandBuffers(vk_state->device, &allocateInfo, &out_pCommandBuffer->handle))
 	{
 		GRFATAL("Failed to allocate command buffer");
-		Free(GetGlobalAllocator(), commandBuffer);
 		return false;
 	}
 
-	commandBuffer->queueFamily = queueFamily;
+	out_pCommandBuffer->queueFamily = queueFamily;
 
 	return true;
 }
 
-void FreeCommandBuffer(CommandBuffer* commandBuffer)
+void FreeCommandBuffer(CommandBuffer commandBuffer)
 {
-	vkFreeCommandBuffers(vk_state->device, commandBuffer->queueFamily->commandPool, 1, &commandBuffer->handle);
-	Free(GetGlobalAllocator(), commandBuffer);
+	vkFreeCommandBuffers(vk_state->device, commandBuffer.queueFamily->commandPool, 1, &commandBuffer.handle);
 }
 
 bool AllocateAndBeginSingleUseCommandBuffer(QueueFamily* queueFamily, CommandBuffer** out_pCommandBuffer)
@@ -143,13 +138,13 @@ bool EndSubmitAndFreeSingleUseCommandBuffer(CommandBuffer* commandBuffer, u32 wa
 	return true;
 }
 
-void ResetCommandBuffer(CommandBuffer* commandBuffer)
+void ResetCommandBuffer(CommandBuffer commandBuffer)
 {
 	// No reset flags, because resources attached to the command buffer don't necessarily need to be freed and this allows Vulkan to decide whats best
-	vkResetCommandBuffer(commandBuffer->handle, 0);
+	vkResetCommandBuffer(commandBuffer.handle, 0);
 }
 
-bool ResetAndBeginCommandBuffer(CommandBuffer* commandBuffer)
+bool ResetAndBeginCommandBuffer(CommandBuffer commandBuffer)
 {
 	VkCommandBufferBeginInfo beginInfo = {};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -157,7 +152,7 @@ bool ResetAndBeginCommandBuffer(CommandBuffer* commandBuffer)
 	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT; /// TODO: test if the validation layer likes this or not
 	beginInfo.pInheritanceInfo = 0;
 
-	if (VK_SUCCESS != vkBeginCommandBuffer(commandBuffer->handle, &beginInfo))
+	if (VK_SUCCESS != vkBeginCommandBuffer(commandBuffer.handle, &beginInfo))
 	{
 		GRFATAL("Failed to start recording command buffer");
 		return false;
@@ -166,9 +161,9 @@ bool ResetAndBeginCommandBuffer(CommandBuffer* commandBuffer)
 	return true;
 }
 
-void EndCommandBuffer(CommandBuffer* commandBuffer)
+void EndCommandBuffer(CommandBuffer commandBuffer)
 {
-	if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer->handle))
+	if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer.handle))
 	{
 		GRFATAL("Failed to stop recording command buffer");
 		return;
