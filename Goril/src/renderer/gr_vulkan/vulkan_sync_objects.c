@@ -13,8 +13,8 @@ bool CreateSyncObjects()
 
 	for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
-		if ((VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->allocator, &vk_state->imageAvailableSemaphoresDarray[i])) ||
-			(VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->allocator, &vk_state->renderFinishedSemaphoresDarray[i])))
+		if ((VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->vkAllocator, &vk_state->imageAvailableSemaphoresDarray[i])) ||
+			(VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->vkAllocator, &vk_state->renderFinishedSemaphoresDarray[i])))
 		{
 			GRFATAL("Failed to create sync objects");
 			return false;
@@ -36,9 +36,9 @@ bool CreateSyncObjects()
 	timelineSemaphoreCreateInfo.pNext = &semaphoreTypeInfo;
 	timelineSemaphoreCreateInfo.flags = 0;
 
-	if (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->vertexUploadSemaphore.handle) ||
-		VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->indexUploadSemaphore.handle) ||
-		VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->imageUploadSemaphore.handle))
+	if (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->vkAllocator, &vk_state->vertexUploadSemaphore.handle) ||
+		VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->vkAllocator, &vk_state->indexUploadSemaphore.handle) ||
+		VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->vkAllocator, &vk_state->imageUploadSemaphore.handle))
 	{
 		GRFATAL("Failed to create sync objects");
 		return false;
@@ -50,7 +50,7 @@ bool CreateSyncObjects()
 	vk_state->frameSemaphore.submitValue = maxMaxFramesInFlight;
 	semaphoreTypeInfo.initialValue = maxMaxFramesInFlight;
 
-	if (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->frameSemaphore.handle))
+	if (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->vkAllocator, &vk_state->frameSemaphore.handle))
 	{
 		GRFATAL("Failed to create sync objects");
 		return false;
@@ -64,19 +64,19 @@ void DestroySyncObjects()
 	for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
 		if (vk_state->imageAvailableSemaphoresDarray)
-			vkDestroySemaphore(vk_state->device, vk_state->imageAvailableSemaphoresDarray[i], vk_state->allocator);
+			vkDestroySemaphore(vk_state->device, vk_state->imageAvailableSemaphoresDarray[i], vk_state->vkAllocator);
 		if (vk_state->renderFinishedSemaphoresDarray)
-			vkDestroySemaphore(vk_state->device, vk_state->renderFinishedSemaphoresDarray[i], vk_state->allocator);
+			vkDestroySemaphore(vk_state->device, vk_state->renderFinishedSemaphoresDarray[i], vk_state->vkAllocator);
 	}
 
 	if (vk_state->vertexUploadSemaphore.handle)
-		vkDestroySemaphore(vk_state->device, vk_state->vertexUploadSemaphore.handle, vk_state->allocator);
+		vkDestroySemaphore(vk_state->device, vk_state->vertexUploadSemaphore.handle, vk_state->vkAllocator);
 	if (vk_state->indexUploadSemaphore.handle)
-		vkDestroySemaphore(vk_state->device, vk_state->indexUploadSemaphore.handle, vk_state->allocator);
+		vkDestroySemaphore(vk_state->device, vk_state->indexUploadSemaphore.handle, vk_state->vkAllocator);
 	if (vk_state->imageUploadSemaphore.handle)
-		vkDestroySemaphore(vk_state->device, vk_state->imageUploadSemaphore.handle, vk_state->allocator);
+		vkDestroySemaphore(vk_state->device, vk_state->imageUploadSemaphore.handle, vk_state->vkAllocator);
 	if (vk_state->frameSemaphore.handle)
-		vkDestroySemaphore(vk_state->device, vk_state->frameSemaphore.handle, vk_state->allocator);
+		vkDestroySemaphore(vk_state->device, vk_state->frameSemaphore.handle, vk_state->vkAllocator);
 
 	if (vk_state->imageAvailableSemaphoresDarray)
 		DarrayDestroy(vk_state->imageAvailableSemaphoresDarray);

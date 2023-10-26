@@ -110,7 +110,7 @@ bool CreateVulkanInstance(u32 requiredExtensionNameCount, const char** requiredE
 		createInfo.enabledExtensionCount = requiredExtensionNameCount;
 		createInfo.ppEnabledExtensionNames = requiredExtensionNames;
 
-		VkResult result = vkCreateInstance(&createInfo, vk_state->allocator, &vk_state->instance);
+		VkResult result = vkCreateInstance(&createInfo, vk_state->vkAllocator, &vk_state->instance);
 
 		if (result != VK_SUCCESS)
 		{
@@ -125,5 +125,5 @@ bool CreateVulkanInstance(u32 requiredExtensionNameCount, const char** requiredE
 void DestroyVulkanInstance()
 {
 	if (vk_state->instance)
-		vkDestroyInstance(vk_state->instance, vk_state->allocator);
+		vkDestroyInstance(vk_state->instance, vk_state->vkAllocator);
 }

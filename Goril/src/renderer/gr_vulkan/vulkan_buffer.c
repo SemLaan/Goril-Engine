@@ -53,7 +53,7 @@ bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags bufferUsageFlags, VkMemo
     bufferCreateInfo.queueFamilyIndexCount = 0;
     bufferCreateInfo.pQueueFamilyIndices = nullptr;
 
-    if (VK_SUCCESS != vkCreateBuffer(vk_state->device, &bufferCreateInfo, vk_state->allocator, out_buffer))
+    if (VK_SUCCESS != vkCreateBuffer(vk_state->device, &bufferCreateInfo, vk_state->vkAllocator, out_buffer))
     {
         GRFATAL("Buffer creation failed");
         return false;
@@ -68,7 +68,7 @@ bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags bufferUsageFlags, VkMemo
     allocateInfo.allocationSize = stagingMemoryRequirements.size;
     allocateInfo.memoryTypeIndex = FindMemoryType(stagingMemoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-    if (VK_SUCCESS != vkAllocateMemory(vk_state->device, &allocateInfo, vk_state->allocator, out_memory))
+    if (VK_SUCCESS != vkAllocateMemory(vk_state->device, &allocateInfo, vk_state->vkAllocator, out_memory))
     {
         GRFATAL("Vulkan device memory allocation failed");
         return false;
@@ -81,12 +81,12 @@ bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags bufferUsageFlags, VkMemo
 
 void VulkanBufferDestructor(void* resource)
 {
-    vkDestroyBuffer(vk_state->device, (VkBuffer)resource, vk_state->allocator);
+    vkDestroyBuffer(vk_state->device, (VkBuffer)resource, vk_state->vkAllocator);
 }
 
 void VulkanMemoryDestructor(void* resource)
 {
-    vkFreeMemory(vk_state->device, (VkDeviceMemory)resource, vk_state->allocator);
+    vkFreeMemory(vk_state->device, (VkDeviceMemory)resource, vk_state->vkAllocator);
 }
 
 VertexBuffer VertexBufferCreate(void* vertices, size_t size)
@@ -319,8 +319,8 @@ static void VertexBufferDestructor(void* resource)
 {
     VulkanVertexBuffer* buffer = (VulkanVertexBuffer*)resource;
 
-    vkDestroyBuffer(vk_state->device, buffer->handle, vk_state->allocator);
-    vkFreeMemory(vk_state->device, buffer->memory, vk_state->allocator);
+    vkDestroyBuffer(vk_state->device, buffer->handle, vk_state->vkAllocator);
+    vkFreeMemory(vk_state->device, buffer->memory, vk_state->vkAllocator);
 
     Free(vk_state->rendererAllocator, buffer);
 }
@@ -448,8 +448,8 @@ static void IndexBufferDestructor(void* resource)
 {
     VulkanIndexBuffer* buffer = (VulkanIndexBuffer*)resource;
 
-    vkDestroyBuffer(vk_state->device, buffer->handle, vk_state->allocator);
-    vkFreeMemory(vk_state->device, buffer->memory, vk_state->allocator);
+    vkDestroyBuffer(vk_state->device, buffer->handle, vk_state->vkAllocator);
+    vkFreeMemory(vk_state->device, buffer->memory, vk_state->vkAllocator);
 
     Free(vk_state->rendererAllocator, buffer);
 }

@@ -187,7 +187,7 @@ bool CreateLogicalDevice(RendererState* state, u32 requiredDeviceExtensionNameCo
 	createInfo.ppEnabledExtensionNames = requiredDeviceExtensionNames;
 	createInfo.pEnabledFeatures = nullptr;
 
-	u32 result = vkCreateDevice(vk_state->physicalDevice, &createInfo, state->allocator, &state->device);
+	u32 result = vkCreateDevice(vk_state->physicalDevice, &createInfo, state->vkAllocator, &state->device);
 
 	DarrayDestroy(queueCreateInfosDarray);
 
@@ -203,7 +203,7 @@ bool CreateLogicalDevice(RendererState* state, u32 requiredDeviceExtensionNameCo
 void DestroyLogicalDevice(RendererState* state)
 {
 	if (state->device)
-		vkDestroyDevice(state->device, state->allocator);
+		vkDestroyDevice(state->device, state->vkAllocator);
 	if (vk_state->swapchainSupport.formatsDarray)
 		DarrayDestroy(vk_state->swapchainSupport.formatsDarray);
 	if (vk_state->swapchainSupport.presentModesDarray)

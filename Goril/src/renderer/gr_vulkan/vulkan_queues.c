@@ -24,7 +24,7 @@ bool CreateQueues()
 	commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	commandPoolCreateInfo.queueFamilyIndex = vk_state->graphicsQueue.index;
 
-	if (VK_SUCCESS != vkCreateCommandPool(vk_state->device, &commandPoolCreateInfo, vk_state->allocator, &vk_state->graphicsQueue.commandPool))
+	if (VK_SUCCESS != vkCreateCommandPool(vk_state->device, &commandPoolCreateInfo, vk_state->vkAllocator, &vk_state->graphicsQueue.commandPool))
 	{
 		GRFATAL("Failed to create Vulkan graphics command pool");
 		return false;
@@ -33,7 +33,7 @@ bool CreateQueues()
 	commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
 	commandPoolCreateInfo.queueFamilyIndex = vk_state->transferQueue.index;
 
-	if (VK_SUCCESS != vkCreateCommandPool(vk_state->device, &commandPoolCreateInfo, vk_state->allocator, &vk_state->transferQueue.commandPool))
+	if (VK_SUCCESS != vkCreateCommandPool(vk_state->device, &commandPoolCreateInfo, vk_state->vkAllocator, &vk_state->transferQueue.commandPool))
 	{
 		GRFATAL("Failed to create Vulkan transfer command pool");
 		return false;
@@ -56,8 +56,8 @@ bool CreateQueues()
 	timelineSemaphoreCreateInfo.pNext = &semaphoreTypeInfo;
 	timelineSemaphoreCreateInfo.flags = 0;
 
-	if (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->graphicsQueue.semaphore.handle) ||
-		VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->allocator, &vk_state->transferQueue.semaphore.handle))
+	if (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->vkAllocator, &vk_state->graphicsQueue.semaphore.handle) ||
+		VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->vkAllocator, &vk_state->transferQueue.semaphore.handle))
 	{
 		GRFATAL("Failed to create sync objects");
 		return false;
@@ -69,15 +69,15 @@ bool CreateQueues()
 void DestroyQueues()
 {
 	if (vk_state->graphicsQueue.semaphore.handle)
-		vkDestroySemaphore(vk_state->device, vk_state->graphicsQueue.semaphore.handle, vk_state->allocator);
+		vkDestroySemaphore(vk_state->device, vk_state->graphicsQueue.semaphore.handle, vk_state->vkAllocator);
 	if (vk_state->transferQueue.semaphore.handle)
-		vkDestroySemaphore(vk_state->device, vk_state->transferQueue.semaphore.handle, vk_state->allocator);
+		vkDestroySemaphore(vk_state->device, vk_state->transferQueue.semaphore.handle, vk_state->vkAllocator);
 
 	if (vk_state->graphicsQueue.commandPool)
-		vkDestroyCommandPool(vk_state->device, vk_state->graphicsQueue.commandPool, vk_state->allocator);
+		vkDestroyCommandPool(vk_state->device, vk_state->graphicsQueue.commandPool, vk_state->vkAllocator);
 
 	if (vk_state->transferQueue.commandPool)
-		vkDestroyCommandPool(vk_state->device, vk_state->transferQueue.commandPool, vk_state->allocator);
+		vkDestroyCommandPool(vk_state->device, vk_state->transferQueue.commandPool, vk_state->vkAllocator);
 
 	if (vk_state->graphicsQueue.resourcesPendingDestructionDarray)
 		DarrayDestroy(vk_state->graphicsQueue.resourcesPendingDestructionDarray);

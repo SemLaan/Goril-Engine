@@ -39,7 +39,7 @@ bool CreateShaderModule(const char* filename, RendererState* state, VkShaderModu
 	// This cast from char* to u32* is possible because darray's are aligned on 64B
 	createInfo.pCode = (u32*)fileData;
 
-	if (VK_SUCCESS != vkCreateShaderModule(state->device, &createInfo, state->allocator, out_shaderModule))
+	if (VK_SUCCESS != vkCreateShaderModule(state->device, &createInfo, state->vkAllocator, out_shaderModule))
 	{
 		Free(vk_state->rendererAllocator, fileData);
 		GRERROR("Shader module creation failed");

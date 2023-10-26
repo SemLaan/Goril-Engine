@@ -36,11 +36,11 @@ bool CreateGraphicsPipeline()
     descriptorSetLayoutCreateInfo.bindingCount = 2;
     descriptorSetLayoutCreateInfo.pBindings = uboLayoutBindings;
 
-    if (VK_SUCCESS != vkCreateDescriptorSetLayout(vk_state->device, &descriptorSetLayoutCreateInfo, vk_state->allocator, &vk_state->descriptorSetLayout))
+    if (VK_SUCCESS != vkCreateDescriptorSetLayout(vk_state->device, &descriptorSetLayoutCreateInfo, vk_state->vkAllocator, &vk_state->descriptorSetLayout))
     {
         GRFATAL("Vulkan descriptor set layout creation failed");
-        vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->allocator);
-        vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->allocator);
+        vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->vkAllocator);
+        vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->vkAllocator);
         return false;
     }
 
@@ -70,11 +70,11 @@ bool CreateGraphicsPipeline()
     descriptorPoolCreateInfo.poolSizeCount = 2;
     descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes;
 
-    if (VK_SUCCESS != vkCreateDescriptorPool(vk_state->device, &descriptorPoolCreateInfo, vk_state->allocator, &vk_state->uniformDescriptorPool))
+    if (VK_SUCCESS != vkCreateDescriptorPool(vk_state->device, &descriptorPoolCreateInfo, vk_state->vkAllocator, &vk_state->uniformDescriptorPool))
     {
         GRFATAL("Vulkan descriptor pool creation failed");
-        vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->allocator);
-        vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->allocator);
+        vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->vkAllocator);
+        vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->vkAllocator);
         return false;
     }
 
@@ -96,8 +96,8 @@ bool CreateGraphicsPipeline()
     if (VK_SUCCESS != vkAllocateDescriptorSets(vk_state->device, &descriptorSetAllocInfo, vk_state->uniformDescriptorSetsDarray))
     {
         GRFATAL("Vulkan descriptor set allocation failed");
-        vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->allocator);
-        vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->allocator);
+        vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->vkAllocator);
+        vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->vkAllocator);
         return false;
     }
 
@@ -282,11 +282,11 @@ bool CreateGraphicsPipeline()
     pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
-    if (VK_SUCCESS != vkCreatePipelineLayout(vk_state->device, &pipelineLayoutCreateInfo, vk_state->allocator, &vk_state->pipelineLayout))
+    if (VK_SUCCESS != vkCreatePipelineLayout(vk_state->device, &pipelineLayoutCreateInfo, vk_state->vkAllocator, &vk_state->pipelineLayout))
     {
         GRFATAL("Vulkan pipeline layout creation failed");
-        vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->allocator);
-        vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->allocator);
+        vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->vkAllocator);
+        vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->vkAllocator);
         return false;
     }
 
@@ -311,16 +311,16 @@ bool CreateGraphicsPipeline()
     graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
     graphicsPipelineCreateInfo.basePipelineIndex = -1;
 
-    if (VK_SUCCESS != vkCreateGraphicsPipelines(vk_state->device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, vk_state->allocator, &vk_state->graphicsPipeline))
+    if (VK_SUCCESS != vkCreateGraphicsPipelines(vk_state->device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, vk_state->vkAllocator, &vk_state->graphicsPipeline))
     {
         GRFATAL("Vulkan graphics pipeline creation failed");
-        vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->allocator);
-        vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->allocator);
+        vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->vkAllocator);
+        vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->vkAllocator);
         return false;
     }
 
-    vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->allocator);
-    vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->allocator);
+    vkDestroyShaderModule(vk_state->device, vertShaderModule, vk_state->vkAllocator);
+    vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->vkAllocator);
 
     // =============================== Initialize descriptor sets ====================================================
 	/*for (u32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
@@ -367,15 +367,15 @@ bool CreateGraphicsPipeline()
 void DestroyGraphicsPipeline()
 {
     if (vk_state->graphicsPipeline)
-        vkDestroyPipeline(vk_state->device, vk_state->graphicsPipeline, vk_state->allocator);
+        vkDestroyPipeline(vk_state->device, vk_state->graphicsPipeline, vk_state->vkAllocator);
     if (vk_state->pipelineLayout)
-        vkDestroyPipelineLayout(vk_state->device, vk_state->pipelineLayout, vk_state->allocator);
+        vkDestroyPipelineLayout(vk_state->device, vk_state->pipelineLayout, vk_state->vkAllocator);
 
     for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         vkUnmapMemory(vk_state->device, vk_state->uniformBuffersMemoryDarray[i]);
-        vkDestroyBuffer(vk_state->device, vk_state->uniformBuffersDarray[i], vk_state->allocator);
-        vkFreeMemory(vk_state->device, vk_state->uniformBuffersMemoryDarray[i], vk_state->allocator);
+        vkDestroyBuffer(vk_state->device, vk_state->uniformBuffersDarray[i], vk_state->vkAllocator);
+        vkFreeMemory(vk_state->device, vk_state->uniformBuffersMemoryDarray[i], vk_state->vkAllocator);
     }
 
     DarrayDestroy(vk_state->uniformBuffersDarray);
@@ -384,10 +384,10 @@ void DestroyGraphicsPipeline()
     DarrayDestroy(vk_state->uniformDescriptorSetsDarray);
 
     if (vk_state->uniformDescriptorPool)
-        vkDestroyDescriptorPool(vk_state->device, vk_state->uniformDescriptorPool, vk_state->allocator);
+        vkDestroyDescriptorPool(vk_state->device, vk_state->uniformDescriptorPool, vk_state->vkAllocator);
 
     if (vk_state->descriptorSetLayout)
-        vkDestroyDescriptorSetLayout(vk_state->device, vk_state->descriptorSetLayout, vk_state->allocator);
+        vkDestroyDescriptorSetLayout(vk_state->device, vk_state->descriptorSetLayout, vk_state->vkAllocator);
 }
 
 void UpdateDescriptorSets(u32 index, VulkanImage* image)

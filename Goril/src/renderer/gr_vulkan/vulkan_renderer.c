@@ -37,7 +37,7 @@ bool InitializeRenderer()
 	CreatePoolAllocator("renderer resource destructor pool", vk_state->rendererAllocator, RENDER_POOL_BLOCK_SIZE_32, 30, &vk_state->poolAllocator32B);
 	CreatePoolAllocator("Renderer resource acquisition pool", vk_state->rendererAllocator, QUEUE_ACQUISITION_POOL_BLOCK_SIZE, 30, &vk_state->resourceAcquisitionPool);
 
-    vk_state->allocator = nullptr;
+    vk_state->vkAllocator = nullptr;
 
     vk_state->currentInFlightFrameIndex = 0;
     vk_state->shouldRecreateSwapchain = false;
@@ -71,7 +71,7 @@ bool InitializeRenderer()
     CreateDebugMessenger();
 
     // ================ Creating a surface =====================================
-    if (!PlatformCreateSurface(vk_state->instance, vk_state->allocator, &vk_state->surface))
+    if (!PlatformCreateSurface(vk_state->instance, vk_state->vkAllocator, &vk_state->surface))
     {
         GRFATAL("Failed to create Vulkan surface");
         return false;
@@ -196,7 +196,7 @@ void ShutdownRenderer()
 
     // ======================= Destroying the surface if it was created ==================================
     if (vk_state->surface)
-        vkDestroySurfaceKHR(vk_state->instance, vk_state->surface, vk_state->allocator);
+        vkDestroySurfaceKHR(vk_state->instance, vk_state->surface, vk_state->vkAllocator);
 
     // ===================== Destroying debug messenger if it was created =================================
     DestroyDebugMessenger();

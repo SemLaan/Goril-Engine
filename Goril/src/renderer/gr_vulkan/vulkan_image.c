@@ -31,7 +31,7 @@ bool CreateImage(VulkanCreateImageParameters* pCreateParameters, VkImage* pImage
 	imageCreateInfo.pQueueFamilyIndices = nullptr;
 	imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-	if (VK_SUCCESS != vkCreateImage(vk_state->device, &imageCreateInfo, vk_state->allocator, pImage))
+	if (VK_SUCCESS != vkCreateImage(vk_state->device, &imageCreateInfo, vk_state->vkAllocator, pImage))
 	{
 		GRFATAL("Vulkan image (texture) creation failed");
 		return false;
@@ -46,7 +46,7 @@ bool CreateImage(VulkanCreateImageParameters* pCreateParameters, VkImage* pImage
 	allocateInfo.allocationSize = memoryRequirements.size;
 	allocateInfo.memoryTypeIndex = FindMemoryType(memoryRequirements.memoryTypeBits, pCreateParameters->properties);
 
-	if (VK_SUCCESS != vkAllocateMemory(vk_state->device, &allocateInfo, vk_state->allocator, pMemory))
+	if (VK_SUCCESS != vkAllocateMemory(vk_state->device, &allocateInfo, vk_state->vkAllocator, pMemory))
 	{
 		GRFATAL("Vulkan image (texture) memory allocation failed");
 		return false;
@@ -249,7 +249,7 @@ Texture TextureCreate(u32 width, u32 height, void* pixels)
 	viewCreateInfo.subresourceRange.baseMipLevel = 0;
 	viewCreateInfo.subresourceRange.levelCount = 1;
 
-	if (VK_SUCCESS != vkCreateImageView(vk_state->device, &viewCreateInfo, vk_state->allocator, &image->view))
+	if (VK_SUCCESS != vkCreateImageView(vk_state->device, &viewCreateInfo, vk_state->vkAllocator, &image->view))
 	{
 		GRFATAL("Texture image view creation failed");
 		GRASSERT(false);
@@ -276,7 +276,7 @@ Texture TextureCreate(u32 width, u32 height, void* pixels)
 	samplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 	samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
 
-	if (VK_SUCCESS != vkCreateSampler(vk_state->device, &samplerCreateInfo, vk_state->allocator, &image->sampler))
+	if (VK_SUCCESS != vkCreateSampler(vk_state->device, &samplerCreateInfo, vk_state->vkAllocator, &image->sampler))
 	{
 		GRASSERT_MSG(false, "failed to create image sampler");
 	}
@@ -288,10 +288,10 @@ static void ImageDestructor(void* resource)
 {
 	VulkanImage* image = (VulkanImage*)resource;
 
-	vkDestroySampler(vk_state->device, image->sampler, vk_state->allocator);
-	vkDestroyImageView(vk_state->device, image->view, vk_state->allocator);
-	vkDestroyImage(vk_state->device, image->handle, vk_state->allocator);
-	vkFreeMemory(vk_state->device, image->memory, vk_state->allocator);
+	vkDestroySampler(vk_state->device, image->sampler, vk_state->vkAllocator);
+	vkDestroyImageView(vk_state->device, image->view, vk_state->vkAllocator);
+	vkDestroyImage(vk_state->device, image->handle, vk_state->vkAllocator);
+	vkFreeMemory(vk_state->device, image->memory, vk_state->vkAllocator);
 
 	Free(vk_state->rendererAllocator, image);
 }

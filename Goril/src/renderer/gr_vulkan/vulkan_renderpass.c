@@ -52,7 +52,7 @@ bool CreateRenderpass(RendererState* state)
 	renderpassCreateInfo.dependencyCount = 1;
 	renderpassCreateInfo.pDependencies = &subpassDependency;
 
-	if (VK_SUCCESS != vkCreateRenderPass(state->device, &renderpassCreateInfo, state->allocator, &state->renderpass))
+	if (VK_SUCCESS != vkCreateRenderPass(state->device, &renderpassCreateInfo, state->vkAllocator, &state->renderpass))
 	{
 		GRFATAL("Failed to create Vulkan renderpass");
 		return false;
@@ -64,5 +64,5 @@ bool CreateRenderpass(RendererState* state)
 void DestroyRenderpass(RendererState* state)
 {
 	if (state->renderpass)
-		vkDestroyRenderPass(state->device, state->renderpass, state->allocator);
+		vkDestroyRenderPass(state->device, state->renderpass, state->vkAllocator);
 }

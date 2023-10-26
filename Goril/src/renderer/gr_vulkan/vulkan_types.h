@@ -121,7 +121,7 @@ typedef struct RendererState
 	QueueFamily graphicsQueue;										// Graphics family queue
 	QueueFamily transferQueue;										// Transfer family queue
 	VkDependencyInfo** requestedQueueAcquisitionOperationsDarray;	// For transfering queue ownership from transfer to graphics after a resource has been uploaded
-	VkAllocationCallbacks* allocator;								// Vulkan API allocator, only for reading vulkan allocations not for taking over allocation from vulkan //TODO: this is currently just nullptr
+	VkAllocationCallbacks* vkAllocator;								// Vulkan API allocator, only for reading vulkan allocations not for taking over allocation from vulkan //TODO: this is currently just nullptr
 
 	// Data that is only used on startup/shutdown
 	VkInstance instance;											// Vulkan instance handle

@@ -76,7 +76,7 @@ bool CreateSwapchain(RendererState* state)
 	createInfo.clipped = VK_TRUE;
 	createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-	if (VK_SUCCESS != vkCreateSwapchainKHR(state->device, &createInfo, state->allocator, &state->swapchain))
+	if (VK_SUCCESS != vkCreateSwapchainKHR(state->device, &createInfo, state->vkAllocator, &state->swapchain))
 	{
 		GRFATAL("Vulkan Swapchain creation failed");
 		return false;
@@ -111,7 +111,7 @@ bool CreateSwapchain(RendererState* state)
 		viewCreateInfo.subresourceRange.baseMipLevel = 0;
 		viewCreateInfo.subresourceRange.levelCount = 1;
 
-		if (VK_SUCCESS != vkCreateImageView(state->device, &viewCreateInfo, state->allocator, &state->swapchainImageViewsDarray[i]))
+		if (VK_SUCCESS != vkCreateImageView(state->device, &viewCreateInfo, state->vkAllocator, &state->swapchainImageViewsDarray[i]))
 		{
 			GRFATAL("Swapchain image view creation failed");
 			return false;
@@ -127,12 +127,12 @@ void DestroySwapchain(RendererState* state)
 	{
 		for (u32 i = 0; i < DarrayGetSize(state->swapchainImageViewsDarray); ++i)
 		{
-			vkDestroyImageView(state->device, state->swapchainImageViewsDarray[i], state->allocator);
+			vkDestroyImageView(state->device, state->swapchainImageViewsDarray[i], state->vkAllocator);
 		}
 	}
 
 	if (state->swapchain)
-		vkDestroySwapchainKHR(state->device, state->swapchain, state->allocator);
+		vkDestroySwapchainKHR(state->device, state->swapchain, state->vkAllocator);
 
 	if (state->swapchainImagesDarray)
 		DarrayDestroy(state->swapchainImagesDarray);
@@ -159,7 +159,7 @@ bool CreateSwapchainFramebuffers(RendererState* state)
 		createInfo.height = state->swapchainExtent.height;
 		createInfo.layers = 1;
 
-		if (VK_SUCCESS != vkCreateFramebuffer(state->device, &createInfo, state->allocator, &state->swapchainFramebuffersDarray[i]))
+		if (VK_SUCCESS != vkCreateFramebuffer(state->device, &createInfo, state->vkAllocator, &state->swapchainFramebuffersDarray[i]))
 		{
 			GRFATAL("Swapchain framebuffer creation failed");
 			return false;
@@ -175,7 +175,7 @@ void DestroySwapchainFramebuffers(RendererState* state)
 	{
 		for (u32 i = 0; i < DarrayGetSize(state->swapchainFramebuffersDarray); ++i)
 		{
-			vkDestroyFramebuffer(state->device, state->swapchainFramebuffersDarray[i], state->allocator);
+			vkDestroyFramebuffer(state->device, state->swapchainFramebuffersDarray[i], state->vkAllocator);
 		}
 		DarrayDestroy(state->swapchainFramebuffersDarray);
 	}
