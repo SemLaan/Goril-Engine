@@ -85,8 +85,8 @@ typedef struct RendererState
 																	// every frame (actually doing it every frame might be faster, because the space being used on the stack is already in cache)
 
 	// Binary semaphores for synchronizing the swapchain with the screen and the GPU
-	VkSemaphore* imageAvailableSemaphoresDarray;					// Binary semaphores that synchronize swapchain image acquisition TODO: change to static array to remove pointer indirection
-	VkSemaphore* renderFinishedSemaphoresDarray;					// Binary semaphores that synchronize swapchain image presentation TODO: change to static array to remove pointer indirection
+	VkSemaphore* imageAvailableSemaphoresDarray;					// Binary semaphores that synchronize swapchain image acquisition TODO: change to static array to remove pointer indirection TODO: change to timeline semaphore once vulkan allows it (hopefully 1.4)
+	VkSemaphore* renderFinishedSemaphoresDarray;					// Binary semaphores that synchronize swapchain image presentation TODO: change to static array to remove pointer indirection TODO: change to timeline semaphore once vulkan allows it (hopefully 1.4)
 
 	// Timeline semaphores for synchronizing uploads and 
 	VulkanSemaphore vertexUploadSemaphore;							// Timeline semaphore that synchronizes vertex upload with vertex input
@@ -104,6 +104,10 @@ typedef struct RendererState
 	VkDescriptorSet* uniformDescriptorSetsDarray; // TODO: factor into 2d renderer 
 	VkPipelineLayout pipelineLayout;	// TODO: factor into 2d renderer
 	VkPipeline graphicsPipeline;		// TODO: factor into 2d renderer
+
+	// Allocators
+	Allocator* rendererAllocator;
+	Allocator* resourceDestructionPool;
 
 	// Data that is not used every frame or possibly used every frame
 	QueueFamily graphicsQueue;

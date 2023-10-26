@@ -32,6 +32,9 @@ bool InitializeRenderer()
     GRINFO("Initializing renderer subsystem...");
 
     vk_state = (RendererState*)Alloc(GetGlobalAllocator(), sizeof(RendererState), MEM_TAG_RENDERER_SUBSYS);
+	CreateFreelistAllocator("renderer allocator", GetGlobalAllocator(), KiB, &vk_state->rendererAllocator);
+	CreatePoolAllocator("renderer resource destructor pool", vk_state->rendererAllocator, sizeof(ResourceDestructionInfo), 30, &vk_state->resourceDestructionPool);
+
     vk_state->allocator = nullptr;
 
     vk_state->currentInFlightFrameIndex = 0;
