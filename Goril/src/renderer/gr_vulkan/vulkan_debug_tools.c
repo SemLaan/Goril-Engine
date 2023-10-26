@@ -1,4 +1,4 @@
-#include "vulkan_debug_messenger.h"
+#include "vulkan_debug_tools.h"
 #include "core/logger.h"
 
 
@@ -47,7 +47,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 	return VK_FALSE;
 }
 
-VkDebugUtilsMessengerCreateInfoEXT GetDebugMessengerCreateInfo()
+VkDebugUtilsMessengerCreateInfoEXT _GetDebugMessengerCreateInfo()
 {
 	VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo = {};
 	debugMessengerCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -64,10 +64,10 @@ VkDebugUtilsMessengerCreateInfoEXT GetDebugMessengerCreateInfo()
 	return debugMessengerCreateInfo;
 }
 
-bool CreateDebugMessenger()
+bool _CreateDebugMessenger()
 {
 	PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(vk_state->instance, "vkCreateDebugUtilsMessengerEXT");
-	VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo = GetDebugMessengerCreateInfo();
+	VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo = _GetDebugMessengerCreateInfo();
 	if (VK_SUCCESS != vkCreateDebugUtilsMessengerEXT(vk_state->instance, &messengerCreateInfo, vk_state->vkAllocator, &vk_state->debugMessenger))
 	{
 		GRFATAL("Failed to create Vulkan debug utils messenger");
@@ -77,7 +77,7 @@ bool CreateDebugMessenger()
 	return true;
 }
 
-void DestroyDebugMessenger()
+void _DestroyDebugMessenger()
 {
 	PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(vk_state->instance, "vkDestroyDebugUtilsMessengerEXT");
 	if (vk_state->debugMessenger)

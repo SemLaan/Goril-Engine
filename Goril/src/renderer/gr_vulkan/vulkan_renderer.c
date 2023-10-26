@@ -7,7 +7,7 @@
 #include "core/meminc.h"
 
 #include "vulkan_command_buffer.h"
-#include "vulkan_debug_messenger.h"
+#include "vulkan_debug_tools.h"
 #include "vulkan_device.h"
 #include "vulkan_graphics_pipeline.h"
 #include "vulkan_instance.h"
