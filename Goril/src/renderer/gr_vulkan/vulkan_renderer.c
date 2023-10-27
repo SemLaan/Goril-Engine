@@ -10,7 +10,6 @@
 #include "vulkan_debug_tools.h"
 #include "vulkan_device.h"
 #include "vulkan_graphics_pipeline.h"
-#include "vulkan_instance.h"
 #include "vulkan_platform.h"
 #include "vulkan_queues.h"
 #include "vulkan_renderpass.h"
@@ -32,12 +31,12 @@ bool InitializeRenderer()
     GRASSERT_DEBUG(vk_state == nullptr); // If this triggers init got called twice
     GRINFO("Initializing renderer subsystem...");
 
-    vk_state = AlignedAlloc(GetGlobalAllocator(), sizeof(RendererState), 64/*cache line*/, MEM_TAG_RENDERER_SUBSYS);
+    vk_state = AlignedAlloc(GetGlobalAllocator(), sizeof(RendererState), 64 /*cache line*/, MEM_TAG_RENDERER_SUBSYS);
     ZeroMem(vk_state, sizeof(*vk_state));
-	CreateFreelistAllocator("renderer allocator", GetGlobalAllocator(), KiB * 100, &vk_state->rendererAllocator);
-	CreateBumpAllocator("renderer bump allocator", vk_state->rendererAllocator, KiB * 5, &vk_state->rendererBumpAllocator);
-	CreatePoolAllocator("renderer resource destructor pool", vk_state->rendererAllocator, RENDER_POOL_BLOCK_SIZE_32, 30, &vk_state->poolAllocator32B);
-	CreatePoolAllocator("Renderer resource acquisition pool", vk_state->rendererAllocator, QUEUE_ACQUISITION_POOL_BLOCK_SIZE, 30, &vk_state->resourceAcquisitionPool);
+    CreateFreelistAllocator("renderer allocator", GetGlobalAllocator(), KiB * 100, &vk_state->rendererAllocator);
+    CreateBumpAllocator("renderer bump allocator", vk_state->rendererAllocator, KiB * 5, &vk_state->rendererBumpAllocator);
+    CreatePoolAllocator("renderer resource destructor pool", vk_state->rendererAllocator, RENDER_POOL_BLOCK_SIZE_32, 30, &vk_state->poolAllocator32B);
+    CreatePoolAllocator("Renderer resource acquisition pool", vk_state->rendererAllocator, QUEUE_ACQUISITION_POOL_BLOCK_SIZE, 30, &vk_state->resourceAcquisitionPool);
 
     vk_state->vkAllocator = nullptr; // TODO: add something that tracks vulkan API allocations in debug mode
 
@@ -46,7 +45,7 @@ bool InitializeRenderer()
 
     RegisterEventListener(EVCODE_WINDOW_RESIZED, OnWindowResize);
 
-	// ================== Getting required instance extensions and layers ================================
+// ================== Getting required instance extensions and layers ================================
 #define MAX_INSTANCE_EXTENSIONS 10
 #define MAX_INSTANCE_LAYERS 10
     // Getting required extensions
@@ -63,23 +62,102 @@ bool InitializeRenderer()
     u32 requiredInstanceLayerCount = 0;
     ADD_DEBUG_INSTANCE_LAYERS(requiredInstanceLayers, requiredInstanceLayerCount);
 
-    // ================== Creating instance =================================
-    if (!CreateVulkanInstance(requiredInstanceExtensionCount, requiredInstanceExtensions, requiredInstanceLayerCount, requiredInstanceLayers))
+    // ============================================================================================================================================================
+    // =========================================================== Creating instance ==============================================================================
+    // ============================================================================================================================================================
     {
-        return false;
+        // ================ App info =============================================
+        VkApplicationInfo appInfo = {};
+        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        appInfo.pNext = nullptr;
+        appInfo.pApplicationName = "Test app";
+        appInfo.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
+        appInfo.pEngineName = "Goril";
+        appInfo.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
+        appInfo.apiVersion = VK_API_VERSION_1_3;
+
+        {
+            // Checking if required extensions are available
+            u32 availableExtensionCount = 0;
+            vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, nullptr);
+            VkExtensionProperties* availableExtensionsDarray = (VkExtensionProperties*)DarrayCreateWithSize(sizeof(VkExtensionProperties), availableExtensionCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
+            vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, availableExtensionsDarray);
+
+            bool extensionsAvailable = CheckRequiredExtensions(requiredInstanceExtensionCount, requiredInstanceExtensions, availableExtensionCount, availableExtensionsDarray);
+
+            DarrayDestroy(availableExtensionsDarray);
+
+            if (!extensionsAvailable)
+            {
+                GRFATAL("Couldn't find required Vulkan extensions");
+                return false;
+            }
+            else
+                GRTRACE("Required Vulkan extensions found");
+        }
+
+        {
+            // Checking if required layers are available
+            u32 availableLayerCount = 0;
+            vkEnumerateInstanceLayerProperties(&availableLayerCount, nullptr);
+            VkLayerProperties* availableLayersDarray = (VkLayerProperties*)DarrayCreate(sizeof(VkLayerProperties), availableLayerCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
+            vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayersDarray);
+
+            bool layersAvailable = CheckRequiredLayers(requiredInstanceLayerCount, requiredInstanceLayers, availableLayerCount, availableLayersDarray);
+
+            DarrayDestroy(availableLayersDarray);
+
+            if (!layersAvailable)
+            {
+                GRFATAL("Couldn't find required Vulkan layers");
+                return false;
+            }
+            else
+                GRTRACE("Required Vulkan layers found");
+        }
+
+        // ================== Creating instance =================================
+        {
+            VkInstanceCreateInfo createInfo = {};
+            createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+
+            GetDebugMessengerCreateInfo(createInfo.pNext);
+            createInfo.flags = 0;
+            createInfo.pApplicationInfo = &appInfo;
+            createInfo.enabledLayerCount = requiredInstanceLayerCount;
+            createInfo.ppEnabledLayerNames = requiredInstanceLayers;
+            createInfo.enabledExtensionCount = requiredInstanceExtensionCount;
+            createInfo.ppEnabledExtensionNames = requiredInstanceExtensions;
+
+            VkResult result = vkCreateInstance(&createInfo, vk_state->vkAllocator, &vk_state->instance);
+
+            if (result != VK_SUCCESS)
+            {
+                GRFATAL("Failed to create Vulkan instance");
+                return false;
+            }
+        }
+
+        GRTRACE("Vulkan instance created");
     }
 
-    // =============== Creating debug messenger ============================
+    // ============================================================================================================================================================
+    // =============== Creating debug messenger ===================================================================================================================
+    // ============================================================================================================================================================
     CreateDebugMessenger();
 
-    // ================ Creating a surface =====================================
+    // ============================================================================================================================================================
+    // ================ Creating a surface ========================================================================================================================
+    // ============================================================================================================================================================
     if (!PlatformCreateSurface(vk_state->instance, vk_state->vkAllocator, &vk_state->surface))
     {
         GRFATAL("Failed to create Vulkan surface");
         return false;
     }
 
-// ================ Getting a physical device ==============================
+// ============================================================================================================================================================
+// ================ Getting a physical device =================================================================================================================
+// ============================================================================================================================================================
 #define MAX_DEVICE_EXTENSIONS 10
     const char* requiredDeviceExtensions[MAX_DEVICE_EXTENSIONS];
     u32 requiredDeviceExtensionCount = 0;
@@ -94,31 +172,43 @@ bool InitializeRenderer()
         return false;
     }
 
-    // ================== Getting device queue families ==============================
+    // ============================================================================================================================================================
+    // ================== Getting device queue families ===========================================================================================================
+    // ============================================================================================================================================================
     SelectQueueFamilies(vk_state);
 
-    // ===================== Creating logical device =============================================
+    // ============================================================================================================================================================
+    // ===================== Creating logical device ==============================================================================================================
+    // ============================================================================================================================================================
     if (!CreateLogicalDevice(vk_state, requiredDeviceExtensionCount, requiredDeviceExtensions, requiredInstanceLayerCount, requiredInstanceLayers))
     {
         return false;
     }
 
-    // ===================== sets up queues and command pools ================================
+    // ============================================================================================================================================================
+    // ===================== sets up queues and command pools =====================================================================================================
+    // ============================================================================================================================================================
     if (!CreateQueues())
         return false;
 
-    // ============================ Allocate a command buffer =======================================
+    // ============================================================================================================================================================
+    // ============================ Allocate graphics command buffers =============================================================================================
+    // ============================================================================================================================================================
     for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         if (!AllocateCommandBuffer(&vk_state->graphicsQueue, &vk_state->graphicsCommandBuffers[i]))
             return false;
     }
 
-    // ================================ Create sync objects ===========================================
+    // ============================================================================================================================================================
+    // ================================ Create sync objects =======================================================================================================
+    // ============================================================================================================================================================
     if (!CreateSyncObjects())
         return false;
 
-    // ======================== Creating the swapchain ===============================================
+    // ============================================================================================================================================================
+    // ======================== Creating the swapchain ============================================================================================================
+    // ============================================================================================================================================================
     if (!CreateSwapchain(vk_state))
         return false;
 
@@ -176,13 +266,19 @@ void ShutdownRenderer()
     // ======================== Destroying renderpass if it was created =====================================
     DestroyRenderpass(vk_state);
 
-    // ====================== Destroying swapchain if it was created ================================
+    // ============================================================================================================================================================
+    // ====================== Destroying swapchain if it was created ==============================================================================================
+    // ============================================================================================================================================================
     DestroySwapchain(vk_state);
 
-    // ================================ Destroy sync objects if they were created ===========================================
+    // ============================================================================================================================================================
+    // ================================ Destroy sync objects if they were created =================================================================================
+    // ============================================================================================================================================================
     DestroySyncObjects();
 
-    // =================================== Free command buffers ===================================================
+    // ============================================================================================================================================================
+    // =================================== Free command buffers ===================================================================================================
+    // ============================================================================================================================================================
     if (vk_state->graphicsCommandBuffers)
     {
         for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
@@ -191,26 +287,37 @@ void ShutdownRenderer()
         }
     }
 
-    // ===================== destroys queues and command pools ================================
+    // ============================================================================================================================================================
+    // ===================== destroys queues and command pools ====================================================================================================
+    // ============================================================================================================================================================
     DestroyQueues();
 
-    // ===================== Destroying logical device if it was created =================================
+    // ============================================================================================================================================================
+    // ===================== Destroying logical device if it was created ==========================================================================================
+    // ============================================================================================================================================================
     DestroyLogicalDevice(vk_state);
 
-    // ======================= Destroying the surface if it was created ==================================
+    // ============================================================================================================================================================
+    // ======================= Destroying the surface if it was created ===========================================================================================
+    // ============================================================================================================================================================
     if (vk_state->surface)
         vkDestroySurfaceKHR(vk_state->instance, vk_state->surface, vk_state->vkAllocator);
 
-    // ===================== Destroying debug messenger if it was created =================================
+    // ============================================================================================================================================================
+    // ===================== Destroying debug messenger if it was created =========================================================================================
+    // ============================================================================================================================================================
     DestroyDebugMessenger();
 
-    // ======================= Destroying instance if it was created =======================================
-    DestroyVulkanInstance();
+    // ============================================================================================================================================================
+    // ======================= Destroying instance if it was created ==============================================================================================
+    // ============================================================================================================================================================
+    if (vk_state->instance)
+        vkDestroyInstance(vk_state->instance, vk_state->vkAllocator);
 
-	DestroyPoolAllocator(vk_state->resourceAcquisitionPool);
-	DestroyPoolAllocator(vk_state->poolAllocator32B);
-	DestroyBumpAllocator(vk_state->rendererBumpAllocator);
-	DestroyFreelistAllocator(vk_state->rendererAllocator);
+    DestroyPoolAllocator(vk_state->resourceAcquisitionPool);
+    DestroyPoolAllocator(vk_state->poolAllocator32B);
+    DestroyBumpAllocator(vk_state->rendererBumpAllocator);
+    DestroyFreelistAllocator(vk_state->rendererAllocator);
     Free(GetGlobalAllocator(), vk_state);
     vk_state = nullptr;
 }
@@ -345,8 +452,8 @@ bool RenderFrame()
     // ================================= End command buffer recording ==================================================
     EndCommandBuffer(vk_state->graphicsCommandBuffers[vk_state->currentInFlightFrameIndex]);
 
-// =================================== Submitting command buffer ==============================================
-// With all the synchronization that that entails...
+    // =================================== Submitting command buffer ==============================================
+    // With all the synchronization that that entails...
 #define WAIT_SEMAPHORE_COUNT 4 // 1 swapchain image acquisition, 3 resourse upload waits
     VkSemaphoreSubmitInfo waitSemaphores[WAIT_SEMAPHORE_COUNT] = {};
 
