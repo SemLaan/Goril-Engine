@@ -31,7 +31,6 @@
         "vector_performance.h": "c",
         "test_defines.h": "c",
         "array": "c",
-        "vulkan_sync_objects.h": "c",
         "mem.h": "c",
         "meminc.h": "c",
         "asserts.h": "c",

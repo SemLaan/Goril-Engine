@@ -12,7 +12,6 @@
 #include "vulkan_platform.h"
 #include "vulkan_renderpass.h"
 #include "vulkan_swapchain.h"
-#include "vulkan_sync_objects.h"
 #include "vulkan_types.h"
 #include "vulkan_utils.h"
 
@@ -221,7 +220,7 @@ bool InitializeRenderer()
             return false;
         }
 
-        GRTRACE("Succesfully selected physical vulkan device");
+        GRTRACE("Successfully selected physical vulkan device");
     }
 
     // ============================================================================================================================================================
@@ -329,7 +328,7 @@ bool InitializeRenderer()
             return false;
         }
 
-        GRTRACE("Succesfully created vulkan logical device");
+        GRTRACE("Successfully created vulkan logical device");
     }
 
     // ============================================================================================================================================================
@@ -394,7 +393,7 @@ bool InitializeRenderer()
             return false;
         }
 
-        GRTRACE("Succesfully created vulkan queues");
+        GRTRACE("Successfully created vulkan queues");
     }
 
     // ============================================================================================================================================================
@@ -409,8 +408,60 @@ bool InitializeRenderer()
     // ============================================================================================================================================================
     // ================================ Create sync objects =======================================================================================================
     // ============================================================================================================================================================
-    if (!CreateSyncObjects())
-        return false;
+    {
+        vk_state->imageAvailableSemaphoresDarray = (VkSemaphore*)DarrayCreateWithSize(sizeof(VkSemaphore), MAX_FRAMES_IN_FLIGHT, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: dont use darray
+        vk_state->renderFinishedSemaphoresDarray = (VkSemaphore*)DarrayCreateWithSize(sizeof(VkSemaphore), MAX_FRAMES_IN_FLIGHT, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: dont use darray
+
+        VkSemaphoreCreateInfo semaphoreCreateInfo = {};
+        semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+        for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+        {
+            if ((VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->vkAllocator, &vk_state->imageAvailableSemaphoresDarray[i])) ||
+                (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->vkAllocator, &vk_state->renderFinishedSemaphoresDarray[i])))
+            {
+                GRFATAL("Failed to create sync objects");
+                return false;
+            }
+        }
+
+        vk_state->vertexUploadSemaphore.submitValue = 0;
+        vk_state->indexUploadSemaphore.submitValue = 0;
+        vk_state->imageUploadSemaphore.submitValue = 0;
+
+        VkSemaphoreTypeCreateInfo semaphoreTypeInfo = {};
+        semaphoreTypeInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
+        semaphoreTypeInfo.pNext = 0;
+        semaphoreTypeInfo.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE;
+        semaphoreTypeInfo.initialValue = 0;
+
+        VkSemaphoreCreateInfo timelineSemaphoreCreateInfo = {};
+        timelineSemaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        timelineSemaphoreCreateInfo.pNext = &semaphoreTypeInfo;
+        timelineSemaphoreCreateInfo.flags = 0;
+
+        if (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->vkAllocator, &vk_state->vertexUploadSemaphore.handle) ||
+            VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->vkAllocator, &vk_state->indexUploadSemaphore.handle) ||
+            VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->vkAllocator, &vk_state->imageUploadSemaphore.handle))
+        {
+            GRFATAL("Failed to create sync objects");
+            return false;
+        }
+
+        // max max frames in flight just needs to be higher than any sensible maxFramesInFlight value,
+        // look at the wait for semaphores function at the start of the renderloop to understand why
+        const u64 maxMaxFramesInFlight = 10;
+        vk_state->frameSemaphore.submitValue = maxMaxFramesInFlight;
+        semaphoreTypeInfo.initialValue = maxMaxFramesInFlight;
+
+        if (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->vkAllocator, &vk_state->frameSemaphore.handle))
+        {
+            GRFATAL("Failed to create sync objects");
+            return false;
+        }
+
+        GRTRACE("Vulkan sync objects created successfully");
+    }
 
     // ============================================================================================================================================================
     // ======================== Creating the swapchain ============================================================================================================
@@ -480,7 +531,27 @@ void ShutdownRenderer()
     // ============================================================================================================================================================
     // ================================ Destroy sync objects if they were created =================================================================================
     // ============================================================================================================================================================
-    DestroySyncObjects();
+    for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+	{
+		if (vk_state->imageAvailableSemaphoresDarray)
+			vkDestroySemaphore(vk_state->device, vk_state->imageAvailableSemaphoresDarray[i], vk_state->vkAllocator);
+		if (vk_state->renderFinishedSemaphoresDarray)
+			vkDestroySemaphore(vk_state->device, vk_state->renderFinishedSemaphoresDarray[i], vk_state->vkAllocator);
+	}
+
+	if (vk_state->vertexUploadSemaphore.handle)
+		vkDestroySemaphore(vk_state->device, vk_state->vertexUploadSemaphore.handle, vk_state->vkAllocator);
+	if (vk_state->indexUploadSemaphore.handle)
+		vkDestroySemaphore(vk_state->device, vk_state->indexUploadSemaphore.handle, vk_state->vkAllocator);
+	if (vk_state->imageUploadSemaphore.handle)
+		vkDestroySemaphore(vk_state->device, vk_state->imageUploadSemaphore.handle, vk_state->vkAllocator);
+	if (vk_state->frameSemaphore.handle)
+		vkDestroySemaphore(vk_state->device, vk_state->frameSemaphore.handle, vk_state->vkAllocator);
+
+	if (vk_state->imageAvailableSemaphoresDarray)
+		DarrayDestroy(vk_state->imageAvailableSemaphoresDarray);
+	if (vk_state->renderFinishedSemaphoresDarray)
+		DarrayDestroy(vk_state->renderFinishedSemaphoresDarray);
 
     // ============================================================================================================================================================
     // =================================== Free command buffers ===================================================================================================
@@ -497,20 +568,20 @@ void ShutdownRenderer()
     // ===================== destroys queues and command pools ====================================================================================================
     // ============================================================================================================================================================
     if (vk_state->graphicsQueue.semaphore.handle)
-		vkDestroySemaphore(vk_state->device, vk_state->graphicsQueue.semaphore.handle, vk_state->vkAllocator);
-	if (vk_state->transferQueue.semaphore.handle)
-		vkDestroySemaphore(vk_state->device, vk_state->transferQueue.semaphore.handle, vk_state->vkAllocator);
+        vkDestroySemaphore(vk_state->device, vk_state->graphicsQueue.semaphore.handle, vk_state->vkAllocator);
+    if (vk_state->transferQueue.semaphore.handle)
+        vkDestroySemaphore(vk_state->device, vk_state->transferQueue.semaphore.handle, vk_state->vkAllocator);
 
-	if (vk_state->graphicsQueue.commandPool)
-		vkDestroyCommandPool(vk_state->device, vk_state->graphicsQueue.commandPool, vk_state->vkAllocator);
+    if (vk_state->graphicsQueue.commandPool)
+        vkDestroyCommandPool(vk_state->device, vk_state->graphicsQueue.commandPool, vk_state->vkAllocator);
 
-	if (vk_state->transferQueue.commandPool)
-		vkDestroyCommandPool(vk_state->device, vk_state->transferQueue.commandPool, vk_state->vkAllocator);
+    if (vk_state->transferQueue.commandPool)
+        vkDestroyCommandPool(vk_state->device, vk_state->transferQueue.commandPool, vk_state->vkAllocator);
 
-	if (vk_state->graphicsQueue.resourcesPendingDestructionDarray)
-		DarrayDestroy(vk_state->graphicsQueue.resourcesPendingDestructionDarray);
-	if (vk_state->transferQueue.resourcesPendingDestructionDarray)
-		DarrayDestroy(vk_state->transferQueue.resourcesPendingDestructionDarray);
+    if (vk_state->graphicsQueue.resourcesPendingDestructionDarray)
+        DarrayDestroy(vk_state->graphicsQueue.resourcesPendingDestructionDarray);
+    if (vk_state->transferQueue.resourcesPendingDestructionDarray)
+        DarrayDestroy(vk_state->transferQueue.resourcesPendingDestructionDarray);
 
     // ============================================================================================================================================================
     // ===================== Destroying logical device if it was created ==========================================================================================
