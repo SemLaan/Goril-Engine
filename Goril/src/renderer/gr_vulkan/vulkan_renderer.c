@@ -409,16 +409,13 @@ bool InitializeRenderer()
     // ================================ Create sync objects =======================================================================================================
     // ============================================================================================================================================================
     {
-        vk_state->imageAvailableSemaphoresDarray = (VkSemaphore*)DarrayCreateWithSize(sizeof(VkSemaphore), MAX_FRAMES_IN_FLIGHT, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: dont use darray
-        vk_state->renderFinishedSemaphoresDarray = (VkSemaphore*)DarrayCreateWithSize(sizeof(VkSemaphore), MAX_FRAMES_IN_FLIGHT, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: dont use darray
-
         VkSemaphoreCreateInfo semaphoreCreateInfo = {};
         semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
         for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
         {
-            if ((VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->vkAllocator, &vk_state->imageAvailableSemaphoresDarray[i])) ||
-                (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->vkAllocator, &vk_state->renderFinishedSemaphoresDarray[i])))
+            if ((VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->vkAllocator, &vk_state->imageAvailableSemaphores[i])) ||
+                (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &semaphoreCreateInfo, vk_state->vkAllocator, &vk_state->renderFinishedSemaphores[i])))
             {
                 GRFATAL("Failed to create sync objects");
                 return false;
@@ -482,7 +479,7 @@ bool InitializeRenderer()
     if (!CreateSwapchainFramebuffers(vk_state))
         return false;
 
-    vk_state->requestedQueueAcquisitionOperationsDarray = (VkDependencyInfo**)DarrayCreate(sizeof(VkDependencyInfo*), 10, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); /// TODO: change allocator to renderer local allocator (when it exists)
+    vk_state->requestedQueueAcquisitionOperationsDarray = (VkDependencyInfo**)DarrayCreate(sizeof(VkDependencyInfo*), 10, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
 
     Init2DRenderer();
 
@@ -533,10 +530,10 @@ void ShutdownRenderer()
     // ============================================================================================================================================================
     for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
-		if (vk_state->imageAvailableSemaphoresDarray)
-			vkDestroySemaphore(vk_state->device, vk_state->imageAvailableSemaphoresDarray[i], vk_state->vkAllocator);
-		if (vk_state->renderFinishedSemaphoresDarray)
-			vkDestroySemaphore(vk_state->device, vk_state->renderFinishedSemaphoresDarray[i], vk_state->vkAllocator);
+		if (vk_state->imageAvailableSemaphores)
+			vkDestroySemaphore(vk_state->device, vk_state->imageAvailableSemaphores[i], vk_state->vkAllocator);
+		if (vk_state->renderFinishedSemaphores)
+			vkDestroySemaphore(vk_state->device, vk_state->renderFinishedSemaphores[i], vk_state->vkAllocator);
 	}
 
 	if (vk_state->vertexUploadSemaphore.handle)
@@ -547,11 +544,6 @@ void ShutdownRenderer()
 		vkDestroySemaphore(vk_state->device, vk_state->imageUploadSemaphore.handle, vk_state->vkAllocator);
 	if (vk_state->frameSemaphore.handle)
 		vkDestroySemaphore(vk_state->device, vk_state->frameSemaphore.handle, vk_state->vkAllocator);
-
-	if (vk_state->imageAvailableSemaphoresDarray)
-		DarrayDestroy(vk_state->imageAvailableSemaphoresDarray);
-	if (vk_state->renderFinishedSemaphoresDarray)
-		DarrayDestroy(vk_state->renderFinishedSemaphoresDarray);
 
     // ============================================================================================================================================================
     // =================================== Free command buffers ===================================================================================================
@@ -660,7 +652,7 @@ bool RenderFrame()
     vkWaitSemaphores(vk_state->device, &semaphoreWaitInfo, UINT64_MAX);
 
     // Getting the next image from the swapchain (doesn't block the CPU and only blocks the GPU if there's no image available (which only happens in certain present modes with certain buffer counts))
-    VkResult result = vkAcquireNextImageKHR(vk_state->device, vk_state->swapchain, UINT64_MAX, vk_state->imageAvailableSemaphoresDarray[vk_state->currentInFlightFrameIndex], VK_NULL_HANDLE, &vk_state->currentSwapchainImageIndex);
+    VkResult result = vkAcquireNextImageKHR(vk_state->device, vk_state->swapchain, UINT64_MAX, vk_state->imageAvailableSemaphores[vk_state->currentInFlightFrameIndex], VK_NULL_HANDLE, &vk_state->currentSwapchainImageIndex);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
     {
@@ -756,7 +748,7 @@ bool RenderFrame()
     // Swapchain image acquisition semaphore
     waitSemaphores[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
     waitSemaphores[0].pNext = nullptr;
-    waitSemaphores[0].semaphore = vk_state->imageAvailableSemaphoresDarray[vk_state->currentInFlightFrameIndex];
+    waitSemaphores[0].semaphore = vk_state->imageAvailableSemaphores[vk_state->currentInFlightFrameIndex];
     waitSemaphores[0].value = 0;
     waitSemaphores[0].stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
     waitSemaphores[0].deviceIndex = 0;
@@ -787,7 +779,7 @@ bool RenderFrame()
     VkSemaphoreSubmitInfo signalSemaphores[SIGNAL_SEMAPHORE_COUNT] = {};
     signalSemaphores[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
     signalSemaphores[0].pNext = nullptr;
-    signalSemaphores[0].semaphore = vk_state->renderFinishedSemaphoresDarray[vk_state->currentInFlightFrameIndex];
+    signalSemaphores[0].semaphore = vk_state->renderFinishedSemaphores[vk_state->currentInFlightFrameIndex];
     signalSemaphores[0].value = 0;
     signalSemaphores[0].stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
     signalSemaphores[0].deviceIndex = 0;
@@ -808,7 +800,7 @@ bool RenderFrame()
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     presentInfo.pNext = nullptr;
     presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = &vk_state->renderFinishedSemaphoresDarray[vk_state->currentInFlightFrameIndex];
+    presentInfo.pWaitSemaphores = &vk_state->renderFinishedSemaphores[vk_state->currentInFlightFrameIndex];
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = &vk_state->swapchain;
     presentInfo.pImageIndices = &vk_state->currentSwapchainImageIndex;

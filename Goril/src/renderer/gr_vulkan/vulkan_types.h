@@ -91,8 +91,8 @@ typedef struct RendererState
 																	// every frame (actually doing it every frame might be faster, because the space being used on the stack is already in cache)
 
 	// Binary semaphores for synchronizing the swapchain with the screen and the GPU
-	VkSemaphore* imageAvailableSemaphoresDarray;					// Binary semaphores that synchronize swapchain image acquisition TODO: change to static array to remove pointer indirection TODO: change to timeline semaphore once vulkan allows it (hopefully 1.4)
-	VkSemaphore* renderFinishedSemaphoresDarray;					// Binary semaphores that synchronize swapchain image presentation TODO: change to static array to remove pointer indirection TODO: change to timeline semaphore once vulkan allows it (hopefully 1.4)
+	VkSemaphore imageAvailableSemaphores[MAX_FRAMES_IN_FLIGHT];					// Binary semaphores that synchronize swapchain image acquisition TODO: change to timeline semaphore once vulkan allows it (hopefully 1.4)
+	VkSemaphore renderFinishedSemaphores[MAX_FRAMES_IN_FLIGHT];					// Binary semaphores that synchronize swapchain image presentation TODO: change to timeline semaphore once vulkan allows it (hopefully 1.4)
 
 	// Timeline semaphores for synchronizing uploads and 
 	VulkanSemaphore vertexUploadSemaphore;							// Timeline semaphore that synchronizes vertex upload with vertex input
@@ -130,8 +130,8 @@ typedef struct RendererState
 	u32 presentQueueFamilyIndex;									// What it says on the tin
 	VkSurfaceKHR surface;											// Vulkan surface handle
 	VkFormat swapchainFormat;										// Format of the swapchain
-	VkImage* swapchainImagesDarray;									// Images that make up the swapchain (retrieved from the swapchain) TODO: remove pointer indirection TODO: this might become used often once the switch to dynamic renderpasses is made
-	VkImageView* swapchainImageViewsDarray;							// Image views that make up the swapchain (created from swapchain images) TODO: remove pointer indirection TODO: this might become used often once the switch to dynamic renderpasses is made
+	VkImage* swapchainImagesDarray;									// Images that make up the swapchain (retrieved from the swapchain) TODO: change from darray to array TODO: this might become used often once the switch to dynamic renderpasses is made
+	VkImageView* swapchainImageViewsDarray;							// Image views that make up the swapchain (created from swapchain images) TODO: change from darray to array TODO: this might become used often once the switch to dynamic renderpasses is made
 #ifndef GR_DIST
 	VkDebugUtilsMessengerEXT debugMessenger;						// Debug messenger, only exists in debug mode
 #endif // !GR_DIST
