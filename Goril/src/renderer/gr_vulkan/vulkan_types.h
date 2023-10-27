@@ -135,6 +135,7 @@ typedef struct RendererState
 	u32 swapchainImageCount;										// Amount of images in the swapchain
 	VkImage* swapchainImages;										// Images that make up the swapchain (retrieved from the swapchain) TODO: this might become used often once the switch to dynamic renderpasses is made
 	VkImageView* swapchainImageViews;								// Image views that make up the swapchain (created from swapchain images) TODO: this might become used often once the switch to dynamic renderpasses is made
+	Texture defaultTexture;											// Default texture
 #ifndef GR_DIST
 	VkDebugUtilsMessengerEXT debugMessenger;						// Debug messenger, only exists in debug mode
 #endif // !GR_DIST

@@ -3,6 +3,8 @@
 #include "math/math_types.h"
 #include "containers/darray.h"
 
+#define TEXTURE_CHANNELS 4
+
 
 typedef struct Vertex
 {
@@ -17,16 +19,19 @@ typedef struct SpriteInstance
 	u32 textureIndex;
 } SpriteInstance;
 
+// Handle to a vertex buffer
 typedef struct VertexBuffer
 {
 	void* internalState;
 } VertexBuffer;
 
+// Handle to an index buffer
 typedef struct IndexBuffer
 {
 	void* internalState;
 } IndexBuffer;
 
+// Handle to a texture
 typedef struct Texture
 {
 	void* internalState;

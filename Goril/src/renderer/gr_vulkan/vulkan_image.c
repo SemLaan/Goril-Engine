@@ -10,7 +10,17 @@
 
 
 
-bool CreateImage(VulkanCreateImageParameters* pCreateParameters, VkImage* pImage, VkDeviceMemory* pMemory)
+typedef struct VulkanCreateImageParameters
+{
+	u32						width;
+	u32						height;
+	VkFormat				format;
+	VkImageTiling			tiling;
+	VkImageUsageFlags		usage;
+	VkMemoryPropertyFlags	properties;
+} VulkanCreateImageParameters;
+
+static bool CreateImage(VulkanCreateImageParameters* pCreateParameters, VkImage* pImage, VkDeviceMemory* pMemory)
 {
 	VkImageCreateInfo imageCreateInfo = {};
 	imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;

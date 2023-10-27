@@ -14,6 +14,7 @@
 #include "vulkan_swapchain.h"
 #include "vulkan_types.h"
 #include "vulkan_utils.h"
+#include "renderer/texture.h"
 
 // TODO: remove these
 static void Init2DRenderer();
@@ -393,6 +394,8 @@ bool InitializeRenderer()
             return false;
         }
 
+        vk_state->requestedQueueAcquisitionOperationsDarray = DarrayCreate(sizeof(VkDependencyInfo*), 10, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
+
         GRTRACE("Successfully created vulkan queues");
     }
 
@@ -466,6 +469,22 @@ bool InitializeRenderer()
     if (!CreateSwapchain(vk_state))
         return false;
 
+    // ============================================================================================================================================================
+    // ============================ Creating default texture ======================================================================================================
+    // ============================================================================================================================================================
+    {
+        #define DEFAULT_TEXTURE_SIZE 2
+
+        u8 defaultTexturePixels[DEFAULT_TEXTURE_SIZE * DEFAULT_TEXTURE_SIZE * TEXTURE_CHANNELS] = {
+            0, 0, 0, 255,     // pixel 0
+            50, 50, 200, 255, // pixel 1
+            0, 0, 0, 255,     // pixel 2
+            50, 50, 200, 255, // pixel 3
+        };
+
+        vk_state->defaultTexture = TextureCreate(DEFAULT_TEXTURE_SIZE, DEFAULT_TEXTURE_SIZE, defaultTexturePixels);
+    }
+
     // TODO: remove the swapchain framebuffers and renderpass by making it dynamic, also remove this other stuff and add it to the startup of the 2d renderer
     // ========================== Creating renderpass ==============================================
     if (!CreateRenderpass(vk_state))
@@ -478,8 +497,6 @@ bool InitializeRenderer()
     // ======================= Create swapchain framebuffers ============================================
     if (!CreateSwapchainFramebuffers(vk_state))
         return false;
-
-    vk_state->requestedQueueAcquisitionOperationsDarray = (VkDependencyInfo**)DarrayCreate(sizeof(VkDependencyInfo*), 10, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
 
     Init2DRenderer();
 
@@ -505,9 +522,6 @@ void ShutdownRenderer()
     if (vk_state->device)
         vkDeviceWaitIdle(vk_state->device);
 
-    if (vk_state->graphicsQueue.resourcesPendingDestructionDarray)
-        TryDestroyResourcesPendingDestruction();
-
     if (vk_state->requestedQueueAcquisitionOperationsDarray)
         DarrayDestroy(vk_state->requestedQueueAcquisitionOperationsDarray);
 
@@ -521,6 +535,15 @@ void ShutdownRenderer()
     DestroyRenderpass(vk_state);
 
     // ============================================================================================================================================================
+    // ============================ Destroying default texture ======================================================================================================
+    // ============================================================================================================================================================
+    if (vk_state->defaultTexture.internalState)
+        TextureDestroy(vk_state->defaultTexture);
+    
+    if (vk_state->graphicsQueue.resourcesPendingDestructionDarray)
+        TryDestroyResourcesPendingDestruction();
+
+    // ============================================================================================================================================================
     // ====================== Destroying swapchain if it was created ==============================================================================================
     // ============================================================================================================================================================
     DestroySwapchain(vk_state);
@@ -529,21 +552,21 @@ void ShutdownRenderer()
     // ================================ Destroy sync objects if they were created =================================================================================
     // ============================================================================================================================================================
     for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-	{
-		if (vk_state->imageAvailableSemaphores)
-			vkDestroySemaphore(vk_state->device, vk_state->imageAvailableSemaphores[i], vk_state->vkAllocator);
-		if (vk_state->renderFinishedSemaphores)
-			vkDestroySemaphore(vk_state->device, vk_state->renderFinishedSemaphores[i], vk_state->vkAllocator);
-	}
+    {
+        if (vk_state->imageAvailableSemaphores)
+            vkDestroySemaphore(vk_state->device, vk_state->imageAvailableSemaphores[i], vk_state->vkAllocator);
+        if (vk_state->renderFinishedSemaphores)
+            vkDestroySemaphore(vk_state->device, vk_state->renderFinishedSemaphores[i], vk_state->vkAllocator);
+    }
 
-	if (vk_state->vertexUploadSemaphore.handle)
-		vkDestroySemaphore(vk_state->device, vk_state->vertexUploadSemaphore.handle, vk_state->vkAllocator);
-	if (vk_state->indexUploadSemaphore.handle)
-		vkDestroySemaphore(vk_state->device, vk_state->indexUploadSemaphore.handle, vk_state->vkAllocator);
-	if (vk_state->imageUploadSemaphore.handle)
-		vkDestroySemaphore(vk_state->device, vk_state->imageUploadSemaphore.handle, vk_state->vkAllocator);
-	if (vk_state->frameSemaphore.handle)
-		vkDestroySemaphore(vk_state->device, vk_state->frameSemaphore.handle, vk_state->vkAllocator);
+    if (vk_state->vertexUploadSemaphore.handle)
+        vkDestroySemaphore(vk_state->device, vk_state->vertexUploadSemaphore.handle, vk_state->vkAllocator);
+    if (vk_state->indexUploadSemaphore.handle)
+        vkDestroySemaphore(vk_state->device, vk_state->indexUploadSemaphore.handle, vk_state->vkAllocator);
+    if (vk_state->imageUploadSemaphore.handle)
+        vkDestroySemaphore(vk_state->device, vk_state->imageUploadSemaphore.handle, vk_state->vkAllocator);
+    if (vk_state->frameSemaphore.handle)
+        vkDestroySemaphore(vk_state->device, vk_state->frameSemaphore.handle, vk_state->vkAllocator);
 
     // ============================================================================================================================================================
     // =================================== Free command buffers ===================================================================================================
