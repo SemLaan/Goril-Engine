@@ -103,20 +103,19 @@ bool CreateSwapchain(RendererState* state)
 	state->swapchainFormat = format.format;
 	state->swapchainExtent = swapchainExtent;
 
-	u32 swapchainImageCount = 0;
-	vkGetSwapchainImagesKHR(state->device, state->swapchain, &swapchainImageCount, 0);
-	state->swapchainImagesDarray = (VkImage*)DarrayCreateWithSize(sizeof(VkImage), swapchainImageCount, vk_state->rendererBumpAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: dont use darray
-	vkGetSwapchainImagesKHR(state->device, state->swapchain, &swapchainImageCount, state->swapchainImagesDarray);
+	vkGetSwapchainImagesKHR(state->device, state->swapchain, &vk_state->swapchainImageCount, 0);
+	state->swapchainImages = Alloc(vk_state->rendererBumpAllocator, sizeof(*state->swapchainImages) * vk_state->swapchainImageCount, MEM_TAG_RENDERER_SUBSYS);
+	vkGetSwapchainImagesKHR(state->device, state->swapchain, &vk_state->swapchainImageCount, state->swapchainImages);
 
-	state->swapchainImageViewsDarray = (VkImageView*)DarrayCreateWithSize(sizeof(VkImageView), swapchainImageCount, vk_state->rendererBumpAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: dont use darray
+	state->swapchainImageViews = Alloc(vk_state->rendererBumpAllocator, sizeof(*state->swapchainImageViews) * vk_state->swapchainImageCount, MEM_TAG_RENDERER_SUBSYS);
 
-	for (u32 i = 0; i < swapchainImageCount; ++i)
+	for (u32 i = 0; i < vk_state->swapchainImageCount; ++i)
 	{
 		VkImageViewCreateInfo viewCreateInfo = {};
 		viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		viewCreateInfo.pNext = nullptr;
 		viewCreateInfo.flags = 0;
-		viewCreateInfo.image = state->swapchainImagesDarray[i];
+		viewCreateInfo.image = state->swapchainImages[i];
 		viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		viewCreateInfo.format = state->swapchainFormat;
 		viewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -129,7 +128,7 @@ bool CreateSwapchain(RendererState* state)
 		viewCreateInfo.subresourceRange.baseMipLevel = 0;
 		viewCreateInfo.subresourceRange.levelCount = 1;
 
-		if (VK_SUCCESS != vkCreateImageView(state->device, &viewCreateInfo, state->vkAllocator, &state->swapchainImageViewsDarray[i]))
+		if (VK_SUCCESS != vkCreateImageView(state->device, &viewCreateInfo, state->vkAllocator, &state->swapchainImageViews[i]))
 		{
 			GRFATAL("Swapchain image view creation failed");
 			return false;
@@ -141,30 +140,30 @@ bool CreateSwapchain(RendererState* state)
 
 void DestroySwapchain(RendererState* state)
 {
-	if (state->swapchainImageViewsDarray)
+	if (state->swapchainImageViews)
 	{
-		for (u32 i = 0; i < DarrayGetSize(state->swapchainImageViewsDarray); ++i)
+		for (u32 i = 0; i < vk_state->swapchainImageCount; ++i)
 		{
-			vkDestroyImageView(state->device, state->swapchainImageViewsDarray[i], state->vkAllocator);
+			vkDestroyImageView(state->device, state->swapchainImageViews[i], state->vkAllocator);
 		}
 	}
 
 	if (state->swapchain)
 		vkDestroySwapchainKHR(state->device, state->swapchain, state->vkAllocator);
 
-	if (state->swapchainImagesDarray)
-		DarrayDestroy(state->swapchainImagesDarray);
-	if (state->swapchainImageViewsDarray)
-		DarrayDestroy(state->swapchainImageViewsDarray);
+	if (state->swapchainImages)
+		Free(vk_state->rendererBumpAllocator, state->swapchainImages);
+	if (state->swapchainImageViews)
+		Free(vk_state->rendererBumpAllocator, state->swapchainImageViews);
 }
 
 bool CreateSwapchainFramebuffers(RendererState* state)
 {
-	state->swapchainFramebuffersDarray = (VkFramebuffer*)DarrayCreateWithSize(sizeof(VkFramebuffer), DarrayGetSize(state->swapchainImagesDarray), vk_state->rendererBumpAllocator, MEM_TAG_RENDERER_SUBSYS);
+	state->swapchainFramebuffersDarray = DarrayCreateWithSize(sizeof(VkFramebuffer), vk_state->swapchainImageCount, vk_state->rendererBumpAllocator, MEM_TAG_RENDERER_SUBSYS);
 
 	for (u32 i = 0; i < DarrayGetSize(state->swapchainFramebuffersDarray); ++i)
 	{
-		VkImageView attachments[] = { state->swapchainImageViewsDarray[i] };
+		VkImageView attachments[] = { state->swapchainImageViews[i] };
 
 		VkFramebufferCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
