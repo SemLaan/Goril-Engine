@@ -1,7 +1,25 @@
 #include "vulkan_swapchain.h"
 #include "platform/platform.h"
-#include "vulkan_device.h"
 
+
+SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
+{
+	SwapchainSupportDetails details;
+
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+
+	u32 formatCount = 0;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
+	details.formatsDarray = (VkSurfaceFormatKHR*)DarrayCreateWithSize(sizeof(VkSurfaceFormatKHR), formatCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: change from darray to just array
+	vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, (VkSurfaceFormatKHR*)details.formatsDarray);
+
+	u32 presentModeCount = 0;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
+	details.presentModesDarray = (VkPresentModeKHR*)DarrayCreateWithSize(sizeof(VkPresentModeKHR), presentModeCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: change from darray to just array
+	vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, (VkPresentModeKHR*)details.presentModesDarray);
+
+	return details;
+}
 
 
 bool CreateSwapchain(RendererState* state)

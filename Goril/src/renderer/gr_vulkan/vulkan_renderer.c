@@ -8,7 +8,6 @@
 
 #include "vulkan_command_buffer.h"
 #include "vulkan_debug_tools.h"
-#include "vulkan_device.h"
 #include "vulkan_graphics_pipeline.h"
 #include "vulkan_platform.h"
 #include "vulkan_queues.h"
@@ -167,22 +166,171 @@ bool InitializeRenderer()
     requiredDeviceExtensions[requiredDeviceExtensionCount + 2] = VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME;
     requiredDeviceExtensionCount += 3;
 
-    if (!SelectPhysicalDevice(requiredDeviceExtensionCount, requiredDeviceExtensions))
     {
-        return false;
+        vk_state->physicalDevice = VK_NULL_HANDLE;
+
+        u32 deviceCount = 0;
+        vkEnumeratePhysicalDevices(vk_state->instance, &deviceCount, nullptr);
+        if (deviceCount == 0)
+        {
+            GRFATAL("No Vulkan devices found");
+            return false;
+        }
+
+        VkPhysicalDevice* availableDevicesDarray = (VkPhysicalDevice*)DarrayCreateWithSize(sizeof(VkPhysicalDevice), deviceCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: different allocator
+        vkEnumeratePhysicalDevices(vk_state->instance, &deviceCount, availableDevicesDarray);
+
+        /// TODO: better device selection
+        for (u32 i = 0; i < DarrayGetSize(availableDevicesDarray); ++i)
+        {
+            VkPhysicalDeviceProperties properties;
+            vkGetPhysicalDeviceProperties(availableDevicesDarray[i], &properties);
+            bool isDiscrete = properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+            bool extensionsAvailable;
+
+            { // Checking if the device has the required extensions
+                u32 availableExtensionCount = 0;
+                vkEnumerateDeviceExtensionProperties(availableDevicesDarray[i], nullptr, &availableExtensionCount, nullptr);
+                VkExtensionProperties* availableExtensionsDarray = (VkExtensionProperties*)DarrayCreateWithSize(sizeof(VkExtensionProperties), availableExtensionCount, g_Allocators->temporary, MEM_TAG_RENDERER_SUBSYS); // TODO: change from darray to just array
+                vkEnumerateDeviceExtensionProperties(availableDevicesDarray[i], nullptr, &availableExtensionCount, availableExtensionsDarray);
+
+                extensionsAvailable = CheckRequiredExtensions(requiredDeviceExtensionCount, requiredDeviceExtensions, availableExtensionCount, availableExtensionsDarray);
+
+                DarrayDestroy(availableExtensionsDarray);
+            }
+
+            if (isDiscrete && extensionsAvailable)
+            {
+                GRTRACE("Device with required extensions, features and properties found");
+                SwapchainSupportDetails swapchainSupport = QuerySwapchainSupport(availableDevicesDarray[i], vk_state->surface);
+                if (DarrayGetSize(swapchainSupport.formatsDarray) != 0 && DarrayGetSize(swapchainSupport.presentModesDarray) != 0)
+                {
+                    vk_state->physicalDevice = availableDevicesDarray[i];
+                    vk_state->swapchainSupport = swapchainSupport;
+                    break;
+                }
+                DarrayDestroy(swapchainSupport.formatsDarray);
+                DarrayDestroy(swapchainSupport.presentModesDarray);
+            }
+        }
+
+        DarrayDestroy(availableDevicesDarray);
+
+        if (vk_state->physicalDevice == VK_NULL_HANDLE)
+        {
+            GRFATAL("No suitable devices found");
+            return false;
+        }
+
+        GRTRACE("Succesfully selected physical vulkan device");
     }
 
     // ============================================================================================================================================================
     // ================== Getting device queue families ===========================================================================================================
     // ============================================================================================================================================================
-    SelectQueueFamilies(vk_state);
+    {
+        u32 queueFamilyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(vk_state->physicalDevice, &queueFamilyCount, nullptr);
+        VkQueueFamilyProperties* availableQueueFamiliesDarray = (VkQueueFamilyProperties*)DarrayCreateWithSize(sizeof(VkQueueFamilyProperties), queueFamilyCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
+        vkGetPhysicalDeviceQueueFamilyProperties(vk_state->physicalDevice, &queueFamilyCount, availableQueueFamiliesDarray);
+
+        vk_state->transferQueue.index = UINT32_MAX;
+
+        for (u32 i = 0; i < queueFamilyCount; ++i)
+        {
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(vk_state->physicalDevice, i, vk_state->surface, &presentSupport);
+            bool graphicsSupport = availableQueueFamiliesDarray[i].queueFlags & VK_QUEUE_GRAPHICS_BIT;
+            bool transferSupport = availableQueueFamiliesDarray[i].queueFlags & VK_QUEUE_TRANSFER_BIT;
+            if (graphicsSupport)
+                vk_state->graphicsQueue.index = i;
+            if (presentSupport)
+                vk_state->presentQueueFamilyIndex = i;
+            if (transferSupport && !graphicsSupport)
+                vk_state->transferQueue.index = i;
+        }
+
+        if (vk_state->transferQueue.index == UINT32_MAX)
+            vk_state->transferQueue.index = vk_state->graphicsQueue.index;
+        /// TODO: check if the device even has queue families for all these things, if not fail startup (is this even required? i think implementations need at least transfer and graphics(?), and compute and present are implied by the existence of the extensions)
+        DarrayDestroy(availableQueueFamiliesDarray);
+    }
 
     // ============================================================================================================================================================
     // ===================== Creating logical device ==============================================================================================================
     // ============================================================================================================================================================
-    if (!CreateLogicalDevice(vk_state, requiredDeviceExtensionCount, requiredDeviceExtensions, requiredInstanceLayerCount, requiredInstanceLayers))
     {
-        return false;
+        // ===================== Specifying queues for logical device =================================
+        VkDeviceQueueCreateInfo* queueCreateInfosDarray = (VkDeviceQueueCreateInfo*)DarrayCreate(sizeof(VkDeviceQueueCreateInfo), 1, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: switch allocator
+
+        u32* uniqueQueueFamiliesDarray = (u32*)DarrayCreate(sizeof(u32), 5, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: switch allocator
+        if (!DarrayContains(uniqueQueueFamiliesDarray, &vk_state->graphicsQueue.index))
+            uniqueQueueFamiliesDarray = (u32*)DarrayPushback(uniqueQueueFamiliesDarray, &vk_state->graphicsQueue.index);
+        if (!DarrayContains(uniqueQueueFamiliesDarray, &vk_state->presentQueueFamilyIndex))
+            uniqueQueueFamiliesDarray = (u32*)DarrayPushback(uniqueQueueFamiliesDarray, &vk_state->presentQueueFamilyIndex);
+        if (!DarrayContains(uniqueQueueFamiliesDarray, &vk_state->transferQueue.index))
+            uniqueQueueFamiliesDarray = (u32*)DarrayPushback(uniqueQueueFamiliesDarray, &vk_state->transferQueue.index);
+
+        f32 queuePriority = 1.0f;
+
+        for (u32 i = 0; i < DarrayGetSize(uniqueQueueFamiliesDarray); ++i)
+        {
+            VkDeviceQueueCreateInfo queueCreateInfo = {};
+            queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queueCreateInfo.pNext = nullptr;
+            queueCreateInfo.flags = 0;
+            queueCreateInfo.queueFamilyIndex = uniqueQueueFamiliesDarray[i];
+            queueCreateInfo.queueCount = 1;
+            queueCreateInfo.pQueuePriorities = &queuePriority;
+            queueCreateInfosDarray = (VkDeviceQueueCreateInfo*)DarrayPushback(queueCreateInfosDarray, &queueCreateInfo);
+        }
+
+        DarrayDestroy(uniqueQueueFamiliesDarray);
+
+        // ===================== Specifying features for logical device ==============================
+        VkPhysicalDeviceFeatures deviceFeatures = {};
+        /// TODO: add required device features here, these should be retrieved from the application config
+
+        /// Put new extension features above here and make the extension feature under this point to that new feature
+        VkPhysicalDeviceTimelineSemaphoreFeatures timelineSemaphoreFeatures = {};
+        timelineSemaphoreFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES;
+        timelineSemaphoreFeatures.pNext = nullptr;
+        timelineSemaphoreFeatures.timelineSemaphore = VK_TRUE;
+
+        VkPhysicalDeviceSynchronization2Features synchronization2Features = {};
+        synchronization2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
+        synchronization2Features.pNext = &timelineSemaphoreFeatures;
+        synchronization2Features.synchronization2 = VK_TRUE;
+
+        VkPhysicalDeviceFeatures2 deviceFeatures2 = {};
+        deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        deviceFeatures2.pNext = &synchronization2Features;
+        deviceFeatures2.features = deviceFeatures;
+
+        // ===================== Creating logical device =============================================
+        VkDeviceCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        createInfo.pNext = &deviceFeatures2;
+        createInfo.flags = 0;
+        createInfo.queueCreateInfoCount = DarrayGetSize(queueCreateInfosDarray);
+        createInfo.pQueueCreateInfos = queueCreateInfosDarray;
+        createInfo.enabledLayerCount = requiredInstanceLayerCount;
+        createInfo.ppEnabledLayerNames = requiredInstanceLayers;
+        createInfo.enabledExtensionCount = requiredDeviceExtensionCount;
+        createInfo.ppEnabledExtensionNames = requiredDeviceExtensions;
+        createInfo.pEnabledFeatures = nullptr;
+
+        u32 result = vkCreateDevice(vk_state->physicalDevice, &createInfo, vk_state->vkAllocator, &vk_state->device);
+
+        DarrayDestroy(queueCreateInfosDarray);
+
+        if (result != VK_SUCCESS)
+        {
+            GRFATAL("Failed to create Vulkan logical device");
+            return false;
+        }
+
+        GRTRACE("Succesfully created vulkan logical device");
     }
 
     // ============================================================================================================================================================
@@ -295,7 +443,12 @@ void ShutdownRenderer()
     // ============================================================================================================================================================
     // ===================== Destroying logical device if it was created ==========================================================================================
     // ============================================================================================================================================================
-    DestroyLogicalDevice(vk_state);
+    if (vk_state->device)
+        vkDestroyDevice(vk_state->device, vk_state->vkAllocator);
+    if (vk_state->swapchainSupport.formatsDarray)
+        DarrayDestroy(vk_state->swapchainSupport.formatsDarray);
+    if (vk_state->swapchainSupport.presentModesDarray)
+        DarrayDestroy(vk_state->swapchainSupport.presentModesDarray);
 
     // ============================================================================================================================================================
     // ======================= Destroying the surface if it was created ===========================================================================================
