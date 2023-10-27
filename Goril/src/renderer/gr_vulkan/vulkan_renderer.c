@@ -10,7 +10,6 @@
 #include "vulkan_debug_tools.h"
 #include "vulkan_graphics_pipeline.h"
 #include "vulkan_platform.h"
-#include "vulkan_queues.h"
 #include "vulkan_renderpass.h"
 #include "vulkan_swapchain.h"
 #include "vulkan_sync_objects.h"
@@ -336,8 +335,67 @@ bool InitializeRenderer()
     // ============================================================================================================================================================
     // ===================== sets up queues and command pools =====================================================================================================
     // ============================================================================================================================================================
-    if (!CreateQueues())
-        return false;
+    {
+        // =================== Getting the device queues ======================================================
+        // Present family queue
+        vkGetDeviceQueue(vk_state->device, vk_state->presentQueueFamilyIndex, 0, &vk_state->presentQueue);
+
+        /// TODO: get compute queue
+        // Graphics, transfer and (in the future) compute queue
+        vkGetDeviceQueue(vk_state->device, vk_state->graphicsQueue.index, 0, &vk_state->graphicsQueue.handle);
+        vk_state->graphicsQueue.resourcesPendingDestructionDarray = DarrayCreate(sizeof(ResourceDestructionInfo), 20, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
+
+        vkGetDeviceQueue(vk_state->device, vk_state->transferQueue.index, 0, &vk_state->transferQueue.handle);
+        vk_state->transferQueue.resourcesPendingDestructionDarray = DarrayCreate(sizeof(ResourceDestructionInfo), 20, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS);
+
+        // ==================== Creating command pools for each of the queue families =============================
+        VkCommandPoolCreateInfo commandPoolCreateInfo = {};
+        commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        commandPoolCreateInfo.pNext = nullptr;
+        commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        commandPoolCreateInfo.queueFamilyIndex = vk_state->graphicsQueue.index;
+
+        if (VK_SUCCESS != vkCreateCommandPool(vk_state->device, &commandPoolCreateInfo, vk_state->vkAllocator, &vk_state->graphicsQueue.commandPool))
+        {
+            GRFATAL("Failed to create Vulkan graphics command pool");
+            return false;
+        }
+
+        commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+        commandPoolCreateInfo.queueFamilyIndex = vk_state->transferQueue.index;
+
+        if (VK_SUCCESS != vkCreateCommandPool(vk_state->device, &commandPoolCreateInfo, vk_state->vkAllocator, &vk_state->transferQueue.commandPool))
+        {
+            GRFATAL("Failed to create Vulkan transfer command pool");
+            return false;
+        }
+
+        /// TODO: create compute command pool
+
+        // Create semaphores
+        vk_state->graphicsQueue.semaphore.submitValue = 0;
+        vk_state->transferQueue.semaphore.submitValue = 0;
+
+        VkSemaphoreTypeCreateInfo semaphoreTypeInfo = {};
+        semaphoreTypeInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
+        semaphoreTypeInfo.pNext = nullptr;
+        semaphoreTypeInfo.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE;
+        semaphoreTypeInfo.initialValue = 0;
+
+        VkSemaphoreCreateInfo timelineSemaphoreCreateInfo = {};
+        timelineSemaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        timelineSemaphoreCreateInfo.pNext = &semaphoreTypeInfo;
+        timelineSemaphoreCreateInfo.flags = 0;
+
+        if (VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->vkAllocator, &vk_state->graphicsQueue.semaphore.handle) ||
+            VK_SUCCESS != vkCreateSemaphore(vk_state->device, &timelineSemaphoreCreateInfo, vk_state->vkAllocator, &vk_state->transferQueue.semaphore.handle))
+        {
+            GRFATAL("Failed to create sync objects");
+            return false;
+        }
+
+        GRTRACE("Succesfully created vulkan queues");
+    }
 
     // ============================================================================================================================================================
     // ============================ Allocate graphics command buffers =============================================================================================
@@ -438,7 +496,21 @@ void ShutdownRenderer()
     // ============================================================================================================================================================
     // ===================== destroys queues and command pools ====================================================================================================
     // ============================================================================================================================================================
-    DestroyQueues();
+    if (vk_state->graphicsQueue.semaphore.handle)
+		vkDestroySemaphore(vk_state->device, vk_state->graphicsQueue.semaphore.handle, vk_state->vkAllocator);
+	if (vk_state->transferQueue.semaphore.handle)
+		vkDestroySemaphore(vk_state->device, vk_state->transferQueue.semaphore.handle, vk_state->vkAllocator);
+
+	if (vk_state->graphicsQueue.commandPool)
+		vkDestroyCommandPool(vk_state->device, vk_state->graphicsQueue.commandPool, vk_state->vkAllocator);
+
+	if (vk_state->transferQueue.commandPool)
+		vkDestroyCommandPool(vk_state->device, vk_state->transferQueue.commandPool, vk_state->vkAllocator);
+
+	if (vk_state->graphicsQueue.resourcesPendingDestructionDarray)
+		DarrayDestroy(vk_state->graphicsQueue.resourcesPendingDestructionDarray);
+	if (vk_state->transferQueue.resourcesPendingDestructionDarray)
+		DarrayDestroy(vk_state->transferQueue.resourcesPendingDestructionDarray);
 
     // ============================================================================================================================================================
     // ===================== Destroying logical device if it was created ==========================================================================================
