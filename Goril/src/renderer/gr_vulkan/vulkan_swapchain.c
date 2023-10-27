@@ -8,15 +8,13 @@ SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurface
 
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
 
-	u32 formatCount = 0;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
-	details.formatsDarray = (VkSurfaceFormatKHR*)DarrayCreateWithSize(sizeof(VkSurfaceFormatKHR), formatCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: change from darray to just array
-	vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, (VkSurfaceFormatKHR*)details.formatsDarray);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &details.formatCount, nullptr);
+	details.formats = Alloc(vk_state->rendererAllocator, sizeof(*details.formats) * details.formatCount, MEM_TAG_RENDERER_SUBSYS);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &details.formatCount, (VkSurfaceFormatKHR*)details.formats);
 
-	u32 presentModeCount = 0;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
-	details.presentModesDarray = (VkPresentModeKHR*)DarrayCreateWithSize(sizeof(VkPresentModeKHR), presentModeCount, vk_state->rendererAllocator, MEM_TAG_RENDERER_SUBSYS); // TODO: change from darray to just array
-	vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, (VkPresentModeKHR*)details.presentModesDarray);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &details.presentModeCount, nullptr);
+	details.presentModes = Alloc(vk_state->rendererAllocator, sizeof(*details.presentModes) * details.presentModeCount, MEM_TAG_RENDERER_SUBSYS);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &details.presentModeCount, (VkPresentModeKHR*)details.presentModes);
 
 	return details;
 }
@@ -25,19 +23,19 @@ SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurface
 bool CreateSwapchain(RendererState* state)
 {
 	// Getting a swapchain format
-	VkSurfaceFormatKHR format = vk_state->swapchainSupport.formatsDarray[0];
-	for (u32 i = 0; i < DarrayGetSize(vk_state->swapchainSupport.formatsDarray); ++i)
+	VkSurfaceFormatKHR format = vk_state->swapchainSupport.formats[0];
+	for (u32 i = 0; i < vk_state->swapchainSupport.formatCount; ++i)
 	{
-		VkSurfaceFormatKHR availableFormat = vk_state->swapchainSupport.formatsDarray[i];
+		VkSurfaceFormatKHR availableFormat = vk_state->swapchainSupport.formats[i];
 		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
 			format = availableFormat;
 	}
 
 	// Getting a presentation mode
 	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
-	for (u32 i = 0; i < DarrayGetSize(vk_state->swapchainSupport.presentModesDarray); ++i)
+	for (u32 i = 0; i < vk_state->swapchainSupport.presentModeCount; ++i)
 	{
-		VkPresentModeKHR availablePresentMode = vk_state->swapchainSupport.presentModesDarray[i];
+		VkPresentModeKHR availablePresentMode = vk_state->swapchainSupport.presentModes[i];
 		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
 			presentMode = availablePresentMode;
 	}
@@ -46,8 +44,8 @@ bool CreateSwapchain(RendererState* state)
 	vec2i windowSize = GetPlatformWindowSize();
 	VkExtent2D swapchainExtent = { (u32)windowSize.x, (u32)windowSize.y };
 	// Making sure the swapchain isn't too big or too small
-	DarrayDestroy(vk_state->swapchainSupport.formatsDarray);
-	DarrayDestroy(vk_state->swapchainSupport.presentModesDarray);
+	Free(vk_state->rendererAllocator, vk_state->swapchainSupport.formats);
+	Free(vk_state->rendererAllocator, vk_state->swapchainSupport.presentModes);
 	vk_state->swapchainSupport = QuerySwapchainSupport(state->physicalDevice, state->surface);
 	if (swapchainExtent.width > state->swapchainSupport.capabilities.maxImageExtent.width)
 		swapchainExtent.width = state->swapchainSupport.capabilities.maxImageExtent.width;

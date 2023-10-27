@@ -72,8 +72,10 @@ typedef struct CommandBuffer
 typedef struct SwapchainSupportDetails
 {
 	VkSurfaceCapabilitiesKHR capabilities;
-	VkSurfaceFormatKHR* formatsDarray;
-	VkPresentModeKHR* presentModesDarray;
+	u32 formatCount;
+	VkSurfaceFormatKHR* formats;
+	u32 presentModeCount;
+	VkPresentModeKHR* presentModes;
 } SwapchainSupportDetails;
 
 typedef struct RendererState
