@@ -770,13 +770,6 @@ bool RenderFrame()
     vkCmdSetScissor(currentCommandBuffer, 0, 1, &scissor);
 
     // =========================================== Render user submitted scene ================================
-    // TODO: binding descriptor sets and binding the pipeline should probably be a part of the Render2DScene function
-    // Binding global descriptor set
-    vkCmdBindDescriptorSets(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->pipelineLayout, 0, 1, &vk_state->uniformDescriptorSetsDarray[vk_state->currentInFlightFrameIndex], 0, nullptr);
-
-    /// TODO: bind graphics pipeline function (and abstracting graphics pipelines in general)
-    vkCmdBindPipeline(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->graphicsPipeline);
-
     Render2DScene();
 
     // ==================================== End renderpass =================================================

@@ -13,13 +13,6 @@ typedef struct Vertex
 	vec2 texCoord;
 } Vertex;
 
-// TODO: move this to 2d renderer
-typedef struct SpriteInstance
-{
-	mat4 model;
-	u32 textureIndex;
-} SpriteInstance;
-
 // Handle to a vertex buffer
 typedef struct VertexBuffer
 {

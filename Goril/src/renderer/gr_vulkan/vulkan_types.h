@@ -90,8 +90,7 @@ typedef struct RendererState
 	VkImage* swapchainImages;										// Images that make up the swapchain (retrieved from the swapchain)
 	VkImageView* swapchainImageViews;								// Image views that make up the swapchain (created from swapchain images)
 	bool shouldRecreateSwapchain;									// Checked at the start of each renderloop, is set to true upon window resize
-	VkExtent2D swapchainExtent;										// Extent of the swapchain, used for beginning renderpass TODO: make the renderpass info beforehand instead of constructing it 
-																	// every frame (actually doing it every frame might be faster, because the space being used on the stack is already in cache)
+	VkExtent2D swapchainExtent;										// Extent of the swapchain, used for beginning renderpass
 
 	// Binary semaphores for synchronizing the swapchain with the screen and the GPU
 	VkSemaphore imageAvailableSemaphores[MAX_FRAMES_IN_FLIGHT];		// Binary semaphores that synchronize swapchain image acquisition TODO: change to timeline semaphore once vulkan allows it (hopefully 1.4)
@@ -102,17 +101,6 @@ typedef struct RendererState
 	VulkanSemaphore indexUploadSemaphore;							// Timeline semaphore that synchronizes index upload with index input
 	VulkanSemaphore imageUploadSemaphore;							// Timeline semaphore that synchronizes image upload with image usage
 	VulkanSemaphore frameSemaphore;									// Timeline semaphore that synchronizes rendering resources
-
-	// TODO: state that needs to be moved out of the global renderer state
-	VkRenderPass renderpass;										// TODO: factor into 2d renderer and switch to dynamic renderpass
-	VkDescriptorSetLayout descriptorSetLayout;						// TODO: factor into 2d renderer
-	VkBuffer* uniformBuffersDarray;									// TODO: factor into 2d renderer
-	VkDeviceMemory* uniformBuffersMemoryDarray;						// TODO: factor into 2d renderer
-	void** uniformBuffersMappedDarray;								// TODO: factor into 2d renderer
-	VkDescriptorPool uniformDescriptorPool;							// TODO: factor into 2d renderer
-	VkDescriptorSet* uniformDescriptorSetsDarray; 					// TODO: factor into 2d renderer 
-	VkPipelineLayout pipelineLayout;								// TODO: factor into 2d renderer
-	VkPipeline graphicsPipeline;									// TODO: factor into 2d renderer
 
 	// Allocators
 	Allocator* rendererAllocator;									// Global allocator of the renderer subsys

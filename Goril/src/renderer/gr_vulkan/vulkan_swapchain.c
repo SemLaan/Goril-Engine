@@ -133,6 +133,8 @@ bool CreateSwapchain(RendererState* state)
 		}
 	}
 
+	GRTRACE("Vulkan swapchain created");
+
 	return true;
 }
 
