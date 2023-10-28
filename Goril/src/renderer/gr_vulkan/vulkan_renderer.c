@@ -14,10 +14,8 @@
 #include "vulkan_swapchain.h"
 #include "vulkan_types.h"
 #include "vulkan_utils.h"
+#include "vulkan_2D_renderer.h"
 
-// TODO: remove these
-static void Init2DRenderer();
-static void Shutdown2DRenderer();
 
 RendererState* vk_state = nullptr;
 
@@ -490,11 +488,7 @@ bool InitializeRenderer()
         vk_state->defaultTexture = TextureCreate(DEFAULT_TEXTURE_SIZE, DEFAULT_TEXTURE_SIZE, defaultTexturePixels);
     }
 
-    // ======================== Creating graphics pipeline ============================================
-    if (!CreateGraphicsPipeline())
-        return false;
-
-    Init2DRenderer();
+    Initialize2DRenderer();
 
     return true;
 }
@@ -511,18 +505,20 @@ void ShutdownRenderer()
         GRINFO("Shutting down renderer subsystem...");
     }
 
-    Shutdown2DRenderer();
-
     UnregisterEventListener(EVCODE_WINDOW_RESIZED, OnWindowResize);
 
+    // Idling before shutting down the 2d renderer
+    if (vk_state->device)
+        vkDeviceWaitIdle(vk_state->device);
+
+    Shutdown2DRenderer();
+
+    // Idling again before destroying resources, because shutting down the 2d renderer might queue resources to be destroyed again
     if (vk_state->device)
         vkDeviceWaitIdle(vk_state->device);
 
     if (vk_state->requestedQueueAcquisitionOperationsDarray)
         DarrayDestroy(vk_state->requestedQueueAcquisitionOperationsDarray);
-
-    // ====================== Destroying graphics pipeline if it was created ================================
-    DestroyGraphicsPipeline();
 
     // ============================================================================================================================================================
     // ============================ Destroying default texture ======================================================================================================
@@ -634,10 +630,6 @@ void RecreateSwapchain()
     vk_state->shouldRecreateSwapchain = false;
     GRINFO("Vulkan Swapchain resized");
 }
-
-// TODO: change where the actual scene rendering happens
-static void Preprocess2DSceneData();
-static void Render2DScene();
 
 bool RenderFrame()
 {
@@ -897,124 +889,6 @@ bool RenderFrame()
     vk_state->currentInFlightFrameIndex = (vk_state->currentInFlightFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 
     return true;
-}
-
-typedef struct Renderer2DState
-{
-    SceneRenderData2D currentRenderData;
-    GlobalUniformObject currentGlobalUBO;
-    VertexBuffer quadVertexBuffer;
-    VertexBuffer instancedBuffer;
-    IndexBuffer quadIndexBuffer;
-} Renderer2DState;
-
-static Renderer2DState* renderer2DState = nullptr;
-
-static void Init2DRenderer()
-{
-    renderer2DState = Alloc(vk_state->rendererBumpAllocator, sizeof(*renderer2DState), MEM_TAG_RENDERER_SUBSYS);
-
-#define QUAD_VERT_COUNT 4
-    Vertex quadVertices[QUAD_VERT_COUNT] =
-        {
-            {{0, 0, 0}, {0, 0, 0}, {0, 0}},
-            {{0, 1, 0}, {0, 0, 0}, {0, 1}},
-            {{1, 0, 0}, {0, 0, 0}, {1, 0}},
-            {{1, 1, 0}, {0, 0, 0}, {1, 1}},
-        };
-
-    renderer2DState->quadVertexBuffer = VertexBufferCreate(quadVertices, sizeof(quadVertices));
-
-#define QUAD_INDEX_COUNT 6
-    u32 quadIndices[QUAD_INDEX_COUNT] =
-        {
-            0, 1, 2,
-            2, 1, 3};
-
-    renderer2DState->quadIndexBuffer = IndexBufferCreate(quadIndices, QUAD_INDEX_COUNT);
-
-    renderer2DState->instancedBuffer = VertexBufferCreate(nullptr, 100 * sizeof(SpriteInstance));
-}
-
-static void Shutdown2DRenderer()
-{
-    IndexBufferDestroy(renderer2DState->quadIndexBuffer);
-    VertexBufferDestroy(renderer2DState->instancedBuffer);
-    VertexBufferDestroy(renderer2DState->quadVertexBuffer);
-
-    Free(vk_state->rendererBumpAllocator, renderer2DState);
-}
-
-static void Preprocess2DSceneData()
-{
-    // ========================== Preprocessing camera ================================
-    renderer2DState->currentGlobalUBO.projView = renderer2DState->currentRenderData.camera;
-
-    // =========================== preprocessing quads =================================
-    u32 spriteCount = DarrayGetSize(renderer2DState->currentRenderData.spriteRenderInfoDarray);
-    GRASSERT(spriteCount > 0);
-
-    // TODO: bind textures
-    // TODO: set uniforms (textures and camera)
-
-    SpriteInstance* instanceData = Alloc(vk_state->rendererAllocator, sizeof(*instanceData) * spriteCount, MEM_TAG_RENDERER_SUBSYS);
-
-    for (u32 i = 0; i < spriteCount; ++i)
-    {
-        instanceData[i].model = renderer2DState->currentRenderData.spriteRenderInfoDarray[i].model;
-        instanceData[i].textureIndex = 0; // TODO: fill instanced buffer with texture indices
-    }
-
-    VertexBufferUpdate(renderer2DState->instancedBuffer, instanceData, spriteCount * sizeof(*instanceData));
-
-    Free(vk_state->rendererAllocator, instanceData);
-
-    // =============================== Updating descriptor sets ==================================
-    MemCopy(vk_state->uniformBuffersMappedDarray[vk_state->currentInFlightFrameIndex], &renderer2DState->currentGlobalUBO, sizeof(GlobalUniformObject));
-    UpdateDescriptorSets(vk_state->currentInFlightFrameIndex, (VulkanImage*)renderer2DState->currentRenderData.spriteRenderInfoDarray[0].texture.internalState); // TODO: make gfx pipelines configurable
-}
-
-static void Render2DScene()
-{
-    u32 spriteCount = DarrayGetSize(renderer2DState->currentRenderData.spriteRenderInfoDarray);
-
-    VkCommandBuffer currentCommandBuffer = vk_state->graphicsCommandBuffers[vk_state->currentInFlightFrameIndex].handle;
-
-    VulkanVertexBuffer* quadBuffer = renderer2DState->quadVertexBuffer.internalState;
-    VulkanIndexBuffer* indexBuffer = renderer2DState->quadIndexBuffer.internalState;
-    VulkanVertexBuffer* instancedBuffer = renderer2DState->instancedBuffer.internalState;
-
-    VkBuffer vertexBuffers[2] = {quadBuffer->handle, instancedBuffer->handle};
-
-    VkDeviceSize offsets[2] = {0, 0};
-    vkCmdBindVertexBuffers(currentCommandBuffer, 0, 2, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(currentCommandBuffer, indexBuffer->handle, 0, VK_INDEX_TYPE_UINT32);
-
-    vkCmdDrawIndexed(currentCommandBuffer, indexBuffer->indexCount, spriteCount, 0, 0, 0);
-
-    DarrayDestroy(renderer2DState->currentRenderData.spriteRenderInfoDarray);
-}
-
-void Submit2DScene(SceneRenderData2D sceneData)
-{
-    renderer2DState->currentRenderData = sceneData;
-}
-
-void DrawIndexed(VertexBuffer _vertexBuffer, IndexBuffer _indexBuffer, PushConstantObject* pPushConstantValues)
-{
-    VkCommandBuffer currentCommandBuffer = vk_state->graphicsCommandBuffers[vk_state->currentInFlightFrameIndex].handle;
-
-    VulkanVertexBuffer* vertexBuffer = (VulkanVertexBuffer*)_vertexBuffer.internalState;
-    VulkanIndexBuffer* indexBuffer = (VulkanIndexBuffer*)_indexBuffer.internalState;
-
-    VkDeviceSize offsets[] = {0};
-    vkCmdBindVertexBuffers(currentCommandBuffer, 0, 1, &vertexBuffer->handle, offsets);
-
-    vkCmdBindIndexBuffer(currentCommandBuffer, indexBuffer->handle, 0, VK_INDEX_TYPE_UINT32);
-
-    vkCmdPushConstants(currentCommandBuffer, vk_state->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantObject), pPushConstantValues);
-
-    vkCmdDrawIndexed(currentCommandBuffer, (u32)indexBuffer->indexCount, 1, 0, 0, 0);
 }
 
 static bool OnWindowResize(EventCode type, EventData data)

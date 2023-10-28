@@ -6,6 +6,7 @@
 #include <core/timer.h>
 #include <platform/platform.h>
 #include <renderer/renderer.h>
+#include <renderer/2D_renderer.h>
 #include <renderer/texture.h>
 
 Allocator* gameAllocator;

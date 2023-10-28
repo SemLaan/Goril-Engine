@@ -2,6 +2,8 @@
 #include "defines.h"
 #include "buffer.h"
 
+
+// ============================================= Engine functions ====================================================
 bool InitializeRenderer();
 void ShutdownRenderer();
 
@@ -9,7 +11,6 @@ void RecreateSwapchain();
 
 bool RenderFrame();
 
-// Submit 2d scene takes ownership over sceneData
-void Submit2DScene(SceneRenderData2D sceneData);
+// ============================================= Game code functions ====================================================
 
-void DrawIndexed(VertexBuffer vertexBuffer, IndexBuffer indexBuffer, PushConstantObject* pPushConstantValues);
+
