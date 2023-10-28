@@ -8,7 +8,3 @@ SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurface
 bool CreateSwapchain(RendererState* state);
 
 void DestroySwapchain(RendererState* state);
-
-bool CreateSwapchainFramebuffers(RendererState* state);
-
-void DestroySwapchainFramebuffers(RendererState* state);

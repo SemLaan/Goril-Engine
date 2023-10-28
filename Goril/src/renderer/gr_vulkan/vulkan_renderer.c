@@ -11,7 +11,6 @@
 #include "vulkan_debug_tools.h"
 #include "vulkan_graphics_pipeline.h"
 #include "vulkan_platform.h"
-#include "vulkan_renderpass.h"
 #include "vulkan_swapchain.h"
 #include "vulkan_types.h"
 #include "vulkan_utils.h"
@@ -491,17 +490,8 @@ bool InitializeRenderer()
         vk_state->defaultTexture = TextureCreate(DEFAULT_TEXTURE_SIZE, DEFAULT_TEXTURE_SIZE, defaultTexturePixels);
     }
 
-    // TODO: remove the swapchain framebuffers and renderpass by making it dynamic, also remove this other stuff and add it to the startup of the 2d renderer
-    // ========================== Creating renderpass ==============================================
-    if (!CreateRenderpass(vk_state))
-        return false;
-
     // ======================== Creating graphics pipeline ============================================
     if (!CreateGraphicsPipeline())
-        return false;
-
-    // ======================= Create swapchain framebuffers ============================================
-    if (!CreateSwapchainFramebuffers(vk_state))
         return false;
 
     Init2DRenderer();
@@ -531,14 +521,8 @@ void ShutdownRenderer()
     if (vk_state->requestedQueueAcquisitionOperationsDarray)
         DarrayDestroy(vk_state->requestedQueueAcquisitionOperationsDarray);
 
-    // ====================== Destroying swapchain framebuffers if they were created ================================
-    DestroySwapchainFramebuffers(vk_state);
-
     // ====================== Destroying graphics pipeline if it was created ================================
     DestroyGraphicsPipeline();
-
-    // ======================== Destroying renderpass if it was created =====================================
-    DestroyRenderpass(vk_state);
 
     // ============================================================================================================================================================
     // ============================ Destroying default texture ======================================================================================================
@@ -643,11 +627,9 @@ void RecreateSwapchain()
 {
     vkDeviceWaitIdle(vk_state->device);
 
-    DestroySwapchainFramebuffers(vk_state);
     DestroySwapchain(vk_state);
 
     CreateSwapchain(vk_state);
-    CreateSwapchainFramebuffers(vk_state);
 
     vk_state->shouldRecreateSwapchain = false;
     GRINFO("Vulkan Swapchain resized");
@@ -748,23 +730,6 @@ bool RenderFrame()
     }
 
     // ==================================== Begin renderpass ==============================================
-    /// TODO: begin renderpass function and remove renderpass objects
-    VkClearValue clearColor = {};
-    clearColor.color.float32[0] = 0;
-    clearColor.color.float32[1] = 0;
-    clearColor.color.float32[2] = 0;
-    clearColor.color.float32[3] = 1.0f;
-    VkRenderPassBeginInfo renderpassBeginInfo = {};
-    renderpassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderpassBeginInfo.pNext = nullptr;
-    renderpassBeginInfo.renderPass = vk_state->renderpass;
-    renderpassBeginInfo.framebuffer = vk_state->swapchainFramebuffersDarray[vk_state->currentSwapchainImageIndex];
-    renderpassBeginInfo.renderArea.offset.x = 0;
-    renderpassBeginInfo.renderArea.offset.y = 0;
-    renderpassBeginInfo.renderArea.extent = vk_state->swapchainExtent;
-    renderpassBeginInfo.clearValueCount = 1;
-    renderpassBeginInfo.pClearValues = &clearColor;
-
     VkRenderingAttachmentInfo renderingAttachmentInfo = {};
     renderingAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
     renderingAttachmentInfo.pNext = nullptr;
@@ -794,10 +759,8 @@ bool RenderFrame()
     renderingInfo.pDepthAttachment = nullptr;
     renderingInfo.pStencilAttachment = nullptr;
 
-    // vkCmdBeginRenderPass(currentCommandBuffer, &renderpassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBeginRendering(currentCommandBuffer, &renderingInfo);
 
-    // TODO: maybe make this static? (this would mean that all pipelines would have to be recreated upon window resize, but.. who cares? better than at runtime especially since otherwise they have to be set every renderpass)
     // Viewport and scissor
     VkViewport viewport = {};
     viewport.x = 0;
@@ -825,9 +788,7 @@ bool RenderFrame()
     Render2DScene();
 
     // ==================================== End renderpass =================================================
-    /// TODO: end renderpass function
     vkCmdEndRendering(currentCommandBuffer);
-    // vkCmdEndRenderPass(vk_state->graphicsCommandBuffers[vk_state->currentInFlightFrameIndex].handle);
 
     // ====================================== Transition swapchain image to present ready ======================================================
     {

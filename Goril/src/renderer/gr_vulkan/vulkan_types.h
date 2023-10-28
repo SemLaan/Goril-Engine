@@ -84,7 +84,6 @@ typedef struct RendererState
 	VkDevice device;												// Logical device
 	VkSwapchainKHR swapchain;										// Swapchain handle
 	VkQueue presentQueue;											// Present queue handle
-	VkFramebuffer* swapchainFramebuffersDarray;						// TODO: gets removed when i switch to dynamic renderpasses
 	CommandBuffer graphicsCommandBuffers[MAX_FRAMES_IN_FLIGHT]; 	// Command buffers for recording entire frames to the graphics queue
 	u32 currentInFlightFrameIndex;									// Current frame % MAX_FRAMES_IN_FLIGHT
 	u32 currentSwapchainImageIndex;									// Current swapchain image index (current frame % swapchain image count)
