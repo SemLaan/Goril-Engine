@@ -44,6 +44,9 @@ void* MapU64Lookup(HashmapU64* hashmap, u64 key);
 // Returns the deleted element, returns nullptr when the object isn't found
 void* MapU64Delete(HashmapU64* hashmap, u64 key);
 
+// Deletes every entry from the map, the client still owns all the value's in the map
+void MapU64Flush(HashmapU64* hashmap);
+
 // Returns a Darray made with the given allocator, this darray needs to be destroyed by the client of this function
 void** MapU64GetValueDarray(HashmapU64* hashmap, Allocator* allocator);
 

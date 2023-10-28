@@ -131,6 +131,12 @@ void* MapU64Delete(HashmapU64* hashmap, u64 key)
     }
 }
 
+void MapU64Flush(HashmapU64* hashmap)
+{
+    ZeroMem(hashmap->backingArray, sizeof(MapEntryU64) * hashmap->backingArrayElementCount);
+    FlushPoolAllocator(hashmap->linkedEntryPool);
+}
+
 void** MapU64GetValueDarray(HashmapU64* hashmap, Allocator* allocator)
 {
     // Assume we have at least a few elements in the hashmap, so starting the darray from zero would cause a lot of unnecessary resizes at the start
