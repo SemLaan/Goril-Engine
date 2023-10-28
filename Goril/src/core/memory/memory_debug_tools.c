@@ -301,6 +301,33 @@ void _UnregisterAllocator(u32 allocatorId, AllocatorType allocatorType)
     GRASSERT_MSG(false, "Tried to destroy allocator that wasn't found");
 }
 
+// =========================================== Flushing an allocator =======================================================
+void _DebugFlushAllocator(Allocator* allocator)
+{
+    MapEntryU64** mapEntriesDarray = (AllocInfo**)MapU64GetValueDarray(state->allocationsMap, memoryDebugAllocator);
+
+    RegisteredAllocatorInfo* allocatedWithAllocator;
+
+    GRINFO("All active allocations:");
+    for (u32 i = 0; i < DarrayGetSize(mapEntriesDarray); ++i)
+    {
+        MapEntryU64* mapEntry = mapEntriesDarray[i];
+        AllocInfo* allocInfo = mapEntry->value;
+
+        if (allocator->id == allocInfo->allocatorId)
+        {
+            state->totalUserAllocationCount--;
+            state->totalUserAllocated -= allocInfo->allocSize;
+            state->perTagAllocated[allocInfo->tag] -= allocInfo->allocSize;
+            state->perTagAllocationCount[allocInfo->tag]--;
+            Free(state->allocInfoPool, allocInfo);
+            MapU64Delete(state->allocationsMap, mapEntry->key);
+        }
+    }
+
+    DarrayDestroy(mapEntriesDarray);
+}
+
 // ============================================= Debug alloc, realloc and free hook-ins =====================================
 void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag memtag, const char* file, u32 line)
 {
@@ -448,17 +475,17 @@ void DebugFree(Allocator* allocator, void* block, const char* file, u32 line)
             GRFATAL("Correct allocator: %s", allocatorName);
             GRASSERT(false);
         }
-        
+
         state->totalUserAllocationCount--;
         state->totalUserAllocated -= allocInfo->allocSize;
         state->perTagAllocated[allocInfo->tag] -= allocInfo->allocSize;
         state->perTagAllocationCount[allocInfo->tag]--;
-        allocator->BackendFree(allocator, block);
+        Free(state->allocInfoPool, allocInfo);
 
         if (allocator->id == state->markedAllocatorId)
             _aligned_free(block);
         else
-            Free(state->allocInfoPool, allocInfo);
+            allocator->BackendFree(allocator, block);
     }
 }
 

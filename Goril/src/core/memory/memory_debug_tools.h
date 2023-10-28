@@ -13,6 +13,7 @@
 
 #define REGISTER_ALLOCATOR(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator, name, allocator)
 #define UNREGISTER_ALLOCATOR(allocatorId, allocatorType)
+#define DEBUG_FLUSH_ALLOCATOR(pAllocator)
 
 #endif
 
@@ -63,13 +64,14 @@ void _MarkAllocator(Allocator* allocator);
 
 void _RegisterAllocator(u64 arenaStart, u64 arenaEnd, u32 stateSize, u32* out_allocatorId, AllocatorType type, Allocator* parentAllocator, const char* name, Allocator* allocator);
 void _UnregisterAllocator(u32 allocatorId, AllocatorType allocatorType);
+void _DebugFlushAllocator(Allocator* allocator);
 
-#define REGISTER_ALLOCATOR(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator, name, allocator) _RegisterAllocator(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator, name, allocator);
-#define UNREGISTER_ALLOCATOR(allocatorId, allocatorType) _UnregisterAllocator(allocatorId, allocatorType);
+#define REGISTER_ALLOCATOR(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator, name, allocator) _RegisterAllocator(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator, name, allocator)
+#define UNREGISTER_ALLOCATOR(allocatorId, allocatorType) _UnregisterAllocator(allocatorId, allocatorType)
+#define DEBUG_FLUSH_ALLOCATOR(pAllocator) _DebugFlushAllocator(pAllocator)
 
 void* DebugAlignedAlloc(Allocator* allocator, u64 size, u32 alignment, MemTag memtag, const char* file, u32 line);
 void* DebugRealloc(Allocator* allocator, void* block, u64 newSize, const char* file, u32 line);
 void DebugFree(Allocator* allocator, void* block, const char* file, u32 line);
-
 
 #endif
