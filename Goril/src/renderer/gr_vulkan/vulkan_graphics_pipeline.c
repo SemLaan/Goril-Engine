@@ -290,9 +290,19 @@ bool CreateGraphicsPipeline()
         return false;
     }
 
+    // Render target
+    VkPipelineRenderingCreateInfo pipelineRenderingCreateInfo = {};
+    pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+    pipelineRenderingCreateInfo.pNext = nullptr;
+    pipelineRenderingCreateInfo.viewMask = 0;
+    pipelineRenderingCreateInfo.colorAttachmentCount = 1;
+    pipelineRenderingCreateInfo.pColorAttachmentFormats = &vk_state->swapchainFormat;
+    pipelineRenderingCreateInfo.depthAttachmentFormat = 0;
+    pipelineRenderingCreateInfo.stencilAttachmentFormat = 0;
+
     VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
     graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    graphicsPipelineCreateInfo.pNext = nullptr;
+    graphicsPipelineCreateInfo.pNext = &pipelineRenderingCreateInfo;
     graphicsPipelineCreateInfo.flags = 0;
     graphicsPipelineCreateInfo.stageCount = 2;
     graphicsPipelineCreateInfo.pStages = shaderStagesCreateInfo;
@@ -306,7 +316,7 @@ bool CreateGraphicsPipeline()
     graphicsPipelineCreateInfo.pColorBlendState = &blendStateCreateInfo;
     graphicsPipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
     graphicsPipelineCreateInfo.layout = vk_state->pipelineLayout;
-    graphicsPipelineCreateInfo.renderPass = vk_state->renderpass;
+    graphicsPipelineCreateInfo.renderPass = nullptr;
     graphicsPipelineCreateInfo.subpass = 0;
     graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
     graphicsPipelineCreateInfo.basePipelineIndex = -1;
@@ -323,7 +333,7 @@ bool CreateGraphicsPipeline()
     vkDestroyShaderModule(vk_state->device, fragShaderModule, vk_state->vkAllocator);
 
     // =============================== Initialize descriptor sets ====================================================
-	/*for (u32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    /*for (u32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         VkDescriptorBufferInfo descriptorBufferInfo = {};
         descriptorBufferInfo.buffer = vk_state->uniformBuffersDarray[i];
@@ -398,13 +408,13 @@ void UpdateDescriptorSets(u32 index, VulkanImage* image)
     descriptorBufferInfo.range = sizeof(GlobalUniformObject);
 
     VkDescriptorImageInfo descriptorImageInfos[COMBINED_IMAGE_SAMPLERS_ARRAY_SIZE];
-	for (u32 i = 0; i < COMBINED_IMAGE_SAMPLERS_ARRAY_SIZE; ++i)
-	{
-		descriptorImageInfos[i].sampler = image->sampler;
-    	descriptorImageInfos[i].imageView = image->view;
-    	descriptorImageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	}
-    
+    for (u32 i = 0; i < COMBINED_IMAGE_SAMPLERS_ARRAY_SIZE; ++i)
+    {
+        descriptorImageInfos[i].sampler = image->sampler;
+        descriptorImageInfos[i].imageView = image->view;
+        descriptorImageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    }
+
     VkWriteDescriptorSet descriptorWrites[2] = {};
     descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     descriptorWrites[0].pNext = nullptr;

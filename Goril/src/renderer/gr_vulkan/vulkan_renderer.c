@@ -6,6 +6,7 @@
 #include "core/logger.h"
 #include "core/meminc.h"
 
+#include "renderer/texture.h"
 #include "vulkan_command_buffer.h"
 #include "vulkan_debug_tools.h"
 #include "vulkan_graphics_pipeline.h"
@@ -14,7 +15,6 @@
 #include "vulkan_swapchain.h"
 #include "vulkan_types.h"
 #include "vulkan_utils.h"
-#include "renderer/texture.h"
 
 // TODO: remove these
 static void Init2DRenderer();
@@ -163,7 +163,8 @@ bool InitializeRenderer()
     requiredDeviceExtensions[requiredDeviceExtensionCount + 0] = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
     requiredDeviceExtensions[requiredDeviceExtensionCount + 1] = VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME;
     requiredDeviceExtensions[requiredDeviceExtensionCount + 2] = VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME;
-    requiredDeviceExtensionCount += 3;
+    requiredDeviceExtensions[requiredDeviceExtensionCount + 3] = VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME;
+    requiredDeviceExtensionCount += 4;
 
     {
         vk_state->physicalDevice = VK_NULL_HANDLE;
@@ -291,9 +292,14 @@ bool InitializeRenderer()
         /// TODO: add required device features here, these should be retrieved from the application config
 
         /// Put new extension features above here and make the extension feature under this point to that new feature
+        VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeatures = {};
+        dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
+        dynamicRenderingFeatures.pNext = nullptr;
+        dynamicRenderingFeatures.dynamicRendering = VK_TRUE;
+
         VkPhysicalDeviceTimelineSemaphoreFeatures timelineSemaphoreFeatures = {};
         timelineSemaphoreFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES;
-        timelineSemaphoreFeatures.pNext = nullptr;
+        timelineSemaphoreFeatures.pNext = &dynamicRenderingFeatures;
         timelineSemaphoreFeatures.timelineSemaphore = VK_TRUE;
 
         VkPhysicalDeviceSynchronization2Features synchronization2Features = {};
@@ -473,7 +479,7 @@ bool InitializeRenderer()
     // ============================ Creating default texture ======================================================================================================
     // ============================================================================================================================================================
     {
-        #define DEFAULT_TEXTURE_SIZE 2
+#define DEFAULT_TEXTURE_SIZE 2
 
         u8 defaultTexturePixels[DEFAULT_TEXTURE_SIZE * DEFAULT_TEXTURE_SIZE * TEXTURE_CHANNELS] = {
             0, 0, 0, 255,     // pixel 0
@@ -539,7 +545,7 @@ void ShutdownRenderer()
     // ============================================================================================================================================================
     if (vk_state->defaultTexture.internalState)
         TextureDestroy(vk_state->defaultTexture);
-    
+
     if (vk_state->graphicsQueue.resourcesPendingDestructionDarray)
         TryDestroyResourcesPendingDestruction();
 
@@ -709,6 +715,38 @@ bool RenderFrame()
 
     DarraySetSize(vk_state->requestedQueueAcquisitionOperationsDarray, 0);
 
+    // ====================================== Transition swapchain image to render attachment ======================================================
+    {
+        VkImageMemoryBarrier2 rendertargetTransitionImageBarrierInfo = {};
+        rendertargetTransitionImageBarrierInfo.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
+        rendertargetTransitionImageBarrierInfo.pNext = nullptr;
+        rendertargetTransitionImageBarrierInfo.srcStageMask = VK_PIPELINE_STAGE_2_NONE;
+        rendertargetTransitionImageBarrierInfo.srcAccessMask = VK_ACCESS_2_NONE;
+        rendertargetTransitionImageBarrierInfo.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+        rendertargetTransitionImageBarrierInfo.dstAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT;
+        rendertargetTransitionImageBarrierInfo.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        rendertargetTransitionImageBarrierInfo.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        rendertargetTransitionImageBarrierInfo.srcQueueFamilyIndex = 0;
+        rendertargetTransitionImageBarrierInfo.dstQueueFamilyIndex = 0;
+        rendertargetTransitionImageBarrierInfo.image = vk_state->swapchainImages[vk_state->currentSwapchainImageIndex];
+        rendertargetTransitionImageBarrierInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        rendertargetTransitionImageBarrierInfo.subresourceRange.baseMipLevel = 0;
+        rendertargetTransitionImageBarrierInfo.subresourceRange.levelCount = 1;
+        rendertargetTransitionImageBarrierInfo.subresourceRange.baseArrayLayer = 0;
+        rendertargetTransitionImageBarrierInfo.subresourceRange.layerCount = 1;
+
+        VkDependencyInfo rendertargetTransitionDependencyInfo = {};
+        rendertargetTransitionDependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+        rendertargetTransitionDependencyInfo.pNext = nullptr;
+        rendertargetTransitionDependencyInfo.dependencyFlags = 0;
+        rendertargetTransitionDependencyInfo.memoryBarrierCount = 0;
+        rendertargetTransitionDependencyInfo.bufferMemoryBarrierCount = 0;
+        rendertargetTransitionDependencyInfo.imageMemoryBarrierCount = 1;
+        rendertargetTransitionDependencyInfo.pImageMemoryBarriers = &rendertargetTransitionImageBarrierInfo;
+
+        vkCmdPipelineBarrier2(currentCommandBuffer, &rendertargetTransitionDependencyInfo);
+    }
+
     // ==================================== Begin renderpass ==============================================
     /// TODO: begin renderpass function and remove renderpass objects
     VkClearValue clearColor = {};
@@ -727,7 +765,37 @@ bool RenderFrame()
     renderpassBeginInfo.clearValueCount = 1;
     renderpassBeginInfo.pClearValues = &clearColor;
 
-    vkCmdBeginRenderPass(currentCommandBuffer, &renderpassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+    VkRenderingAttachmentInfo renderingAttachmentInfo = {};
+    renderingAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+    renderingAttachmentInfo.pNext = nullptr;
+    renderingAttachmentInfo.imageView = vk_state->swapchainImageViews[vk_state->currentSwapchainImageIndex];
+    renderingAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    renderingAttachmentInfo.resolveMode = 0;
+    renderingAttachmentInfo.resolveImageView = nullptr;
+    renderingAttachmentInfo.resolveImageLayout = 0;
+    renderingAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    renderingAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    renderingAttachmentInfo.clearValue.color.float32[0] = 0;
+    renderingAttachmentInfo.clearValue.color.float32[1] = 0;
+    renderingAttachmentInfo.clearValue.color.float32[2] = 0;
+    renderingAttachmentInfo.clearValue.color.float32[3] = 1.0f;
+
+    VkRenderingInfo renderingInfo = {};
+    renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+    renderingInfo.pNext = nullptr;
+    renderingInfo.flags = 0;
+    renderingInfo.renderArea.offset.x = 0;
+    renderingInfo.renderArea.offset.y = 0;
+    renderingInfo.renderArea.extent = vk_state->swapchainExtent;
+    renderingInfo.layerCount = 1;
+    renderingInfo.viewMask = 0;
+    renderingInfo.colorAttachmentCount = 1;
+    renderingInfo.pColorAttachments = &renderingAttachmentInfo;
+    renderingInfo.pDepthAttachment = nullptr;
+    renderingInfo.pStencilAttachment = nullptr;
+
+    // vkCmdBeginRenderPass(currentCommandBuffer, &renderpassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBeginRendering(currentCommandBuffer, &renderingInfo);
 
     // TODO: maybe make this static? (this would mean that all pipelines would have to be recreated upon window resize, but.. who cares? better than at runtime especially since otherwise they have to be set every renderpass)
     // Viewport and scissor
@@ -758,7 +826,40 @@ bool RenderFrame()
 
     // ==================================== End renderpass =================================================
     /// TODO: end renderpass function
-    vkCmdEndRenderPass(vk_state->graphicsCommandBuffers[vk_state->currentInFlightFrameIndex].handle);
+    vkCmdEndRendering(currentCommandBuffer);
+    // vkCmdEndRenderPass(vk_state->graphicsCommandBuffers[vk_state->currentInFlightFrameIndex].handle);
+
+    // ====================================== Transition swapchain image to present ready ======================================================
+    {
+        VkImageMemoryBarrier2 rendertargetTransitionImageBarrierInfo = {};
+        rendertargetTransitionImageBarrierInfo.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
+        rendertargetTransitionImageBarrierInfo.pNext = nullptr;
+        rendertargetTransitionImageBarrierInfo.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+        rendertargetTransitionImageBarrierInfo.srcAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT;
+        rendertargetTransitionImageBarrierInfo.dstStageMask = VK_PIPELINE_STAGE_2_NONE;
+        rendertargetTransitionImageBarrierInfo.dstAccessMask = VK_ACCESS_2_NONE;
+        rendertargetTransitionImageBarrierInfo.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        rendertargetTransitionImageBarrierInfo.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        rendertargetTransitionImageBarrierInfo.srcQueueFamilyIndex = 0;
+        rendertargetTransitionImageBarrierInfo.dstQueueFamilyIndex = 0;
+        rendertargetTransitionImageBarrierInfo.image = vk_state->swapchainImages[vk_state->currentSwapchainImageIndex];
+        rendertargetTransitionImageBarrierInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        rendertargetTransitionImageBarrierInfo.subresourceRange.baseMipLevel = 0;
+        rendertargetTransitionImageBarrierInfo.subresourceRange.levelCount = 1;
+        rendertargetTransitionImageBarrierInfo.subresourceRange.baseArrayLayer = 0;
+        rendertargetTransitionImageBarrierInfo.subresourceRange.layerCount = 1;
+
+        VkDependencyInfo rendertargetTransitionDependencyInfo = {};
+        rendertargetTransitionDependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+        rendertargetTransitionDependencyInfo.pNext = nullptr;
+        rendertargetTransitionDependencyInfo.dependencyFlags = 0;
+        rendertargetTransitionDependencyInfo.memoryBarrierCount = 0;
+        rendertargetTransitionDependencyInfo.bufferMemoryBarrierCount = 0;
+        rendertargetTransitionDependencyInfo.imageMemoryBarrierCount = 1;
+        rendertargetTransitionDependencyInfo.pImageMemoryBarriers = &rendertargetTransitionImageBarrierInfo;
+
+        vkCmdPipelineBarrier2(currentCommandBuffer, &rendertargetTransitionDependencyInfo);
+    }
 
     // ================================= End command buffer recording ==================================================
     EndCommandBuffer(vk_state->graphicsCommandBuffers[vk_state->currentInFlightFrameIndex]);

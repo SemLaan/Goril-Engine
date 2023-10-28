@@ -88,6 +88,8 @@ typedef struct RendererState
 	CommandBuffer graphicsCommandBuffers[MAX_FRAMES_IN_FLIGHT]; 	// Command buffers for recording entire frames to the graphics queue
 	u32 currentInFlightFrameIndex;									// Current frame % MAX_FRAMES_IN_FLIGHT
 	u32 currentSwapchainImageIndex;									// Current swapchain image index (current frame % swapchain image count)
+	VkImage* swapchainImages;										// Images that make up the swapchain (retrieved from the swapchain)
+	VkImageView* swapchainImageViews;								// Image views that make up the swapchain (created from swapchain images)
 	bool shouldRecreateSwapchain;									// Checked at the start of each renderloop, is set to true upon window resize
 	VkExtent2D swapchainExtent;										// Extent of the swapchain, used for beginning renderpass TODO: make the renderpass info beforehand instead of constructing it 
 																	// every frame (actually doing it every frame might be faster, because the space being used on the stack is already in cache)
@@ -133,8 +135,6 @@ typedef struct RendererState
 	VkSurfaceKHR surface;											// Vulkan surface handle
 	VkFormat swapchainFormat;										// Format of the swapchain
 	u32 swapchainImageCount;										// Amount of images in the swapchain
-	VkImage* swapchainImages;										// Images that make up the swapchain (retrieved from the swapchain) TODO: this might become used often once the switch to dynamic renderpasses is made
-	VkImageView* swapchainImageViews;								// Image views that make up the swapchain (created from swapchain images) TODO: this might become used often once the switch to dynamic renderpasses is made
 	Texture defaultTexture;											// Default texture
 #ifndef GR_DIST
 	VkDebugUtilsMessengerEXT debugMessenger;						// Debug messenger, only exists in debug mode
