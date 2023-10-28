@@ -304,11 +304,8 @@ void _UnregisterAllocator(u32 allocatorId, AllocatorType allocatorType)
 // =========================================== Flushing an allocator =======================================================
 void _DebugFlushAllocator(Allocator* allocator)
 {
-    MapEntryU64** mapEntriesDarray = (AllocInfo**)MapU64GetValueDarray(state->allocationsMap, memoryDebugAllocator);
+    MapEntryU64** mapEntriesDarray = MapU64GetMapEntryDarray(state->allocationsMap, memoryDebugAllocator);
 
-    RegisteredAllocatorInfo* allocatedWithAllocator;
-
-    GRINFO("All active allocations:");
     for (u32 i = 0; i < DarrayGetSize(mapEntriesDarray); ++i)
     {
         MapEntryU64* mapEntry = mapEntriesDarray[i];
