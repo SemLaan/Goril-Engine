@@ -51,4 +51,5 @@ u64 GetBumpAllocatorArenaUsage(Allocator* allocator);
 // all blocks created by this allocator are aligned on allocSize (provided it is a power of two)
 void CreatePoolAllocator(const char* name, Allocator* parentAllocator, u32 blockSize, u32 poolSize, Allocator** out_allocator);
 void DestroyPoolAllocator(Allocator* allocator);
+void FlushPoolAllocator(Allocator* allocator);
 u64 GetPoolAllocatorArenaUsage(Allocator* allocator);

@@ -581,6 +581,18 @@ void DestroyPoolAllocator(Allocator* allocator)
     Free(allocator->parentAllocator, allocator);
 }
 
+void FlushPoolAllocator(Allocator* allocator)
+{
+    PoolAllocatorState* state = (PoolAllocatorState*)allocator->backendState;
+
+    DEBUG_FLUSH_ALLOCATOR(allocator);
+
+    for (u32 i = 0; i < state->controlBlockCount; ++i)
+	{
+		state->controlBlocks[i] = 0;
+	}
+}
+
 // From: http://tekpool.wordpress.com/category/bit-count/
 u32 BitCount(u32 u)
 {
