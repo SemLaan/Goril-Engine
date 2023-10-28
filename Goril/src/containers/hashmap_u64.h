@@ -46,3 +46,6 @@ void* MapU64Delete(HashmapU64* hashmap, u64 key);
 
 // Returns a Darray made with the given allocator, this darray needs to be destroyed by the client of this function
 void** MapU64GetValueDarray(HashmapU64* hashmap, Allocator* allocator);
+
+// Returns a Darray made with the given allocator, this darray needs to be destroyed by the client of this function
+MapEntryU64** MapU64GetMapEntryDarray(HashmapU64* hashmap, Allocator* allocator);

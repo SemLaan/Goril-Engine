@@ -157,3 +157,25 @@ void** MapU64GetValueDarray(HashmapU64* hashmap, Allocator* allocator)
     return valuesDarray;
 }
 
+MapEntryU64** MapU64GetMapEntryDarray(HashmapU64* hashmap, Allocator* allocator)
+{
+    MapEntryU64** entriesDarray = DarrayCreate(sizeof(*entriesDarray), ARBITRARY_DARRAY_START_CAPACITY, allocator, MEM_TAG_HASHMAP);
+
+    for (u32 i = 0; i < hashmap->backingArrayElementCount; ++i)
+    {
+        MapEntryU64* item = hashmap->backingArray + i;
+        
+        if (item->value)
+        {
+            entriesDarray = DarrayPushback(entriesDarray, &item);
+
+            while (item->next)
+            {
+                item = item->next;
+                entriesDarray = DarrayPushback(entriesDarray, &item);
+            }
+        }
+    }
+
+    return entriesDarray;
+}
