@@ -9,7 +9,6 @@
 #include "renderer/texture.h"
 #include "vulkan_command_buffer.h"
 #include "vulkan_debug_tools.h"
-#include "vulkan_graphics_pipeline.h"
 #include "vulkan_platform.h"
 #include "vulkan_swapchain.h"
 #include "vulkan_types.h"

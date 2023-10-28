@@ -5,7 +5,6 @@
 #include "core/asserts.h"
 #include "renderer/renderer.h"
 #include "vulkan_buffer.h"
-#include "vulkan_graphics_pipeline.h"
 #include "vulkan_shader_loader.h"
 #include "containers/hashmap_u64.h"
 #include "containers/darray.h"
