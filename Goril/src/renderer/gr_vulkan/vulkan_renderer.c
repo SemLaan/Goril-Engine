@@ -475,14 +475,33 @@ bool InitializeRenderer()
     // ============================ Creating default texture ======================================================================================================
     // ============================================================================================================================================================
     {
-#define DEFAULT_TEXTURE_SIZE 2
+#define DEFAULT_TEXTURE_SIZE 256
 
-        u8 defaultTexturePixels[DEFAULT_TEXTURE_SIZE * DEFAULT_TEXTURE_SIZE * TEXTURE_CHANNELS] = {
-            0, 0, 0, 255,     // pixel 0
-            50, 50, 200, 255, // pixel 1
-            0, 0, 0, 255,     // pixel 2
-            50, 50, 200, 255, // pixel 3
-        };
+        const u32 defaultTexturePixelCount = DEFAULT_TEXTURE_SIZE * DEFAULT_TEXTURE_SIZE;
+        u8 defaultTexturePixels[DEFAULT_TEXTURE_SIZE * DEFAULT_TEXTURE_SIZE * TEXTURE_CHANNELS] = {};
+
+        const u32 halfOfTexturePixels = defaultTexturePixelCount / 2;
+
+        for (u32 i = 0; i < defaultTexturePixelCount * TEXTURE_CHANNELS; i += TEXTURE_CHANNELS)
+        {
+            u32 pixelIndex = i / TEXTURE_CHANNELS;
+
+            if ((pixelIndex < halfOfTexturePixels && (pixelIndex % DEFAULT_TEXTURE_SIZE) < (DEFAULT_TEXTURE_SIZE / 2)) ||
+                (pixelIndex >= halfOfTexturePixels && (pixelIndex % DEFAULT_TEXTURE_SIZE) >= (DEFAULT_TEXTURE_SIZE / 2)))
+            {
+                defaultTexturePixels[i + 0] = 150;
+                defaultTexturePixels[i + 1] = 50;
+                defaultTexturePixels[i + 2] = 200;
+                defaultTexturePixels[i + 3] = 255;
+            }
+            else 
+            {
+                defaultTexturePixels[i + 0] = 0;
+                defaultTexturePixels[i + 1] = 0;
+                defaultTexturePixels[i + 2] = 0;
+                defaultTexturePixels[i + 3] = 255;
+            }
+        }
 
         vk_state->defaultTexture = TextureCreate(DEFAULT_TEXTURE_SIZE, DEFAULT_TEXTURE_SIZE, defaultTexturePixels);
     }
