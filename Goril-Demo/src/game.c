@@ -23,11 +23,9 @@ bool Init()
     vec2i windowSize = GetPlatformWindowSize();
     float windowAspectRatio = windowSize.x / (float)windowSize.y;
     i32 orthoWidth = 20;
-    gamestate->proj = mat4_orthographic(-orthoWidth / 2, orthoWidth / 2, -orthoWidth / 2 / windowAspectRatio, orthoWidth / 2 / windowAspectRatio, 0.1f, 1000.0f);
-    gamestate->view = mat4_identity();
-    gamestate->camPosition = (vec3){0, 0, 10};
-    // Create the rotation matrix
-    gamestate->camRotation = mat4_rotate_xyz((vec3){0, PI, 0});
+    gamestate->camera = CameraCreateOrthographic(-orthoWidth / 2, orthoWidth / 2, -orthoWidth / 2 / windowAspectRatio, orthoWidth / 2 / windowAspectRatio, 0.1f, 1000.0f);
+    CameraSetPosition(&gamestate->camera, (vec3){0, 0, 10});
+    CameraSetRotation(&gamestate->camera, (vec3){0, PI, 0});
 
 // =========================== Creating the texture =============================================================
 #define textureSize 100
@@ -62,25 +60,20 @@ bool Shutdown()
 bool Update()
 {
     // Updating camera position based on player movement
-    vec3 rightVector = {gamestate->camRotation.values[0][0], gamestate->camRotation.values[1][0], gamestate->camRotation.values[2][0]};
     vec3 frameMovement = {};
     if (GetKeyDown(KEY_A))
-        frameMovement = vec3_add_vec3(frameMovement, rightVector);
+        frameMovement.x -= 1;
     if (GetKeyDown(KEY_D))
-        frameMovement = vec3_min_vec3(frameMovement, rightVector);
+        frameMovement.x += 1;
     if (GetKeyDown(KEY_S))
         frameMovement.y -= 1;
     if (GetKeyDown(KEY_W))
         frameMovement.y += 1;
-    gamestate->camPosition = vec3_add_vec3(gamestate->camPosition, vec3_div_float(frameMovement, 300.f));
-
-    // Updating the view matrix based on new camera position
-    mat4 translate = mat4_translate(gamestate->camPosition);
-    gamestate->view = mat4_mul_mat4(gamestate->camRotation, translate);
+    CameraSetPosition(&gamestate->camera, vec3_add_vec3(CameraGetPosition(&gamestate->camera), vec3_div_float(frameMovement, 300.f)));
 
     // Submitting the scene for rendering
     SceneRenderData2D sceneData = {};
-    sceneData.camera = mat4_mul_mat4(gamestate->proj, gamestate->view);
+    sceneData.camera = CameraGetProjectionView(&gamestate->camera);
     sceneData.spriteRenderInfoDarray = DarrayCreate(sizeof(*sceneData.spriteRenderInfoDarray), 1, GetGlobalAllocator(), MEM_TAG_GAME);
 
     SpriteRenderInfo sprite = {};
