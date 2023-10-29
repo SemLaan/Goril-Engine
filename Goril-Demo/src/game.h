@@ -7,8 +7,6 @@
 
 typedef struct GameState
 {
-	VertexBuffer vertexBuffer;
-	IndexBuffer indexBuffer;
 	Texture texture;
 	Texture texture2;
 	vec3 camPosition;
@@ -19,7 +17,6 @@ typedef struct GameState
 	mat4 orthographic;
 	bool mouseEnabled;
 	bool perspectiveEnabled;
-	f64 meshOneActive;
 } GameState;
 
 extern GameState* gamestate;

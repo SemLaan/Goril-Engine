@@ -20,41 +20,6 @@ bool Init()
 
     PRINT_MEMORY_STATS();
 
-#define VERTEX_COUNT 8
-    Vertex vertices[VERTEX_COUNT] =
-        {
-            {{-1, -1, 1}, {1.f, 0.f, 0.f}, {0.0f, 0.0f}},
-            {{1, -1, 1}, {0.f, 1.f, 0.f}, {1.0f, 0.0f}},
-            {{-1, 1, 1}, {0.f, 0.f, 1.f}, {0.0f, 1.0f}},
-            {{1, 1, 1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f}},
-            {{-1, -1, -1}, {1.f, 1.f, 1.f}, {0.0f, 0.0f}},
-            {{1, -1, -1}, {1.f, 1.f, 1.f}, {1.0f, 0.0f}},
-            {{-1, 1, -1}, {1.f, 1.f, 1.f}, {0.0f, 1.0f}},
-            {{1, 1, -1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f}}};
-
-    gamestate->vertexBuffer = VertexBufferCreate(nullptr, sizeof(vertices));
-
-#define INDEX_COUNT (6 * 6)
-    u32 indices[INDEX_COUNT] = {
-        // Top
-        7, 6, 2,
-        2, 3, 7,
-        // Bottom
-        0, 4, 5,
-        5, 1, 0,
-        // Left
-        0, 2, 6,
-        6, 4, 0,
-        // Right
-        7, 3, 1,
-        1, 5, 7,
-        // Front
-        3, 2, 0,
-        0, 1, 3,
-        // Back
-        4, 6, 7,
-        7, 5, 4};
-    gamestate->indexBuffer = IndexBufferCreate(indices, INDEX_COUNT);
 
     vec2i windowSize = GetPlatformWindowSize();
     float windowAspectRatio = windowSize.x / (float)windowSize.y;
@@ -66,11 +31,10 @@ bool Init()
     gamestate->camPosition = (vec3){0, -3, 0};
     gamestate->camRotation = (vec3){0, 0, 0};
 
-    const u32 textureWidth = 100;
-    const u32 textureHeight = 100;
-    u8* texturePixels = Alloc(GetGlobalAllocator(), textureWidth * textureHeight * TEXTURE_CHANNELS, MEM_TAG_GAME);
+    const u32 textureSize = 100;
+    u8* texturePixels = Alloc(GetGlobalAllocator(), textureSize * textureSize * TEXTURE_CHANNELS, MEM_TAG_GAME);
 
-    for (u32 i = 0; i < textureWidth * textureHeight; ++i)
+    for (u32 i = 0; i < textureSize * textureSize; ++i)
     {
         u32 pixelIndex = i * TEXTURE_CHANNELS;
 
@@ -80,7 +44,7 @@ bool Init()
         texturePixels[pixelIndex + 3] = 255;
     }
 
-    gamestate->texture = TextureCreate(textureWidth, textureHeight, texturePixels);
+    gamestate->texture = TextureCreate(textureSize, textureSize, texturePixels);
 
     Free(GetGlobalAllocator(), texturePixels);
 
@@ -98,14 +62,25 @@ bool Init()
 
     gamestate->mouseEnabled = false;
     gamestate->perspectiveEnabled = true;
-    gamestate->meshOneActive = true;
+
+    return true;
+}
+
+bool Shutdown()
+{
+    TextureDestroy(gamestate->texture);
+    TextureDestroy(gamestate->texture2);
+
+    Free(gameAllocator, gamestate);
+
+    DestroyFreelistAllocator(gameAllocator);
 
     return true;
 }
 
 bool Update()
 {
-    f32 mouseMoveSpeed = 3500;
+    const f32 mouseMoveSpeed = 3500;
 
     if (gamestate->mouseEnabled)
     {
@@ -158,38 +133,6 @@ bool Update()
             gamestate->proj = gamestate->orthographic;
     }
 
-    Vertex vertices1[VERTEX_COUNT] = {
-        {{-1, -1, 1}, {1.f, 0.f, 0.f}, {0.0f, 0.0f}},
-        {{1, -1, 1}, {0.f, 1.f, 0.f}, {1.0f, 0.0f}},
-        {{-1, 1, 1}, {0.f, 0.f, 1.f}, {0.0f, 1.0f}},
-        {{1, 1, 1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f}},
-        {{-1, -1, -1}, {1.f, 1.f, 1.f}, {0.0f, 0.0f}},
-        {{1, -1, -1}, {1.f, 1.f, 1.f}, {1.0f, 0.0f}},
-        {{-1, 1, -1}, {1.f, 1.f, 1.f}, {0.0f, 1.0f}},
-        {{1, 1, -1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f}}};
-
-    Vertex vertices2[VERTEX_COUNT] = {
-        {{-1, -1, 1}, {1.f, 0.f, 0.f}, {0.0f, 0.0f}},
-        {{1, -1, 1}, {0.f, 1.f, 0.f}, {1.0f, 0.0f}},
-        {{-1, 1, 1}, {0.f, 0.f, 1.f}, {0.0f, 1.0f}},
-        {{1, 1, 1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f}},
-        {{-1, -1, -1}, {1.f, 1.f, 1.f}, {0.0f, 0.0f}},
-        {{2, -1, -1}, {1.f, 1.f, 1.f}, {1.0f, 0.0f}},
-        {{-1, 1, -1}, {1.f, 1.f, 1.f}, {0.0f, 1.0f}},
-        {{1, 1, -1}, {1.f, 1.f, 1.f}, {1.0f, 1.0f}}};
-
-    gamestate->meshOneActive += g_deltaTime;
-
-    if (gamestate->meshOneActive > 5)
-    {
-        gamestate->meshOneActive = 0;
-        VertexBufferUpdate(gamestate->vertexBuffer, vertices1, sizeof(vertices1));
-    }
-    else if (gamestate->meshOneActive > 2.5f && gamestate->meshOneActive < 2.6f)
-    {
-        VertexBufferUpdate(gamestate->vertexBuffer, vertices2, sizeof(vertices2));
-    }
-
     return true;
 }
 
@@ -214,16 +157,3 @@ bool Render()
     return true;
 }
 
-bool Shutdown()
-{
-    IndexBufferDestroy(gamestate->indexBuffer);
-    VertexBufferDestroy(gamestate->vertexBuffer);
-    TextureDestroy(gamestate->texture);
-    TextureDestroy(gamestate->texture2);
-
-    Free(gameAllocator, gamestate);
-
-    DestroyFreelistAllocator(gameAllocator);
-
-    return true;
-}
