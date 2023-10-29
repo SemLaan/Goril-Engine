@@ -11,6 +11,5 @@ void GetGameConfigAndFunctions(GameConfig* out_config, GameFunctions* out_gameFu
 
 	out_gameFunctions->GameInit = Init;
 	out_gameFunctions->GameUpdate = Update;
-	out_gameFunctions->GameRender = Render;
 	out_gameFunctions->GameShutdown = Shutdown;
 }

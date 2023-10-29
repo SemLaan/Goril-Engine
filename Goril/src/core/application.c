@@ -97,7 +97,6 @@ bool RunEngine(GameFunctions* gameFunctions)
 		if (!appSuspended)
 		{
 			gameFunctions->GameUpdate();
-			gameFunctions->GameRender();
 			RenderFrame();
 			if (GetKeyDown(KEY_ESCAPE))
 				appRunning = false;

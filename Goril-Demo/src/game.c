@@ -5,8 +5,8 @@
 #include <core/meminc.h>
 #include <core/timer.h>
 #include <platform/platform.h>
-#include <renderer/renderer.h>
 #include <renderer/2D_renderer.h>
+#include <renderer/renderer.h>
 #include <renderer/texture.h>
 
 Allocator* gameAllocator;
@@ -29,8 +29,8 @@ bool Init()
     // Create the rotation matrix
     gamestate->camRotation = mat4_rotate_xyz((vec3){0, PI, 0});
 
-    // =========================== Creating the texture =============================================================
-    #define textureSize 100
+// =========================== Creating the texture =============================================================
+#define textureSize 100
     u8 texturePixels[textureSize * textureSize * TEXTURE_CHANNELS];
 
     for (u32 i = 0; i < textureSize * textureSize; ++i)
@@ -44,7 +44,6 @@ bool Init()
     }
 
     gamestate->texture = TextureCreate(textureSize, textureSize, texturePixels);
-
 
     return true;
 }
@@ -79,11 +78,7 @@ bool Update()
     mat4 translate = mat4_translate(gamestate->camPosition);
     gamestate->view = mat4_mul_mat4(gamestate->camRotation, translate);
 
-    return true;
-}
-
-bool Render()
-{
+    // Submitting the scene for rendering
     SceneRenderData2D sceneData = {};
     sceneData.camera = mat4_mul_mat4(gamestate->proj, gamestate->view);
     sceneData.spriteRenderInfoDarray = DarrayCreate(sizeof(*sceneData.spriteRenderInfoDarray), 1, GetGlobalAllocator(), MEM_TAG_GAME);

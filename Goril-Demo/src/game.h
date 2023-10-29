@@ -19,5 +19,4 @@ extern GameState* gamestate;
 
 bool Init();
 bool Update();
-bool Render();
 bool Shutdown();
