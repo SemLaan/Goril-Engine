@@ -21,6 +21,7 @@ typedef struct SpriteInstance
 
 #define COMBINED_IMAGE_SAMPLERS_ARRAY_SIZE 100
 
+// TODO: factor out some data into a struct for user data and renderer data
 // State for the 2d renderer
 typedef struct Renderer2DState
 {
@@ -38,7 +39,7 @@ typedef struct Renderer2DState
     VkPipelineLayout pipelineLayout;                //
     VkPipeline graphicsPipeline;                    //
     HashmapU64* textureMap;                         //
-    Texture* textureDarray;                         //
+    VulkanImage* textureDarray;                     //
 } Renderer2DState;
 
 static Renderer2DState* state2D = nullptr;
@@ -507,23 +508,30 @@ void Preprocess2DSceneData()
     u32 instanceCount = DarrayGetSize(state2D->currentRenderData.spriteRenderInfoDarray);
     GRASSERT_DEBUG(instanceCount > 0);
 
-    DarraySetSize(state2D->textureDarray, 0);
-    // TODO: clear map
-
-    for (u32 i = 0; i < instanceCount; ++i)
-    {
-
-    }
-
-    // TODO: bind textures
-    // TODO: set uniforms (textures and camera)
-
     SpriteInstance* instanceData = Alloc(vk_state->rendererAllocator, sizeof(*instanceData) * instanceCount, MEM_TAG_RENDERER_SUBSYS);
 
+    DarraySetSize(state2D->textureDarray, 0);
+    MapU64Flush(state2D->textureMap);
+
+#define TEXTURE_INDEX_BIT (1 << 16)
+    u32 currentTextureIndex = 0 + TEXTURE_INDEX_BIT;
+
     for (u32 i = 0; i < instanceCount; ++i)
     {
+        // TODO: compare performance of using map and darray for checking whether a texture is already in the list
+        Texture texture = state2D->currentRenderData.spriteRenderInfoDarray[i].texture;
+        u32 result = (u64)MapU64Lookup(state2D->textureMap, (u64)texture.internalState);
+
+        if (result == 0)
+        {
+            MapU64Insert(state2D->textureMap, (u64)texture.internalState, (void*)(u64)currentTextureIndex);
+            DarrayPushback(state2D->textureDarray, texture.internalState);
+            result = currentTextureIndex;
+            currentTextureIndex++;
+        }
+
         instanceData[i].model = state2D->currentRenderData.spriteRenderInfoDarray[i].model;
-        instanceData[i].textureIndex = 0; // TODO: fill instanced buffer with texture indices
+        instanceData[i].textureIndex = result - TEXTURE_INDEX_BIT;
     }
 
     VertexBufferUpdate(state2D->instancedBuffer, instanceData, instanceCount * sizeof(*instanceData));
@@ -540,10 +548,10 @@ void Preprocess2DSceneData()
         descriptorBufferInfo.range = sizeof(GlobalUniformObject);
 
         VkDescriptorImageInfo descriptorImageInfos[COMBINED_IMAGE_SAMPLERS_ARRAY_SIZE];
-        for (u32 i = 0; i < COMBINED_IMAGE_SAMPLERS_ARRAY_SIZE; ++i)
+        for (u32 i = 0; i < currentTextureIndex - TEXTURE_INDEX_BIT; ++i)
         {
-            descriptorImageInfos[i].sampler = ((VulkanImage*)vk_state->defaultTexture.internalState)->sampler;// TODO: 
-            descriptorImageInfos[i].imageView = ((VulkanImage*)vk_state->defaultTexture.internalState)->view;
+            descriptorImageInfos[i].sampler = state2D->textureDarray[i].sampler;
+            descriptorImageInfos[i].imageView = state2D->textureDarray[i].view;
             descriptorImageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         }
 
@@ -564,7 +572,7 @@ void Preprocess2DSceneData()
         descriptorWrites[1].dstSet = state2D->uniformDescriptorSetsDarray[vk_state->currentInFlightFrameIndex];
         descriptorWrites[1].dstBinding = 1;
         descriptorWrites[1].dstArrayElement = 0;
-        descriptorWrites[1].descriptorCount = COMBINED_IMAGE_SAMPLERS_ARRAY_SIZE;
+        descriptorWrites[1].descriptorCount = currentTextureIndex - TEXTURE_INDEX_BIT;
         descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         descriptorWrites[1].pImageInfo = descriptorImageInfos;
         descriptorWrites[1].pBufferInfo = nullptr;

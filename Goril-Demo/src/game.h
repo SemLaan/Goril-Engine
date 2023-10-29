@@ -10,6 +10,7 @@ typedef struct GameState
 	VertexBuffer vertexBuffer;
 	IndexBuffer indexBuffer;
 	Texture texture;
+	Texture texture2;
 	vec3 camPosition;
 	vec3 camRotation;
 	mat4 view;

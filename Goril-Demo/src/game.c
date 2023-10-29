@@ -66,8 +66,8 @@ bool Init()
     gamestate->camPosition = (vec3){0, -3, 0};
     gamestate->camRotation = (vec3){0, 0, 0};
 
-    u32 textureWidth = 100;
-    u32 textureHeight = 100;
+    const u32 textureWidth = 100;
+    const u32 textureHeight = 100;
     u8* texturePixels = Alloc(GetGlobalAllocator(), textureWidth * textureHeight * TEXTURE_CHANNELS, MEM_TAG_GAME);
 
     for (u32 i = 0; i < textureWidth * textureHeight; ++i)
@@ -83,6 +83,18 @@ bool Init()
     gamestate->texture = TextureCreate(textureWidth, textureHeight, texturePixels);
 
     Free(GetGlobalAllocator(), texturePixels);
+
+    #define texture2Size 2
+
+    u8 texture2Pixels[texture2Size * texture2Size * TEXTURE_CHANNELS] = 
+    {
+        255, 0, 0, 255,
+        0, 255, 0, 255,
+        0, 0, 255, 255,
+        255, 255, 255, 255,
+    };
+
+    gamestate->texture2 = TextureCreate(texture2Size, texture2Size, texture2Pixels);
 
     gamestate->mouseEnabled = false;
     gamestate->perspectiveEnabled = true;
@@ -194,6 +206,7 @@ bool Render()
     sceneData.spriteRenderInfoDarray = DarrayPushback(sceneData.spriteRenderInfoDarray, &sprite);
 
     sprite.model = mat4_translate((vec3){2, 2, 2});
+    sprite.texture = gamestate->texture2;
     sceneData.spriteRenderInfoDarray = DarrayPushback(sceneData.spriteRenderInfoDarray, &sprite);
 
     Submit2DScene(sceneData);
@@ -206,6 +219,7 @@ bool Shutdown()
     IndexBufferDestroy(gamestate->indexBuffer);
     VertexBufferDestroy(gamestate->vertexBuffer);
     TextureDestroy(gamestate->texture);
+    TextureDestroy(gamestate->texture2);
 
     Free(gameAllocator, gamestate);
 
