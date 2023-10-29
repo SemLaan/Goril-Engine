@@ -8,15 +8,10 @@
 typedef struct GameState
 {
 	Texture texture;
-	Texture texture2;
 	vec3 camPosition;
-	vec3 camRotation;
+	mat4 camRotation;
 	mat4 view;
 	mat4 proj;
-	mat4 perspective;
-	mat4 orthographic;
-	bool mouseEnabled;
-	bool perspectiveEnabled;
 } GameState;
 
 extern GameState* gamestate;
