@@ -30,15 +30,15 @@ typedef struct vec4
 
 typedef struct mat2
 {
-	f32 values[2][2];
+	f32 values[4];
 } mat2;
 
 typedef struct mat3
 {
-	f32 values[3][3];
+	f32 values[9];
 } mat3;
 
 typedef struct mat4
 {
-	f32 values[4][4];
+	f32 values[16];
 } mat4;
