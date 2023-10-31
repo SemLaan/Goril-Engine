@@ -225,3 +225,30 @@ static f32 mat2_determinant(mat2 A)
 	// determinant = ad - bc
 	return A.values[M2a] * A.values[M2d] - A.values[M2b] * A.values[M2c];
 }
+
+static f32 mat3_determinant(mat3 A)
+{
+	// A:
+	// a b c
+	// d e f
+	// g h i
+	// Determinant = a * minor(a) - b * minor(b) + c * minor(c)
+	f32 accumulator = 0;
+
+	mat2 temp = {};
+	temp.values[M2a] = A.values[M3e];
+	temp.values[M2b] = A.values[M3f];
+	temp.values[M2c] = A.values[M3h];
+	temp.values[M2d] = A.values[M3i];
+	accumulator += A.values[M3a] * mat2_determinant(temp);
+
+	temp.values[M2a] = A.values[M3d];
+	temp.values[M2c] = A.values[M3g];
+	accumulator -= A.values[M3b] * mat2_determinant(temp);
+
+	temp.values[M2b] = A.values[M3e];
+	temp.values[M2d] = A.values[M3h];
+	accumulator += A.values[M3c] * mat2_determinant(temp);
+
+	return accumulator;
+}
