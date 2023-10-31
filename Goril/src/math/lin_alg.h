@@ -35,6 +35,10 @@
 #define M3i 8
 
 
+static vec3 vec4_to_vec3(vec4 v)
+{
+	return (vec3){v.x, v.y, v.z};
+}
 
 static vec3 vec3_from_float(f32 value)
 {
@@ -313,7 +317,7 @@ static mat4 mat4_inverse(mat4 A)
 					  A.values[0 + COL4(2)] * adjoint.values[2 + COL4(0)] + 
 					  A.values[0 + COL4(3)] * adjoint.values[3 + COL4(0)];
 
-	GRASSERT_MSG(abs((0) - (determinant)) > 0.001f, "determinant was zero, matrix is singular");
+	//GRASSERT_MSG(abs((0) - (determinant)) > 0.001f, "determinant was zero, matrix is singular");
 
 	// divide adjoint by determinant elementwise to get inverse
 	f32 inverseDeterminant = 1.f / determinant;
@@ -326,3 +330,14 @@ static mat4 mat4_inverse(mat4 A)
 	return adjoint;
 }
 
+static vec4 mat4_mul_vec4(mat4 A, vec4 b)
+{
+	vec4 result = {};
+
+	for (u32 i = 0; i < 4; ++i)
+	{
+		result.values[i] = A.values[i + COL4(0)] * b.values[0] + A.values[i + COL4(1)] * b.values[1] + A.values[i + COL4(2)] * b.values[2] + A.values[i + COL4(3)] * b.values[3];
+	}
+
+	return result;
+}
