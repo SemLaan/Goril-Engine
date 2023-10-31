@@ -252,3 +252,60 @@ static f32 mat3_determinant(mat3 A)
 
 	return accumulator;
 }
+
+static mat4 mat4_inverse(mat4 A)
+{
+	mat4 adjoint = {};
+
+	i32 sign = 1;
+
+	// Calculate adjoint
+	for (u32 k = 0; k < 4; ++k)
+	{
+		for (u32 l = 0; l < 4; ++l)
+		{
+			// Get matrix with deleted row and column to calculate the minor of A[k, l]
+			u32 row = 0, col = 0; // Row and col of the smaller matrix
+			mat3 temp = {};
+			for (u32 i = 0; i < 4; ++i)
+			{
+				if (i == k) continue;
+				for (u32 j = 0; j < 4; ++j)
+				{
+					if (j == l) continue;
+
+					temp.values[row + COL3(col)] = A.values[i + COL4(j)];
+					col++;
+				}
+				col = 0;
+				row++;
+			}
+
+			// Get determinant of small matrix
+			f32 determinant = mat3_determinant(temp);
+			// Calculate the minor of A[k, l], multiplying it by the correct sign and inserting it in adjoint[l, k] so it's already transposed since the adjoint is the transpose of the cofactor
+			adjoint.values[l + COL4(k)] = sign * determinant;
+
+			sign = -sign;
+		}
+		sign = -sign;
+	}
+
+	f32 determinant = A.values[0 + COL4(0)] * adjoint.values[0 + COL4(0)] + 
+					  A.values[0 + COL4(1)] * adjoint.values[1 + COL4(0)] + 
+					  A.values[0 + COL4(2)] * adjoint.values[2 + COL4(0)] + 
+					  A.values[0 + COL4(3)] * adjoint.values[3 + COL4(0)];
+
+	GRASSERT_MSG(abs((0) - (determinant)) > 0.001f, "determinant was zero, matrix is singular");
+
+	// divide adjoint by determinant elementwise to get inverse
+	f32 inverseDeterminant = 1.f / determinant;
+	for (u32 i = 0; i < 16/*elements of 4x4 mat*/; ++i)
+	{
+		adjoint.values[i] = adjoint.values[i] * inverseDeterminant;
+	}
+
+	// Return variable adjoint as adjoint was just overriden with the inverse
+	return adjoint;
+}
+
