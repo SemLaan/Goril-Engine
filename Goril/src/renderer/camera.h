@@ -24,4 +24,4 @@ void CameraSetPosition(Camera* camera, vec3 position);
 vec3 CameraGetRotation(Camera* camera);
 void CameraSetRotation(Camera* camera, vec3 rotation);
 
-vec3 CameraScreenToWorldSpace(Camera* camera, vec2 screenPosition);
+vec4 CameraScreenToWorldSpace(Camera* camera, vec2 screenPosition);

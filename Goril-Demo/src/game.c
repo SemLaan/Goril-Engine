@@ -71,13 +71,19 @@ bool Update()
         frameMovement.y += 1;
     CameraSetPosition(&gamestate->camera, vec3_add_vec3(CameraGetPosition(&gamestate->camera), vec3_div_float(frameMovement, 300.f)));
 
+    vec2 mouseScreenPos = (vec2){GetMousePos().x, GetMousePos().y};
+
+    vec4 mouseWorldPos = CameraScreenToWorldSpace(&gamestate->camera, mouseScreenPos);
+    mouseWorldPos.y = -mouseWorldPos.y;
+    mouseWorldPos.z = 0;
+
     // Submitting the scene for rendering
     SceneRenderData2D sceneData = {};
     sceneData.camera = CameraGetProjectionView(&gamestate->camera);
     sceneData.spriteRenderInfoDarray = DarrayCreate(sizeof(*sceneData.spriteRenderInfoDarray), 1, GetGlobalAllocator(), MEM_TAG_GAME);
 
     SpriteRenderInfo sprite = {};
-    sprite.model = mat4_identity();
+    sprite.model = mat4_translate(vec4_to_vec3(mouseWorldPos));
     sprite.texture = gamestate->texture;
 
     sceneData.spriteRenderInfoDarray = DarrayPushback(sceneData.spriteRenderInfoDarray, &sprite);

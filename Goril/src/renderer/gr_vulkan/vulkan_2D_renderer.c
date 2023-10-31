@@ -424,10 +424,10 @@ bool Initialize2DRenderer()
 #define QUAD_VERT_COUNT 4
     Vertex quadVertices[QUAD_VERT_COUNT] =
         {
-            {{0, 0, 0}, {0, 0, 0}, {0, 0}},
-            {{0, 1, 0}, {0, 0, 0}, {0, 1}},
-            {{1, 0, 0}, {0, 0, 0}, {1, 0}},
-            {{1, 1, 0}, {0, 0, 0}, {1, 1}},
+            {{-0.5, -0.5, 0}, {0, 0, 0}, {0, 0}},
+            {{-0.5,  0.5, 0}, {0, 0, 0}, {0, 1}},
+            {{ 0.5, -0.5, 0}, {0, 0, 0}, {1, 0}},
+            {{ 0.5,  0.5, 0}, {0, 0, 0}, {1, 1}},
         };
 
     state2D->quadVertexBuffer = VertexBufferCreate(quadVertices, sizeof(quadVertices));
