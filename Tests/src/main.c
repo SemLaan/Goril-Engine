@@ -4,11 +4,8 @@
 #include <platform/platform.h>
 #include <core/event.h>
 
-#include "core/memory_tests.h"
-#include "core/event_tests.h"
-#include "containers/container_tests.h"
-#include "memory/allocator_tests.h"
-#include "vector_intrinsics/vector_performance.h"
+#include "functional_tests/test_register_functions.h"
+#include "performance_tests/vector_performance.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -51,11 +48,18 @@ int main()
 	}
 
 	// ----------------- register all tests ----------------
+	// Functionality
 	register_memory_tests();
 	register_allocator_tests();
 	register_container_tests();
 	register_event_tests();
-	register_vector_perf_tests();
+	register_math_tests();
+	// Performance
+	const bool enablePerformanceTests = false;
+	if (enablePerformanceTests)
+	{
+		register_vector_perf_tests();
+	}
 	// ----------------------------------------------------
 
 	// Run tests

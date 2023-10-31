@@ -1,4 +1,4 @@
-#include "allocator_tests.h"
+#include "test_register_functions.h"
 #include <core/memory/allocator_frontends.h>
 
 #include "test_defines.h"

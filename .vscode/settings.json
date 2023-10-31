@@ -46,6 +46,7 @@
         "vulkan_image.h": "c",
         "camera.h": "c",
         "goril_game.h": "c",
-        "lin_alg.h": "c"
+        "lin_alg.h": "c",
+        "test_register_functions.h": "c"
     }
 }

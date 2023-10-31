@@ -1,4 +1,4 @@
-#include "container_tests.h"
+#include "test_register_functions.h"
 
 #include "test_defines.h"
 #include "../test_manager.h"
