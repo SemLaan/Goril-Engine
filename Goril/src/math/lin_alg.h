@@ -216,3 +216,12 @@ static mat4 mat4_orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 near
 
 	return projection;
 }
+
+static f32 mat2_determinant(mat2 A)
+{
+	// A:
+	// a b
+	// c d
+	// determinant = ad - bc
+	return A.values[M2a] * A.values[M2d] - A.values[M2b] * A.values[M2c];
+}
