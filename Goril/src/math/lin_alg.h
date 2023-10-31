@@ -6,10 +6,35 @@
 // TODO: make it so this doesn't have to be included everywhere, because it is big and it's only needed for trig funcs
 #include <math.h>
 
+
+// !!!!!!!!!!!!!!! Matrices are stored column-wise ==========================================================
+
 #define PI 3.14159265358979323846f
-#define COL4(col) (col * 4)
-#define COL3(col) (col * 3)
-#define COL2(col) (col * 2)
+#define COL4(col_z) (col_z * 4)
+#define COL3(col_z) (col_z * 3)
+#define COL2(col_z) (col_z * 2)
+
+// a b
+// c d
+#define M2a 0
+#define M2b 2
+#define M2c 1
+#define M2d 3
+
+// a b c
+// d e f
+// g h i
+#define M3a 0
+#define M3d 1
+#define M3g 2
+#define M3b 3
+#define M3e 4
+#define M3h 5
+#define M3c 6
+#define M3f 7
+#define M3i 8
+
+
 
 static vec3 vec3_from_float(f32 value)
 {
