@@ -41,8 +41,27 @@ static bool determinant_test()
     return true;
 }
 
+static bool inverse_matrix_test()
+{
+    mat4 mat = mat4_rotate_x(3);
+    mat = mat4_mul_mat4(mat, mat4_scale((vec3){100, 32, -33}));
+
+    mat4 inverse = mat4_inverse(mat);
+
+    mat4 result = mat4_mul_mat4(mat, inverse);
+    mat4 identity = mat4_identity();
+
+    for (u32 i = 0; i < 16/*elements of 4x4 mat*/; ++i)
+	{
+        expect_float_to_be(identity.values[i], result.values[i]);
+	}
+
+    return true;
+}
+
 
 void register_math_tests()
 {
     register_test(determinant_test, "Math: Determinants");
+    register_test(inverse_matrix_test, "Math: Inverse matrix");
 }
