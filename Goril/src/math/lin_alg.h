@@ -61,6 +61,23 @@ static f32 vec4_dot(vec4 v1, vec4 v2)
 	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z + v1.w * v2.w;
 }
 
+static mat2 mat2_identity()
+{
+	mat2 mat = {};
+	mat.values[M2a] = 1.f;
+	mat.values[M2d] = 1.f;
+	return mat;
+}
+
+static mat3 mat3_identity()
+{
+	mat3 mat = {};
+	mat.values[M3a] = 1.f;
+	mat.values[M3e] = 1.f;
+	mat.values[M3i] = 1.f;
+	return mat;
+}
+
 static mat4 mat4_identity()
 {
 	mat4 mat = {};
