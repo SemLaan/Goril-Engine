@@ -64,7 +64,7 @@ void _MarkAllocator(Allocator* allocator);
 
 void _RegisterAllocator(u64 arenaStart, u64 arenaEnd, u32 stateSize, u32* out_allocatorId, AllocatorType type, Allocator* parentAllocator, const char* name, Allocator* allocator);
 void _UnregisterAllocator(u32 allocatorId, AllocatorType allocatorType);
-void _DebugFlushAllocator(Allocator* allocator);
+u32 _DebugFlushAllocator(Allocator* allocator);
 
 #define REGISTER_ALLOCATOR(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator, name, allocator) _RegisterAllocator(arenaStart, arenaEnd, stateSize, out_allocatorId, type, parentAllocator, name, allocator)
 #define UNREGISTER_ALLOCATOR(allocatorId, allocatorType) _UnregisterAllocator(allocatorId, allocatorType)

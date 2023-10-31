@@ -291,6 +291,9 @@ void _UnregisterAllocator(u32 allocatorId, AllocatorType allocatorType)
     {
         if (state->registeredAllocatorDarray[i].allocatorId == allocatorId)
         {
+            u32 freedCount = _DebugFlushAllocator(state->registeredAllocatorDarray[i].allocator);
+            if (freedCount > 0)
+                GRWARN("Destroyed allocator with %u active allocation(s)", freedCount);
             DarrayPopAt(state->registeredAllocatorDarray, i);
             return;
         }
@@ -302,9 +305,11 @@ void _UnregisterAllocator(u32 allocatorId, AllocatorType allocatorType)
 }
 
 // =========================================== Flushing an allocator =======================================================
-void _DebugFlushAllocator(Allocator* allocator)
+u32 _DebugFlushAllocator(Allocator* allocator)
 {
     MapEntryU64** mapEntriesDarray = MapU64GetMapEntryDarray(state->allocationsMap, memoryDebugAllocator);
+
+    u32 freedAllocations = 0;
 
     for (u32 i = 0; i < DarrayGetSize(mapEntriesDarray); ++i)
     {
@@ -319,10 +324,13 @@ void _DebugFlushAllocator(Allocator* allocator)
             state->perTagAllocationCount[allocInfo->tag]--;
             Free(state->allocInfoPool, allocInfo);
             MapU64Delete(state->allocationsMap, mapEntry->key);
+            freedAllocations++;
         }
     }
 
     DarrayDestroy(mapEntriesDarray);
+
+    return freedAllocations;
 }
 
 // ============================================= Debug alloc, realloc and free hook-ins =====================================
