@@ -239,8 +239,12 @@ void SetFullscreen(bool enabled)
 			0
 		);
 
-		state->width = state->widthPreMaximize;
-		state->height = state->heightPreMaximize;
+		RECT clientRect;
+		if (GetClientRect(state->hwnd, &clientRect))
+		{
+			state->width = clientRect.right - clientRect.left;
+			state->height = clientRect.bottom - clientRect.top;
+		}
 
 		EventData eventData = {};
 		eventData.u32[0] = state->width;
