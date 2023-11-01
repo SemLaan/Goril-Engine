@@ -20,7 +20,7 @@ mat4 CameraGetProjectionView(Camera* camera)
     if (camera->dirty)
     {
         mat4 rotation = mat4_rotate_xyz(camera->rotation);
-        mat4 translation = mat4_translate(camera->position);
+        mat4 translation = mat4_3Dtranslate(camera->position);
         camera->view = mat4_mul_mat4(rotation, translation);
         camera->projectionView = mat4_mul_mat4(camera->projection, camera->view);
         camera->dirty = false;
@@ -71,7 +71,7 @@ vec4 CameraScreenToWorldSpace(Camera* camera, vec2 screenPosition)
     if (camera->dirty)
     {
         mat4 rotation = mat4_rotate_xyz(camera->rotation);
-        mat4 translation = mat4_translate(camera->position);
+        mat4 translation = mat4_3Dtranslate(camera->position);
         camera->view = mat4_mul_mat4(rotation, translation);
         camera->projectionView = mat4_mul_mat4(camera->projection, camera->view);
         camera->dirty = false;

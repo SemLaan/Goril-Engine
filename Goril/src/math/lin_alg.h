@@ -94,7 +94,7 @@ static mat4 mat4_identity()
 	return mat;
 }
 
-static mat4 mat4_scale(vec3 vec)
+static mat4 mat4_3Dscale(vec3 vec)
 {
 	mat4 mat = {};
 
@@ -106,7 +106,19 @@ static mat4 mat4_scale(vec3 vec)
 	return mat;
 }
 
-static mat4 mat4_translate(vec3 vec)
+static mat4 mat4_2Dscale(vec2 vec)
+{
+	mat4 mat = {};
+
+	mat.values[0] = vec.x;
+	mat.values[1 + COL4(1)] = vec.y;
+	mat.values[2 + COL4(2)] = 1.f;
+	mat.values[3 + COL4(3)] = 1.f;
+
+	return mat;
+}
+
+static mat4 mat4_3Dtranslate(vec3 vec)
 {
 	mat4 mat = {};
 
@@ -118,6 +130,21 @@ static mat4 mat4_translate(vec3 vec)
 	mat.values[0 + COL4(3)] = vec.x;
 	mat.values[1 + COL4(3)] = vec.y;
 	mat.values[2 + COL4(3)] = vec.z;
+
+	return mat;
+}
+
+static mat4 mat4_2Dtranslate(vec2 vec)
+{
+	mat4 mat = {};
+
+	mat.values[0] = 1.f;
+	mat.values[1 + COL4(1)] = 1.f;
+	mat.values[2 + COL4(2)] = 1.f;
+	mat.values[3 + COL4(3)] = 1.f;
+
+	mat.values[0 + COL4(3)] = vec.x;
+	mat.values[1 + COL4(3)] = vec.y;
 
 	return mat;
 }

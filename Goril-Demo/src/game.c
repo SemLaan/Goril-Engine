@@ -12,11 +12,13 @@
 Allocator* gameAllocator;
 GameState* gamestate = nullptr;
 
+
 bool Init()
 {
     // =========================== Allocating game memory ============================================================
     CreateFreelistAllocator("Game allocator", GetGlobalAllocator(), KiB * 5, &gameAllocator);
     gamestate = Alloc(gameAllocator, sizeof(*gamestate), MEM_TAG_GAME);
+    ZeroMem(gamestate, sizeof(*gamestate));
     PRINT_MEMORY_STATS();
 
     // =========================== Setting up the game camera ==========================================================
@@ -42,6 +44,8 @@ bool Init()
     }
 
     gamestate->texture = TextureCreate(textureSize, textureSize, texturePixels);
+
+    gamestate->buttons[0].size = (vec2){5.f, 5.f};
 
     return true;
 }
@@ -71,10 +75,27 @@ bool Update()
         frameMovement.y += 1;
     CameraSetPosition(&gamestate->camera, vec3_add_vec3(CameraGetPosition(&gamestate->camera), vec3_div_float(frameMovement, 300.f)));
 
-    vec2 mouseScreenPos = (vec2){GetMousePos().x, GetMousePos().y};
 
-    vec4 mouseWorldPos = CameraScreenToWorldSpace(&gamestate->camera, mouseScreenPos);
-    mouseWorldPos.z = 0;
+    if (GetButtonDown(BUTTON_LEFTMOUSEBTN) && !GetButtonDownPrevious(BUTTON_LEFTMOUSEBTN))
+    {
+        vec2 mouseScreenPos = (vec2){GetMousePos().x, GetMousePos().y};
+
+        vec4 mouseWorldPos = CameraScreenToWorldSpace(&gamestate->camera, mouseScreenPos);
+        mouseWorldPos.z = 0;
+
+        for (u32 i = 0; i < 2; ++i)
+        {
+            f32 left, right, top, bottom;
+            left = gamestate->buttons[i].position.x;
+            right = gamestate->buttons[i].position.x + gamestate->buttons[i].size.x;
+            bottom = gamestate->buttons[i].position.y;
+            top = gamestate->buttons[i].position.y + gamestate->buttons[i].size.y;
+            if (mouseWorldPos.x > left && mouseWorldPos.x < right && mouseWorldPos.y > bottom && mouseWorldPos.y < top)
+            {
+                GRDEBUG("beef");
+            }
+        }
+    }
 
     // Submitting the scene for rendering
     SceneRenderData2D sceneData = {};
@@ -82,12 +103,12 @@ bool Update()
     sceneData.spriteRenderInfoDarray = DarrayCreate(sizeof(*sceneData.spriteRenderInfoDarray), 1, GetGlobalAllocator(), MEM_TAG_GAME);
 
     SpriteRenderInfo sprite = {};
-    sprite.model = mat4_translate(vec4_to_vec3(mouseWorldPos));
+    sprite.model = mat4_mul_mat4(mat4_2Dtranslate(gamestate->buttons[0].position), mat4_2Dscale(gamestate->buttons[0].size));
     sprite.texture = gamestate->texture;
 
     sceneData.spriteRenderInfoDarray = DarrayPushback(sceneData.spriteRenderInfoDarray, &sprite);
 
-    sprite.model = mat4_translate((vec3){2, 2, 0});
+    sprite.model = mat4_3Dtranslate((vec3){0, 0, 0});
     sprite.texture = gamestate->texture;
     sceneData.spriteRenderInfoDarray = DarrayPushback(sceneData.spriteRenderInfoDarray, &sprite);
 
