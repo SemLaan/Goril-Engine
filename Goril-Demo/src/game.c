@@ -74,7 +74,6 @@ bool Update()
     vec2 mouseScreenPos = (vec2){GetMousePos().x, GetMousePos().y};
 
     vec4 mouseWorldPos = CameraScreenToWorldSpace(&gamestate->camera, mouseScreenPos);
-    mouseWorldPos.y = -mouseWorldPos.y;
     mouseWorldPos.z = 0;
 
     // Submitting the scene for rendering
