@@ -45,6 +45,11 @@ static vec3 vec3_from_float(f32 value)
 	return (vec3){ value, value, value };
 }
 
+static vec3 vec3_invert_sign(vec3 v)
+{
+	return (vec3){-v.x, -v.y, -v.z};
+}
+
 static vec3 vec3_add_vec3(vec3 v1, vec3 v2)
 {
 	return (vec3){ v1.x + v2.x, v1.y + v2.y, v1.z + v2.z };
@@ -255,12 +260,13 @@ static mat4 mat4_orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 near
 	mat4 projection = {};
 
 	projection.values[0 + COL4(0)] = 2.f / (right - left);
-	projection.values[1 + COL4(1)] = 2.f / (bottom - top);
-	projection.values[2 + COL4(2)] = -1.f / (far - near);
+	projection.values[1 + COL4(1)] = 2.f / (top - bottom);
+	projection.values[2 + COL4(2)] = 1.f / (far - near);
 	projection.values[3 + COL4(3)] = 1.f;
-	projection.values[3 + COL4(0)] = -(right + left) / (right - left);
-	projection.values[3 + COL4(1)] = -(top + bottom) / (bottom - top);
-	projection.values[3 + COL4(2)] = -(near) / (far - near);
+	//projection.values[0 + COL4(3)] = -(right + left) / (right - left);
+	//projection.values[1 + COL4(3)] = -(top + bottom) / (bottom - top);
+	projection.values[2 + COL4(3)] = near / (far - near) + 1;
+	//projection.values[2 + COL4(3)] = (near) / (far - near);
 
 	return projection;
 }

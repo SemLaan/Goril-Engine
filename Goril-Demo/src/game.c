@@ -23,11 +23,10 @@ bool Init()
 
     // =========================== Setting up the game camera ==========================================================
     vec2i windowSize = GetPlatformWindowSize();
-    float windowAspectRatio = windowSize.x / (float)windowSize.y;
-    i32 orthoWidth = 20;
-    gamestate->camera = CameraCreateOrthographic(-orthoWidth / 2, orthoWidth / 2, -orthoWidth / 2 / windowAspectRatio, orthoWidth / 2 / windowAspectRatio, 0.1f, 1000.0f);
+    f32 windowAspectRatio = windowSize.x / (f32)windowSize.y;
+    f32 orthoWidth = 20.f;
+    gamestate->camera = CameraCreateOrthographic(-orthoWidth / 2.f, orthoWidth / 2.f, -orthoWidth / 2.f / windowAspectRatio, orthoWidth / 2.f / windowAspectRatio, 0.1f, 100.0f);
     CameraSetPosition(&gamestate->camera, (vec3){0, 0, 10});
-    CameraSetRotation(&gamestate->camera, (vec3){0, PI, 0});
 
 // =========================== Creating the texture =============================================================
 #define textureSize 100
@@ -46,6 +45,7 @@ bool Init()
     gamestate->texture = TextureCreate(textureSize, textureSize, texturePixels);
 
     gamestate->buttons[0].size = (vec2){5.f, 5.f};
+    gamestate->buttons[0].position = (vec2){2.5f, 0.f};
 
     return true;
 }
@@ -81,6 +81,11 @@ bool Update()
         vec2 mouseScreenPos = (vec2){GetMousePos().x, GetMousePos().y};
 
         vec4 mouseWorldPos = CameraScreenToWorldSpace(&gamestate->camera, mouseScreenPos);
+        GRDEBUG("world: x: %.2f, y: %.2f, z: %.2f", mouseWorldPos.x, mouseWorldPos.y, mouseWorldPos.z);
+
+        vec4 test = mat4_mul_vec4(CameraGetProjectionView(&gamestate->camera), mouseWorldPos);
+        GRDEBUG("clip:  x: %.2f, y: %.2f, z: %.2f", test.x, test.y, test.z);
+
         mouseWorldPos.z = 0;
 
         for (u32 i = 0; i < 2; ++i)
@@ -108,7 +113,7 @@ bool Update()
 
     sceneData.spriteRenderInfoDarray = DarrayPushback(sceneData.spriteRenderInfoDarray, &sprite);
 
-    sprite.model = mat4_3Dtranslate((vec3){0, 0, 0});
+    sprite.model = mat4_3Dtranslate((vec3){0.f, 5.0f, 0});
     sprite.texture = gamestate->texture;
     sceneData.spriteRenderInfoDarray = DarrayPushback(sceneData.spriteRenderInfoDarray, &sprite);
 
