@@ -25,7 +25,8 @@ bool Init()
     vec2i windowSize = GetPlatformWindowSize();
     f32 windowAspectRatio = windowSize.x / (f32)windowSize.y;
     f32 orthoWidth = 20.f;
-    gamestate->camera = CameraCreateOrthographic(-orthoWidth / 2.f, orthoWidth / 2.f, -orthoWidth / 2.f / windowAspectRatio, orthoWidth / 2.f / windowAspectRatio, 0.1f, 100.0f);
+    //gamestate->camera = CameraCreateOrthographic(-orthoWidth / 2.f, orthoWidth / 2.f, -orthoWidth / 2.f / windowAspectRatio, orthoWidth / 2.f / windowAspectRatio, 0.1f, 100.0f);
+    gamestate->camera = CameraCreateOrthographic(0, orthoWidth, 0, orthoWidth / windowAspectRatio, 0.1f, 100.0f);
     CameraSetPosition(&gamestate->camera, (vec3){0, 0, 10});
 
 // =========================== Creating the texture =============================================================

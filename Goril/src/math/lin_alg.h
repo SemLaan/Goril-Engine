@@ -263,10 +263,9 @@ static mat4 mat4_orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 near
 	projection.values[1 + COL4(1)] = 2.f / (top - bottom);
 	projection.values[2 + COL4(2)] = 1.f / (far - near);
 	projection.values[3 + COL4(3)] = 1.f;
-	//projection.values[0 + COL4(3)] = -(right + left) / (right - left);
-	//projection.values[1 + COL4(3)] = -(top + bottom) / (bottom - top);
+	projection.values[0 + COL4(3)] = -(right + left) / (right - left);
+	projection.values[1 + COL4(3)] = -(top + bottom) / (top - bottom);
 	projection.values[2 + COL4(3)] = near / (far - near) + 1;
-	//projection.values[2 + COL4(3)] = (near) / (far - near);
 
 	return projection;
 }
