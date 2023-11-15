@@ -1,19 +1,20 @@
 #include "particle_life.h"
 
+#include <core/input.h>
+#include <math/color_utils.h>
+#include <math/random_utils.h>
+#include <platform/platform.h>
 #include <renderer/2D_renderer.h>
 #include <renderer/texture.h>
-#include <math/color_utils.h>
-#include <platform/platform.h>
-#include <math/random_utils.h>
 
 #define PARTICLE_TEXTURE_SIZE 30
 #define COLOR_COUNT 5
-#define PARTICLE_COUNT 3000
+#define PARTICLE_COUNT 2000
 #define PARTICLE_RADIUS 0.05f
-#define MAX_DISTANCE (PARTICLE_RADIUS * 13.1f)
+#define MAX_DISTANCE (PARTICLE_RADIUS * 23.1f)
 #define MIN_DISTANCE_PERCENT 0.3f
 #define FRICTION_COEF 0.9f
-#define DELTA_TIME 0.001f
+#define DELTA_TIME 0.0005f
 
 typedef struct State
 {
@@ -35,7 +36,7 @@ State* state = nullptr;
 
 void ParticlelifeStart(Allocator* allocator, Camera* camera, i32 simWidth, i32 simHeight)
 {
-    state = AlignedAlloc(allocator, sizeof(*state), 64/*cache line*/, MEM_TAG_GAME);
+    state = AlignedAlloc(allocator, sizeof(*state), 64 /*cache line*/, MEM_TAG_GAME);
     ZeroMem(state, sizeof(*state));
     state->allocator = allocator;
     state->camera = camera;
@@ -57,8 +58,8 @@ void ParticlelifeStart(Allocator* allocator, Camera* camera, i32 simWidth, i32 s
             u32 pixelIndex = i * TEXTURE_CHANNELS;
             f32 x = i % PARTICLE_TEXTURE_SIZE;
             f32 y = (i - x) / PARTICLE_TEXTURE_SIZE;
-            x /= (PARTICLE_TEXTURE_SIZE-1) * 0.5;
-            y /= (PARTICLE_TEXTURE_SIZE-1) * 0.5;
+            x /= (PARTICLE_TEXTURE_SIZE - 1) * 0.5;
+            y /= (PARTICLE_TEXTURE_SIZE - 1) * 0.5;
             x -= 1;
             y -= 1;
 
@@ -109,7 +110,8 @@ static void UpdateVelocities()
         vec2 totalForce = {};
         for (u32 j = 0; j < PARTICLE_COUNT; ++j)
         {
-            if (i == j) continue;
+            if (i == j)
+                continue;
             vec2 hypothenuse = vec2_sub_vec2(state->particlePositions[j], state->particlePositions[i]);
             f32 magnitude = vec2_magnitude(hypothenuse);
             magnitude /= MAX_DISTANCE;
@@ -119,9 +121,14 @@ static void UpdateVelocities()
                 f32 force = magnitude / MIN_DISTANCE_PERCENT - 1;
                 totalForce = vec2_add_vec2(totalForce, vec2_mul_f32(direction, force));
             }
+            else if (magnitude < 1 /*magnitude normalized by max distance, thus less than max distance*/)
+            {
+                f32 force = state->attractionMatrix[i % COLOR_COUNT][j % COLOR_COUNT] * (1 - abs(2 * magnitude - 1 - MIN_DISTANCE_PERCENT) / (1 - MIN_DISTANCE_PERCENT));
+                totalForce = vec2_add_vec2(totalForce, vec2_mul_f32(direction, force));
+            }
         }
 
-        //totalForce = vec2_mul_f32(totalForce, MAX_DISTANCE);
+        // totalForce = vec2_mul_f32(totalForce, MAX_DISTANCE);
         state->particleVelocities[i] = vec2_add_vec2(vec2_mul_f32(state->particleVelocities[i], FRICTION_COEF), vec2_mul_f32(totalForce, DELTA_TIME));
     }
 }
@@ -153,7 +160,7 @@ static void Render()
     sprite.model = mat4_identity();
     sprite.texture = state->circleTextures[0];
 
-    mat4 particleScale = mat4_mul_mat4(mat4_2Dtranslate((vec2){-PARTICLE_RADIUS/2, -PARTICLE_RADIUS/2}), mat4_2Dscale((vec2){PARTICLE_RADIUS, PARTICLE_RADIUS})); 
+    mat4 particleScale = mat4_mul_mat4(mat4_2Dtranslate((vec2){-PARTICLE_RADIUS / 2, -PARTICLE_RADIUS / 2}), mat4_2Dscale((vec2){PARTICLE_RADIUS, PARTICLE_RADIUS}));
     for (u32 i = 0; i < PARTICLE_COUNT; ++i)
     {
         sprite.model = mat4_mul_mat4(mat4_2Dtranslate(state->particlePositions[i]), particleScale);
@@ -166,6 +173,17 @@ static void Render()
 
 void ParticlelifeUpdate()
 {
+    if (GetButtonDown(BUTTON_LEFTMOUSEBTN) && !GetButtonDownPrevious(BUTTON_LEFTMOUSEBTN))
+    {
+        // Generate new random attraction values for all color pairs
+        for (u32 i = 0; i < COLOR_COUNT; ++i)
+        {
+            for (u32 j = 0; j < COLOR_COUNT; ++j)
+            {
+                state->attractionMatrix[i][j] = (RandomFloat(&state->randomSeed) * 2) - 1;
+            }
+        }
+    }
     UpdateVelocities();
     UpdatePositions();
     Render();
