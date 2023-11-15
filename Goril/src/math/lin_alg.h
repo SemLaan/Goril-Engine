@@ -35,6 +35,11 @@
 #define M3i 8
 
 
+static vec2 vec2_add_vec2(vec2 a, vec2 b)
+{
+	return (vec2){a.x + b.x, a.y + b.y};
+}
+
 static vec3 vec4_to_vec3(vec4 v)
 {
 	return (vec3){v.x, v.y, v.z};
