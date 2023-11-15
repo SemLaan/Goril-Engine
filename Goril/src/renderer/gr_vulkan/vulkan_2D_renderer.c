@@ -439,7 +439,7 @@ bool Initialize2DRenderer()
             2, 1, 3};
 
     state2D->quadIndexBuffer = IndexBufferCreate(quadIndices, QUAD_INDEX_COUNT);
-    state2D->instancedBuffer = VertexBufferCreate(nullptr, 100 * sizeof(SpriteInstance));
+    state2D->instancedBuffer = VertexBufferCreate(nullptr, 10000 * sizeof(SpriteInstance));
 
     const u32 mapBackingArraySize = 100;
     const u32 mapLinkedElementsSize = 10;
