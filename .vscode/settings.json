@@ -51,6 +51,7 @@
         "mem_utils.h": "c",
         "random": "cpp",
         "limits": "cpp",
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "color_utils.h": "c"
     }
 }

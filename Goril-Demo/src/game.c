@@ -18,7 +18,7 @@ GameState* gamestate = nullptr;
 bool Init()
 {
     // =========================== Allocating game memory ============================================================
-    CreateFreelistAllocator("Game allocator", GetGlobalAllocator(), KiB * 50, &gameAllocator);
+    CreateFreelistAllocator("Game allocator", GetGlobalAllocator(), KiB * 100, &gameAllocator);
     gamestate = Alloc(gameAllocator, sizeof(*gamestate), MEM_TAG_GAME);
     ZeroMem(gamestate, sizeof(*gamestate));
     PRINT_MEMORY_STATS();
@@ -30,7 +30,7 @@ bool Init()
     gamestate->camera = CameraCreateOrthographic(0, orthoWidth, 0, orthoWidth / windowAspectRatio, 0.1f, 100.0f);
     CameraSetPosition(&gamestate->camera, (vec3){0, 0, 10});
 
-    ParticlelifeStart(gameAllocator, &gamestate->camera);
+    ParticlelifeStart(gameAllocator, &gamestate->camera, orthoWidth, orthoWidth / windowAspectRatio);
 /*
 // =========================== Creating the texture =============================================================
 #define textureSize 100
