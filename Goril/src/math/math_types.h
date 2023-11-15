@@ -7,6 +7,13 @@ typedef struct vec2i
     i32 y;
 } vec2i;
 
+typedef struct vec3i
+{
+    i32 x;
+    i32 y;
+    i32 z;
+} vec3i;
+
 typedef struct vec2
 {
     f32 x;
@@ -30,7 +37,7 @@ typedef struct vec4
             f32 z;
             f32 w;
         };
-        struct 
+        struct
         {
             f32 values[4];
         };
