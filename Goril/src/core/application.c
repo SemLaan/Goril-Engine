@@ -25,12 +25,11 @@ static bool OnKeyDown(EventCode type, EventData data);
 
 bool InitializeEngine(GameConfig config)
 {
-	size_t engineMemoryRequirement = MiB;
-	size_t subsysAllocatorRequirement = KiB * 5;
+	size_t engineMemoryRequirement = MiB * 5;
 
 	START_MEMORY_DEBUG_SUBSYS();
 	// Initialize subsystems
-	if (!InitializeMemory(config.game_instance_memory_requirement + engineMemoryRequirement, subsysAllocatorRequirement))
+	if (!InitializeMemory(config.game_instance_memory_requirement + engineMemoryRequirement))
 	{
 		GRFATAL("Memory failed to initialize");
 		return false;

@@ -8,7 +8,12 @@
 
 #define PARTICLE_TEXTURE_SIZE 30
 #define COLOR_COUNT 5
-#define PARTICLE_COUNT 1000
+#define PARTICLE_COUNT 3000
+#define PARTICLE_RADIUS 0.05f
+#define MAX_DISTANCE (PARTICLE_RADIUS * 13.1f)
+#define MIN_DISTANCE_PERCENT 0.3f
+#define FRICTION_COEF 0.9f
+#define DELTA_TIME 0.001f
 
 typedef struct State
 {
@@ -17,6 +22,7 @@ typedef struct State
     u32 randomSeed;
     i32 simWidth;
     i32 simHeight;
+    f32 attractionMatrix[COLOR_COUNT][COLOR_COUNT];
     Texture circleTextures[COLOR_COUNT];
     vec2 particlePositions[PARTICLE_COUNT];
     vec2 particleVelocities[PARTICLE_COUNT];
@@ -74,6 +80,15 @@ void ParticlelifeStart(Allocator* allocator, Camera* camera, i32 simWidth, i32 s
         state->particlePositions[i].x = RandomFloat(&state->randomSeed) * state->simWidth;
         state->particlePositions[i].y = RandomFloat(&state->randomSeed) * state->simHeight;
     }
+
+    // Generate random attraction values for all color pairs
+    for (u32 i = 0; i < COLOR_COUNT; ++i)
+    {
+        for (u32 j = 0; j < COLOR_COUNT; ++j)
+        {
+            state->attractionMatrix[i][j] = (RandomFloat(&state->randomSeed) * 2) - 1;
+        }
+    }
 }
 
 void ParticlelifeShutdown()
@@ -89,6 +104,26 @@ void ParticlelifeShutdown()
 
 static void UpdateVelocities()
 {
+    for (u32 i = 0; i < PARTICLE_COUNT; ++i)
+    {
+        vec2 totalForce = {};
+        for (u32 j = 0; j < PARTICLE_COUNT; ++j)
+        {
+            if (i == j) continue;
+            vec2 hypothenuse = vec2_sub_vec2(state->particlePositions[j], state->particlePositions[i]);
+            f32 magnitude = vec2_magnitude(hypothenuse);
+            magnitude /= MAX_DISTANCE;
+            vec2 direction = (vec2){hypothenuse.x / magnitude, hypothenuse.y / magnitude};
+            if (magnitude < MIN_DISTANCE_PERCENT)
+            {
+                f32 force = magnitude / MIN_DISTANCE_PERCENT - 1;
+                totalForce = vec2_add_vec2(totalForce, vec2_mul_f32(direction, force));
+            }
+        }
+
+        //totalForce = vec2_mul_f32(totalForce, MAX_DISTANCE);
+        state->particleVelocities[i] = vec2_add_vec2(vec2_mul_f32(state->particleVelocities[i], FRICTION_COEF), vec2_mul_f32(totalForce, DELTA_TIME));
+    }
 }
 
 static void UpdatePositions()
@@ -118,7 +153,7 @@ static void Render()
     sprite.model = mat4_identity();
     sprite.texture = state->circleTextures[0];
 
-    mat4 particleScale = mat4_mul_mat4(mat4_2Dtranslate((vec2){-0.05f, -0.05f}), mat4_2Dscale((vec2){0.1f, 0.1f})); 
+    mat4 particleScale = mat4_mul_mat4(mat4_2Dtranslate((vec2){-PARTICLE_RADIUS/2, -PARTICLE_RADIUS/2}), mat4_2Dscale((vec2){PARTICLE_RADIUS, PARTICLE_RADIUS})); 
     for (u32 i = 0; i < PARTICLE_COUNT; ++i)
     {
         sprite.model = mat4_mul_mat4(mat4_2Dtranslate(state->particlePositions[i]), particleScale);

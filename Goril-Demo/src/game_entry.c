@@ -4,7 +4,7 @@
 
 void GetGameConfigAndFunctions(GameConfig* out_config, GameFunctions* out_gameFunctions)
 {
-	out_config->game_instance_memory_requirement = KiB;
+	out_config->game_instance_memory_requirement = 5*MiB;
 	out_config->windowTitle = "Test game";
 	out_config->windowWidth = 1280;
 	out_config->windowHeight = 720;

@@ -17,7 +17,7 @@ static bool initialized = false;
 
 GlobalAllocators* g_Allocators = nullptr;
 
-bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement)
+bool InitializeMemory(size_t requiredMemory)
 {
 	GRASSERT_DEBUG(state == nullptr); // If this fails it means init was called twice
 	GRINFO("Initializing memory subsystem...");

@@ -18,7 +18,7 @@ GameState* gamestate = nullptr;
 bool Init()
 {
     // =========================== Allocating game memory ============================================================
-    CreateFreelistAllocator("Game allocator", GetGlobalAllocator(), KiB * 100, &gameAllocator);
+    CreateFreelistAllocator("Game allocator", GetGlobalAllocator(), 2*MiB, &gameAllocator);
     gamestate = Alloc(gameAllocator, sizeof(*gamestate), MEM_TAG_GAME);
     ZeroMem(gamestate, sizeof(*gamestate));
     PRINT_MEMORY_STATS();

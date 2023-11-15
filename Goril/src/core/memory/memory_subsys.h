@@ -9,7 +9,7 @@ typedef struct GlobalAllocators
 
 extern GlobalAllocators* g_Allocators;
 
-bool InitializeMemory(size_t requiredMemory, size_t subsysMemoryRequirement);
+bool InitializeMemory(size_t requiredMemory);
 
 void ShutdownMemory();
 

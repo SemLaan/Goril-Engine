@@ -40,6 +40,21 @@ static vec2 vec2_add_vec2(vec2 a, vec2 b)
 	return (vec2){a.x + b.x, a.y + b.y};
 }
 
+static vec2 vec2_sub_vec2(vec2 a, vec2 b)
+{
+	return (vec2){a.x - b.x, a.y - b.y};
+}
+
+static f32 vec2_magnitude(vec2 a)
+{
+	return sqrtf(a.x * a.x + a.y * a.y);
+}
+
+static vec2 vec2_mul_f32(vec2 a, f32 b)
+{
+	return (vec2){a.x * b, a.y * b};
+}
+
 static vec3 vec4_to_vec3(vec4 v)
 {
 	return (vec3){v.x, v.y, v.z};
