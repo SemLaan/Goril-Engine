@@ -7,14 +7,13 @@
 #include "core/meminc.h"
 
 #include "renderer/texture.h"
+#include "vulkan_2D_renderer.h"
 #include "vulkan_command_buffer.h"
 #include "vulkan_debug_tools.h"
 #include "vulkan_platform.h"
 #include "vulkan_swapchain.h"
 #include "vulkan_types.h"
 #include "vulkan_utils.h"
-#include "vulkan_2D_renderer.h"
-
 
 RendererState* vk_state = nullptr;
 
@@ -494,7 +493,7 @@ bool InitializeRenderer()
                 defaultTexturePixels[i + 2] = 200;
                 defaultTexturePixels[i + 3] = 255;
             }
-            else 
+            else
             {
                 defaultTexturePixels[i + 0] = 0;
                 defaultTexturePixels[i + 1] = 0;
@@ -557,9 +556,9 @@ void ShutdownRenderer()
     // ============================================================================================================================================================
     for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        if (vk_state->imageAvailableSemaphores)
+        if (vk_state->imageAvailableSemaphores[i])
             vkDestroySemaphore(vk_state->device, vk_state->imageAvailableSemaphores[i], vk_state->vkAllocator);
-        if (vk_state->renderFinishedSemaphores)
+        if (vk_state->renderFinishedSemaphores[i])
             vkDestroySemaphore(vk_state->device, vk_state->renderFinishedSemaphores[i], vk_state->vkAllocator);
     }
 
@@ -575,12 +574,9 @@ void ShutdownRenderer()
     // ============================================================================================================================================================
     // =================================== Free command buffers ===================================================================================================
     // ============================================================================================================================================================
-    if (vk_state->graphicsCommandBuffers)
+    for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        for (i32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-        {
-            FreeCommandBuffer(vk_state->graphicsCommandBuffers[i]);
-        }
+        FreeCommandBuffer(vk_state->graphicsCommandBuffers[i]);
     }
 
     // ============================================================================================================================================================

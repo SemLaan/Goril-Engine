@@ -6,8 +6,9 @@ for /R %~DP0/Goril %%f in (*.c) do set FileLIST=!FileLIST! %%f
 set FileLIST=%FileLIST:~1%
 for /R %~DP0/Goril-Demo %%f in (*.c) do set FileLIST=!FileLIST! %%f
 
-set defines=-DGR_DEBUG -D__win__ -DDEBUG -D_DEBUG
-rem dist defines (non debug) set defines=-D__win__ -DGR_DIST
+rem set defines=-DGR_DEBUG -D__win__ -DDEBUG -D_DEBUG
+rem dist defines (non debug) 
+set defines=-D__win__ -DGR_DIST
 set includepaths=-I%~DP0/Goril/src/ -I%~DP0/Goril-Demo/src/ -I%VULKAN_SDK%/Include
 set linkpaths=-L%VULKAN_SDK%/Lib
 set links=-lvulkan-1
@@ -19,4 +20,5 @@ echo compiling shaders...
 call %~DP0/Goril/src/renderer/shaders/compile_shaders.bat
 
 echo compiling game and engine...
-gcc %FileLIST% %compilerflags% -o %~DP0/bin/Debug/Goril-Demo.exe %defines% %includepaths% %linkpaths% %links% -fmax-errors=0
+gcc %FileLIST% %compilerflags% -o %~DP0/bin/Debug/Goril-Demo.exe %defines% %includepaths% %linkpaths% %links% -fmax-errors=0 -pg -O2 
+rem -no-pie -g
